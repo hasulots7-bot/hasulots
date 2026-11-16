@@ -10,7 +10,7 @@ selected Windows printer (B&W / Color printer chosen in the dashboard).
 3. Download `QuickPrint-Shop-Setup-1.0.0.exe` from the run's **Artifacts** (or tag `app-v1.0.0` to get a Release).
 4. Upload/keep it as a GitHub **Release** asset, copy the file link, and set it in Render > Environment:
    `DESKTOP_DOWNLOAD_URL = https://github.com/<user>/<repo>/releases/download/app-v1.0.0/QuickPrint-Shop-Setup-1.0.0.exe`
-   Now `https://print.hasulotstechnologies.com/download` has a working download button.
+   Now `https://qrprint.hasulotstechnologies.com/download` has a working download button.
 
 ## Build on a Windows PC instead
 ```

@@ -7,7 +7,7 @@
   "author": "Hasulots Technologies",
   "license": "UNLICENSED",
   "private": true,
-  "qpServerUrl": "https://print.hasulotstechnologies.com",
+  "qpServerUrl": "https://qrprint.hasulotstechnologies.com",
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --win nsis --x64 --publish never"
