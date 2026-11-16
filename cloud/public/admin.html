@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickPrint — Platform Admin Console</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100%;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background:
+        radial-gradient(1200px 500px at 90% -10%, rgba(99, 102, 241, 0.16), transparent 60%),
+        radial-gradient(900px 450px at -10% 110%, rgba(168, 85, 247, 0.12), transparent 60%),
+        #f1f5f9;
+      color: #1e293b;
+      font-size: 14px;
+    }
+    .admin-header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      height: 62px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 12px 32px -18px rgba(15, 23, 42, 0.18);
+    }
+    .admin-main {
+      display: grid;
+      grid-template-columns: minmax(320px, 370px) minmax(0, 1fr);
+      gap: 16px;
+      padding: 16px 20px 26px;
+      max-width: 1600px;
+      margin: 0 auto;
+      align-items: start;
+    }
+    .admin-side, .admin-content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 0;
+    }
+    .stat-card { padding: 14px 16px; }
+    .stat-value { font-size: 26px; font-weight: 900; line-height: 1.05; letter-spacing: -0.03em; }
+    .field {
+      width: 100%;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 11px;
+      padding: 9px 11px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      background: #fff;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .field:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.16); }
+    .field-label { display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 5px; }
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+    .badge-ok { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .badge-off { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .badge-neutral { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
+    .shops-table { width: 100%; border-collapse: collapse; }
+    .shops-table th {
+      text-align: left;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #94a3b8;
+      font-weight: 900;
+      padding: 9px 10px;
+      border-bottom: 1px solid #e2e8f0;
+      white-space: nowrap;
+    }
+    .shops-table td {
+      padding: 11px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 12.5px;
+      vertical-align: middle;
+    }
+    .shops-table tr:last-child td { border-bottom: 0; }
+    .shops-table tr.is-active { background: #eef2ff; }
+    .order-chip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      background: #0f172a;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 7px;
+    }
+    .orders-mini { display: flex; flex-direction: column; gap: 7px; max-height: 330px; overflow-y: auto; }
+    .order-line {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 9px 11px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+    .toggle-link { font-size: 11px; font-weight: 800; color: #4f46e5; cursor: pointer; }
+    .toggle-link:hover { text-decoration: underline; }
+    @media (max-width: 1080px) {
+      .admin-main { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body data-role="admin">
+
+  <!-- ============================================================ -->
+  <!-- PLATFORM ADMIN LOGIN                                         -->
+  <!-- ============================================================ -->
+  <div id="admin-login-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-md p-4">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-md w-full p-7 text-center relative overflow-hidden">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center text-2xl shadow-lg shadow-indigo-500/30 mb-3">
+        🛡️
+      </div>
+      <h2 class="text-xl font-black text-slate-900 leading-tight">Platform Admin</h2>
+      <p class="text-xs text-slate-500 mt-1">உங்கள் QuickPrint நிறுவன கட்டுப்பாட்டு பலகை</p>
+
+      <div class="space-y-3.5 my-5 text-left">
+        <div>
+          <label class="field-label">Admin Username / அட்மின் பயனர் பெயர்</label>
+          <input type="text" id="admin-username-input" class="field" placeholder="admin" value="admin" autocomplete="username">
+        </div>
+        <div>
+          <label class="field-label">Password / கடவுச்சொல்</label>
+          <input type="password" id="admin-password-input" class="field" placeholder="Enter admin password" autocomplete="current-password"
+                 onkeydown="if(event.key==='Enter')platformLogin()">
+        </div>
+      </div>
+
+      <div id="login-error-msg" class="text-xs font-bold text-rose-600 min-h-[18px] mb-2 text-center opacity-0 transition-opacity">
+        Incorrect admin username or password.
+      </div>
+
+      <button type="button" id="btn-submit-pwd" onclick="platformLogin()" class="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-black text-sm shadow-lg shadow-indigo-500/25 transition active:scale-98">
+        Unlock Admin Console →
+      </button>
+
+      <div class="mt-4 pt-3 border-t border-slate-100 text-center text-[11px] text-slate-500">
+        Default: <b>admin / 1234</b> · change it inside after first login
+      </div>
+      <div class="mt-2 text-center text-[11px] text-slate-400">
+        Shop owner? <a href="/owner" class="text-violet-600 font-extrabold hover:underline">Open Shop Console</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- HEADER                                                       -->
+  <!-- ============================================================ -->
+  <header class="admin-header">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center text-xl shadow-md shadow-indigo-500/25 shrink-0">
+        🛡️
+      </div>
+      <div class="min-w-0">
+        <h1 class="font-black text-base text-slate-900 leading-tight truncate">QuickPrint Platform Admin</h1>
+        <div class="flex items-center gap-2 mt-0.5">
+          <span class="text-[11px] font-mono font-bold text-indigo-600">SYSTEM CONSOLE</span>
+          <span class="badge badge-neutral" id="header-role-badge">admin</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="hidden sm:inline-flex badge badge-ok" id="header-tunnel-badge">Tunnel checking...</span>
+      <a href="/owner" class="px-3 py-2 rounded-xl bg-violet-50 hover:bg-violet-100 border border-violet-200 text-violet-700 font-extrabold text-xs flex items-center gap-1.5 transition">
+        🏪 <span class="hidden sm:inline">Shop Owner Console</span><span class="sm:hidden">Owner</span>
+      </a>
+      <button type="button" onclick="refreshAll()" class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-extrabold text-xs flex items-center gap-1.5 transition">
+        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> <span class="hidden sm:inline">Refresh</span>
+      </button>
+      <button type="button" onclick="lockAdmin()" class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-extrabold text-xs flex items-center gap-1.5 transition">
+        <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock
+      </button>
+    </div>
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- MAIN                                                         -->
+  <!-- ============================================================ -->
+  <main class="admin-main">
+
+    <!-- LEFT: SYSTEM / QR / CREDENTIALS -->
+    <aside class="admin-side">
+
+      <!-- System status -->
+      <section class="card p-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-sm font-black text-slate-900">Server &amp; Tunnel</h2>
+            <p class="text-[11px] text-slate-400 font-semibold">This print station</p>
+          </div>
+          <span class="badge badge-ok" id="sys-tunnel-badge">checking</span>
+        </div>
+
+        <div class="mt-3 space-y-2.5 text-xs">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-slate-500 font-bold">Installed role</span>
+            <span class="font-black text-indigo-700" id="sys-role">—</span>
+          </div>
+          <div>
+            <span class="block text-slate-500 font-bold mb-0.5">Local server</span>
+            <code class="block bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono text-[11px] font-bold text-slate-700 truncate" id="sys-server-url">—</code>
+          </div>
+          <div>
+            <span class="block text-slate-500 font-bold mb-0.5">Shop Wi-Fi URL</span>
+            <code class="block bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono text-[11px] font-bold text-slate-700 truncate" id="sys-lan-url">—</code>
+          </div>
+          <div>
+            <span class="block text-slate-500 font-bold mb-0.5">Public customer URL</span>
+            <div class="flex items-center gap-1.5">
+              <code class="flex-1 bg-indigo-50 border border-indigo-200 rounded-lg px-2.5 py-1.5 font-mono text-[11px] font-bold text-indigo-700 truncate" id="sys-public-url">—</code>
+              <button type="button" onclick="copyPublicUrl()" class="px-2 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 text-[11px] font-extrabold" title="Copy public URL">Copy</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <div class="rounded-xl bg-slate-50 border border-slate-200 px-2.5 py-2">
+              <span class="block text-[10px] text-slate-400 font-bold uppercase">Uptime</span>
+              <span class="font-black text-slate-800" id="sys-uptime">—</span>
+            </div>
+            <div class="rounded-xl bg-slate-50 border border-slate-200 px-2.5 py-2">
+              <span class="block text-[10px] text-slate-400 font-bold uppercase">Node</span>
+              <span class="font-black text-slate-800" id="sys-node">—</span>
+            </div>
+          </div>
+          <button type="button" onclick="restartTunnel()" class="w-full mt-1 py-2 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-800 font-extrabold text-xs transition">
+            🔄 Restart public tunnel
+          </button>
+          <p class="text-[10px] text-amber-700/80 font-semibold leading-snug">Restarting changes the public URL. Reprint the QR poster after it changes.</p>
+        </div>
+      </section>
+
+      <!-- Customer QR -->
+      <section class="card p-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-sm font-black text-slate-900">Customer QR</h2>
+            <p class="text-[11px] text-slate-400 font-semibold">No app install — scan only</p>
+          </div>
+          <a href="/standee.html" target="_blank" class="toggle-link">Print poster ↗</a>
+        </div>
+        <div class="mt-3 flex items-center gap-4">
+          <div class="w-[132px] h-[132px] shrink-0 rounded-2xl border-2 border-slate-200 bg-white p-2 flex items-center justify-center overflow-hidden">
+            <img id="qr-admin-img" src="/api/qr?format=image&width=240" alt="Customer QR" class="w-full h-full object-contain">
+          </div>
+          <div class="min-w-0 text-xs">
+            <p class="font-black text-slate-800">Customers scan → upload → pay → collect</p>
+            <p class="text-slate-500 font-semibold mt-1 leading-snug">They use only the web page on their phone. Nothing is installed or downloaded.</p>
+            <code class="block mt-2 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 font-mono text-[10px] font-bold text-slate-600 truncate" id="qr-target-url">/order</code>
+          </div>
+        </div>
+      </section>
+
+      <!-- Platform credentials -->
+      <section class="card p-4">
+        <div class="pb-3 border-b border-slate-100">
+          <h2 class="text-sm font-black text-slate-900">Platform Admin Login</h2>
+          <p class="text-[11px] text-slate-400 font-semibold">Only this console uses these credentials</p>
+        </div>
+        <div class="mt-3 space-y-2.5">
+          <div>
+            <label class="field-label">Admin username</label>
+            <input type="text" id="plat-username" class="field" placeholder="admin" autocomplete="username">
+          </div>
+          <div>
+            <label class="field-label">New password</label>
+            <input type="password" id="plat-password" class="field" placeholder="Leave blank to keep current" autocomplete="new-password">
+          </div>
+          <button type="button" onclick="savePlatformCredentials()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-md shadow-indigo-500/25 transition">
+            💾 Save admin credentials
+          </button>
+          <p id="platform-msg" class="text-[11px] font-bold text-center opacity-0 transition-opacity">Saved</p>
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- RIGHT: STATS / SHOPS / ORDERS -->
+    <section class="admin-content">
+
+      <!-- Stats -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="card stat-card">
+          <span class="text-[11px] font-bold text-slate-500 block">Registered shops</span>
+          <span class="stat-value text-slate-900" id="stat-shops">0</span>
+          <span class="text-[11px] text-slate-400 font-semibold">in registry</span>
+        </div>
+        <div class="card stat-card">
+          <span class="text-[11px] font-bold text-slate-500 block">Active shop</span>
+          <span class="stat-value text-indigo-700 text-lg leading-tight block truncate" id="stat-active-shop">—</span>
+          <span class="text-[11px] text-slate-400 font-semibold" id="stat-active-id">—</span>
+        </div>
+        <div class="card stat-card">
+          <span class="text-[11px] font-bold text-slate-500 block">Total orders</span>
+          <span class="stat-value text-slate-900" id="stat-orders">0</span>
+          <span class="text-[11px] text-slate-400 font-semibold">all time</span>
+        </div>
+        <div class="card stat-card">
+          <span class="text-[11px] font-bold text-slate-500 block">Installed role</span>
+          <span class="stat-value text-violet-700 text-lg leading-tight block" id="stat-role">—</span>
+          <span class="text-[11px] text-slate-400 font-semibold">this PC</span>
+        </div>
+      </div>
+
+      <!-- Shops registry -->
+      <div class="card overflow-hidden">
+        <div class="flex items-center justify-between gap-2 px-4 py-3.5 border-b border-slate-100">
+          <div>
+            <h2 class="text-base font-black text-slate-900">Shop Registry</h2>
+            <p class="text-[11px] text-slate-400 font-semibold">Activate a shop to make its QR, pricing and owner login live</p>
+          </div>
+          <button type="button" onclick="toggleAddShop(true)" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md shadow-emerald-500/20 transition">
+            ➕ Add shop
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="shops-table">
+            <thead>
+              <tr>
+                <th>Shop</th>
+                <th>Login</th>
+                <th>UPI</th>
+                <th>Rates</th>
+                <th>Status</th>
+                <th class="text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="shops-table-body">
+              <tr><td colspan="6" class="text-center py-8 text-slate-400 font-semibold">Loading shops…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Add shop -->
+      <div id="add-shop-card" class="card p-4 hidden">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-sm font-black text-slate-900">Register New Shop</h2>
+            <p class="text-[11px] text-slate-400 font-semibold">Creates a shop ID, owner login, UPI and pricing</p>
+          </div>
+          <button type="button" onclick="toggleAddShop(false)" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black">✕</button>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-3 mt-4">
+          <div class="sm:col-span-2">
+            <label class="field-label">Shop name *</label>
+            <input type="text" id="new-shop-name" class="field" placeholder="e.g. Suprajaa Textiles" oninput="autoFillNewShop(this.value)">
+          </div>
+          <div>
+            <label class="field-label">Owner username *</label>
+            <input type="text" id="new-shop-username" class="field" placeholder="e.g. Suprajaa_txt">
+          </div>
+          <div>
+            <label class="field-label">Owner password *</label>
+            <input type="text" id="new-shop-password" class="field" placeholder="e.g. 1234">
+          </div>
+          <div>
+            <label class="field-label">Phone</label>
+            <input type="tel" id="new-shop-phone" class="field" placeholder="9876543210">
+          </div>
+          <div>
+            <label class="field-label">UPI ID</label>
+            <input type="text" id="new-shop-upi" class="field" placeholder="shop@upi">
+          </div>
+          <div>
+            <label class="field-label">B&amp;W rate (₹/page)</label>
+            <input type="number" id="new-shop-bw" class="field" value="3">
+          </div>
+          <div>
+            <label class="field-label">Color rate (₹/page)</label>
+            <input type="number" id="new-shop-color" class="field" value="10">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 gap-2">
+          <p id="add-shop-msg" class="text-[11px] font-bold text-slate-500"></p>
+          <button type="button" onclick="addShop()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md shadow-emerald-500/20 transition">
+            ✨ Register &amp; activate shop
+          </button>
+        </div>
+      </div>
+
+      <!-- Orders monitor -->
+      <div class="card p-4">
+        <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-base font-black text-slate-900">Latest Orders</h2>
+            <p class="text-[11px] text-slate-400 font-semibold">Read-only monitor. Owner verifies payment and prints from the Shop Console.</p>
+          </div>
+          <a href="/owner" class="toggle-link whitespace-nowrap">Open owner console ↗</a>
+        </div>
+        <div id="orders-mini" class="orders-mini mt-3">
+          <p class="text-center py-6 text-slate-400 font-semibold">Loading orders…</p>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="text-center text-[11px] text-slate-400 font-semibold pb-6">
+    QuickPrint Platform Admin · Customers use the QR page only — no software install
+  </footer>
+
+  <script src="/platform.js?v=2"></script>
+</body>
+</html>

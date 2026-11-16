@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Uploaded Customer Files (Keep folder, ignore contents)
+uploads/*
+!uploads/.gitkeep
+
+# Live shop data (contains passwords / customer orders — never commit)
+data/
+cloud/data/
+cloud/uploads/
+
+# Downloaded print jobs
+print-jobs/
+
+# Executables & Local binaries
+cloudflared.exe
+*.exe
+*.obj
+*.pdb
+
+# Local environment & System logs
+.env
+.system_generated/
+*.log
+.DS_Store
+Thumbs.db

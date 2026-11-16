@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickPrint — Scan. Upload. Print. | Hasulots Technologies</title>
+  <meta name="description" content="QuickPrint lets customers scan a QR code at your counter, upload a document from their phone and print instantly. No app install for customers.">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    .glow { background: radial-gradient(60% 60% at 50% 0%, #ede9fe 0%, transparent 70%); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+  <!-- Nav -->
+  <header class="max-w-6xl mx-auto px-5 py-5 flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white grid place-items-center text-lg shadow-lg shadow-violet-500/25">🖨️</div>
+      <div>
+        <div class="font-black text-slate-900 leading-tight">QuickPrint</div>
+        <div class="text-[10px] font-bold uppercase tracking-widest text-violet-500">by Hasulots</div>
+      </div>
+    </div>
+    <nav class="flex items-center gap-2">
+      <a href="/owner" class="px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:text-violet-700 hover:bg-white transition">Owner login</a>
+      <a href="/signup.html" class="px-4 py-2.5 rounded-xl text-sm font-black text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-violet-500/25 transition">Create shop account</a>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="glow">
+    <div class="max-w-6xl mx-auto px-5 pt-10 pb-16 grid lg:grid-cols-2 gap-12 items-center">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-violet-100 text-[11px] font-extrabold text-violet-700 shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          No app install for customers
+        </div>
+        <h1 class="mt-5 text-4xl sm:text-5xl font-black text-slate-900 leading-[1.08] tracking-tight">
+          Customers scan a QR.<br>
+          <span class="bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">You print the file.</span>
+        </h1>
+        <p class="mt-5 text-slate-600 text-[15px] leading-relaxed max-w-xl">
+          QuickPrint turns any print shop into a self-service counter. The customer scans your QR code,
+          picks a PDF, Word file or photo from their phone, chooses pages and pays by UPI — and the job
+          lands on your PC, ready to print after you verify the payment.
+        </p>
+        <div class="mt-7 flex flex-wrap gap-3">
+          <a href="/signup.html" class="px-6 py-3.5 rounded-2xl text-sm font-black text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-xl shadow-violet-500/30 transition">Start free — create shop account</a>
+          <a href="/owner" class="px-6 py-3.5 rounded-2xl text-sm font-black text-slate-700 bg-white border-2 border-slate-200 hover:border-violet-300 hover:text-violet-700 transition">I already have an account</a>
+        </div>
+        <div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-bold text-slate-500">
+          <span>✔ UPI + cash</span>
+          <span>✔ Word / PDF / JPG</span>
+          <span>✔ Page selection</span>
+          <span>✔ Today's reports</span>
+        </div>
+      </div>
+
+      <div class="relative">
+        <div class="absolute -inset-4 bg-gradient-to-tr from-indigo-200/40 to-pink-200/40 blur-2xl rounded-[2rem]"></div>
+        <div class="relative bg-white rounded-[2rem] border border-slate-100 shadow-2xl shadow-slate-900/10 p-6">
+          <div class="flex items-center justify-between mb-5">
+            <div class="text-xs font-black text-slate-400 uppercase tracking-widest">How it works</div>
+            <div class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-extrabold">LIVE</div>
+          </div>
+          <ol class="space-y-4">
+            <li class="flex gap-3">
+              <span class="w-8 h-8 shrink-0 rounded-xl bg-indigo-50 text-indigo-600 grid place-items-center font-black text-sm">1</span>
+              <div><div class="font-extrabold text-slate-900 text-sm">Shop prints the QR poster</div><div class="text-xs text-slate-500 mt-0.5">Generated automatically in the owner console, unique per shop.</div></div>
+            </li>
+            <li class="flex gap-3">
+              <span class="w-8 h-8 shrink-0 rounded-xl bg-violet-50 text-violet-600 grid place-items-center font-black text-sm">2</span>
+              <div><div class="font-extrabold text-slate-900 text-sm">Customer scans &amp; uploads</div><div class="text-xs text-slate-500 mt-0.5">No install, no signup. Word files are previewed as PDF pages.</div></div>
+            </li>
+            <li class="flex gap-3">
+              <span class="w-8 h-8 shrink-0 rounded-xl bg-pink-50 text-pink-600 grid place-items-center font-black text-sm">3</span>
+              <div><div class="font-extrabold text-slate-900 text-sm">Owner verifies payment</div><div class="text-xs text-slate-500 mt-0.5">See the UPI reference, then Verify &amp; Print or Reject.</div></div>
+            </li>
+            <li class="flex gap-3">
+              <span class="w-8 h-8 shrink-0 rounded-xl bg-amber-50 text-amber-600 grid place-items-center font-black text-sm">4</span>
+              <div><div class="font-extrabold text-slate-900 text-sm">Local agent prints it</div><div class="text-xs text-slate-500 mt-0.5">A tiny agent on the shop PC picks the job and sends it to your printer.</div></div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="max-w-6xl mx-auto px-5 py-14">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+        <div class="text-2xl mb-3">📱</div>
+        <div class="font-black text-slate-900">Zero customer install</div>
+        <p class="text-xs text-slate-500 mt-2 leading-relaxed">Everything runs in the phone browser. Just scan, upload and pay.</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+        <div class="text-2xl mb-3">📄</div>
+        <div class="font-black text-slate-900">Word files preview as PDF</div>
+        <p class="text-xs text-slate-500 mt-2 leading-relaxed">.doc/.docx are converted server-side so customers see real pages before printing.</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+        <div class="text-2xl mb-3">✅</div>
+        <div class="font-black text-slate-900">Payment verification</div>
+        <p class="text-xs text-slate-500 mt-2 leading-relaxed">Nothing prints until you approve the payment. Reject with a reason if it never arrived.</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+        <div class="text-2xl mb-3">🖨️</div>
+        <div class="font-black text-slate-900">Your own printer</div>
+        <p class="text-xs text-slate-500 mt-2 leading-relaxed">The print agent runs on your counter PC and uses the printer you already have.</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+        <div class="text-2xl mb-3">📊</div>
+        <div class="font-black text-slate-900">Daily reports</div>
+        <p class="text-xs text-slate-500 mt-2 leading-relaxed">Today's orders, CSV export and a printable day summary for your cash box.</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+        <div class="text-2xl mb-3">🔒</div>
+        <div class="font-black text-slate-900">Separate consoles</div>
+        <p class="text-xs text-slate-500 mt-2 leading-relaxed">Shop owners and the platform admin each get their own page and login.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="max-w-6xl mx-auto px-5 pb-16">
+    <div class="rounded-3xl bg-gradient-to-r from-indigo-600 to-violet-600 p-8 sm:p-10 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-2xl shadow-violet-500/30">
+      <div>
+        <div class="text-2xl font-black">Ready to go live today?</div>
+        <p class="text-sm text-indigo-100 mt-1.5">Create your shop, print the QR poster, and start accepting jobs.</p>
+      </div>
+      <a href="/signup.html" class="px-7 py-3.5 rounded-2xl bg-white text-violet-700 font-black text-sm hover:bg-indigo-50 transition shrink-0">Create shop account →</a>
+    </div>
+  </section>
+
+  <footer class="border-t border-slate-200 bg-white">
+    <div class="max-w-6xl mx-auto px-5 py-7 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+      <div>© <span id="yr"></span> Hasulots Technologies. All rights reserved.</div>
+      <div class="flex items-center gap-4 font-bold">
+        <a href="/signup.html" class="hover:text-violet-700">Create account</a>
+        <a href="/owner" class="hover:text-violet-700">Owner login</a>
+        <a href="/admin" class="hover:text-violet-700">Admin</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+</body>
+</html>

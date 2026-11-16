@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickPrint — Opening your console…</title>
+  <meta name="robots" content="noindex">
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #f1f5f9;
+      color: #334155;
+      text-align: center;
+      padding: 24px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 28px 26px;
+      max-width: 380px;
+      box-shadow: 0 18px 40px -24px rgba(15, 23, 42, 0.35);
+    }
+    .icon { font-size: 34px; margin-bottom: 6px; }
+    h1 { font-size: 17px; margin: 0 0 6px; color: #0f172a; }
+    p { font-size: 12.5px; margin: 0 0 16px; color: #64748b; line-height: 1.5; }
+    a {
+      display: inline-block;
+      margin: 4px;
+      padding: 10px 16px;
+      border-radius: 11px;
+      font-size: 12.5px;
+      font-weight: 800;
+      text-decoration: none;
+      color: #fff;
+      background: linear-gradient(to right, #4f46e5, #7c3aed);
+    }
+    a.alt { background: #ec2a7a; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">🖨️</div>
+    <h1>Opening your QuickPrint console…</h1>
+    <p id="hint">Detecting whether this PC is set up as Admin or Shop Owner.</p>
+    <div>
+      <a id="ownerLink" href="/owner">Shop Owner Console</a>
+      <a id="adminLink" class="alt" href="/admin">Admin Console</a>
+    </div>
+  </div>
+  <script>
+    fetch('/api/role', { cache: 'no-store' })
+      .then(r => r.text())
+      .then(role => {
+        const target = String(role || '').trim() === 'admin' ? '/admin' : '/owner';
+        window.location.replace(target);
+      })
+      .catch(() => {
+        const hint = document.getElementById('hint');
+        if (hint) hint.textContent = 'The server is not reachable. Start QuickPrint, then choose a console below.';
+      });
+  </script>
+</body>
+</html>
