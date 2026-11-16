@@ -16,5 +16,7 @@ services:
         sync: false   # Owner panel login username (/superadmin)
       - key: SUPERADMIN_PASS
         sync: false   # Owner panel password (use a strong one)
+      - key: DESKTOP_DOWNLOAD_URL
+        sync: false   # GitHub Releases link of QuickPrint-Shop-Setup-x.y.z.exe
       - key: AUTH_SECRET
         generateValue: true   # keeps logins valid across restarts

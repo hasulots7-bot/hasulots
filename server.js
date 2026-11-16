@@ -134,10 +134,18 @@ app.get('/', (req, res) => {
 });
 
 // Info pages (clean URLs)
-const INFO_PAGES = { '/features': 'features.html', '/setup-guide': 'setup-guide.html', '/about': 'about.html', '/contact': 'contact.html' };
+const INFO_PAGES = { '/download': 'download.html', '/features': 'features.html', '/setup-guide': 'setup-guide.html', '/about': 'about.html', '/contact': 'contact.html' };
 app.get(Object.keys(INFO_PAGES), (req, res) => {
   res.sendFile(path.join(__dirname, 'public', INFO_PAGES[req.path]));
 });
+
+// Windows app installer lives on GitHub Releases (too big for this repo). Set DESKTOP_DOWNLOAD_URL in Render > Environment.
+app.get('/download/windows', (req, res) => {
+  const url = (process.env.DESKTOP_DOWNLOAD_URL || '').trim();
+  if (/^https:\/\//.test(url)) return res.redirect(302, url);
+  res.status(404).type('text/plain').send('The Windows app is not published yet. Please contact QuickPrint support.');
+});
+app.get('/api/desktop', (req, res) => res.json({ available: /^https:\/\//.test((process.env.DESKTOP_DOWNLOAD_URL || '').trim()) }));
 
 // Startup check: warn loudly if the public folder is missing
 if (!fs.existsSync(path.join(__dirname, 'public', 'index.html'))) {

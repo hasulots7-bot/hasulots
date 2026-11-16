@@ -416,7 +416,7 @@ function openCreate() {
     var pay = getPay();
     var r = await api('/shops', 'POST', { shopName: val('c_name'), username: val('c_user'), password: val('c_pass'), phone: val('c_phone'), upiId: val('c_upi'), bwRate: val('c_bw'), colorRate: val('c_col'), plan: val('c_plan'), amount: pay.amount, payStatus: pay.payStatus, payMethod: pay.payMethod, payRef: pay.payRef });
     var u = r.shop.username, p = val('c_pass');
-    var txt = 'QuickPrint login\nShop: ' + r.shop.shopName + '\nURL: ' + location.origin + '/admin\nUsername: ' + u + '\nPassword: ' + p + '\nPlan: ' + r.shop.planLabel + (r.shop.expiresAt ? ' (till ' + fmtDate(r.shop.expiresAt) + ')' : '');
+    var txt = 'QuickPrint login\nShop: ' + r.shop.shopName + '\nDownload Windows app: ' + location.origin + '/download\nLogin page: ' + location.origin + '/admin\nUsername: ' + u + '\nPassword: ' + p + '\nPlan: ' + r.shop.planLabel + (r.shop.expiresAt ? ' (till ' + fmtDate(r.shop.expiresAt) + ')' : '');
     var wa = r.shop.phone ? 'https://wa.me/91' + encodeURIComponent(r.shop.phone) + '?text=' + encodeURIComponent(txt) : '';
     openModal('<h2>✅ Shop created</h2><p class="s">Send these login details to the shop owner. The password cannot be viewed again.</p><div class="hi" style="white-space:pre-line">' + esc(txt) + '</div>' +
       '<div class="mf"><button class="btn btn-o" id="cp">📋 Copy</button>' + (wa ? '<a class="btn btn-g" target="_blank" href="' + wa + '">💬 WhatsApp</a>' : '') + '<button class="btn btn-p" onclick="closeModal()">Done</button></div>');
@@ -521,7 +521,7 @@ function openApprove(s) {
   $('mok').onclick = function () { submit(async function () {
     var pay = getPay();
     var r = await api('/shops/' + encodeURIComponent(s.shopId) + '/approve', 'POST', { plan: val('a_plan'), days: val('a_days'), amount: pay.amount, payStatus: pay.payStatus, payMethod: pay.payMethod, payRef: pay.payRef });
-    var msg = 'Hello ' + (s.ownerName || '') + ', your QuickPrint shop "' + s.shopName + '" is approved! ✅\nLogin: ' + location.origin + '/admin\nUsername: ' + s.username + '\nPassword: (the one you chose while registering)\nPlan: ' + r.shop.planLabel + (r.shop.expiresAt ? ' (valid till ' + fmtDate(r.shop.expiresAt) + ')' : '');
+    var msg = 'Hello ' + (s.ownerName || '') + ', your QuickPrint shop "' + s.shopName + '" is approved! ✅\nDownload Windows app: ' + location.origin + '/download\nLogin: ' + location.origin + '/admin\nUsername: ' + s.username + '\nPassword: (the one you chose while registering)\nPlan: ' + r.shop.planLabel + (r.shop.expiresAt ? ' (valid till ' + fmtDate(r.shop.expiresAt) + ')' : '');
     var wa = 'https://wa.me/91' + encodeURIComponent(s.phone) + '?text=' + encodeURIComponent(msg);
     openModal('<h2>✅ Shop approved</h2><p class="s">' + esc(s.shopName) + ' can login now. Send them a WhatsApp message:</p><div class="hi" style="white-space:pre-line">' + esc(msg) + '</div>' +
       '<div class="mf"><button class="btn btn-o" onclick="closeModal()">Close</button><a class="btn btn-p" target="_blank" href="' + wa + '" onclick="closeModal()">💬 Send on WhatsApp</a></div>');

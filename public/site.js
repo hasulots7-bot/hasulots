@@ -8,7 +8,7 @@ window.SITE_CONFIG = {
 (function () {
   var C = window.SITE_CONFIG;
   var NAV = [
-    ["Home", "/"], ["Pricing", "/#pricing"], ["How to Setup", "/setup-guide"],
+    ["Home", "/"], ["Pricing", "/#pricing"], ["How to Setup", "/setup-guide"], ["⬇ Download App", "/download"],
     ["Features", "/features"], ["About", "/about"], ["Contact Us", "/contact"]
   ];
   var path = location.pathname.replace(/\/+$/, "") || "/";
@@ -26,7 +26,7 @@ window.SITE_CONFIG = {
   var footer = '<footer><div class="wrap"><div class="fgrid">' +
     '<div><div class="logo" style="color:#fff;margin-bottom:10px"><img src="/icon-192.png" alt=""><div>QuickPrint</div></div>' +
     '<p>Scan. Upload. Pay. Auto Print.<br>Cyber cafes, print shops and CSC centers-ku smart printing software.</p></div>' +
-    '<div><h4>Product</h4><a href="/setup-guide">How to Setup</a><a href="/features">Features</a><a href="/#pricing">Pricing</a><a href="/#faq">FAQ</a></div>' +
+    '<div><h4>Product</h4><a href="/setup-guide">How to Setup</a><a href="/features">Features</a><a href="/download">Download Windows App</a><a href="/#pricing">Pricing</a><a href="/#faq">FAQ</a></div>' +
     '<div><h4>Contact</h4><a id="fPhone" href="#">📞 Phone</a><a id="fMail" href="#">📧 Email</a><a href="/about">About Us</a><a href="/admin">🔑 Shop Owner Login</a></div>' +
     '</div><div class="copy">© 2026 QuickPrint • Powered by Hasulots Technologies • All rights reserved</div></div></footer>' +
     '<a class="wa-fab" id="waFab" href="#" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>';

@@ -1,0 +1,36 @@
+{
+  "name": "quickprint-shop",
+  "productName": "QuickPrint Shop",
+  "version": "1.0.0",
+  "description": "QuickPrint shop app - login, customer QR and silent printing for Windows",
+  "main": "main.js",
+  "author": "Hasulots Technologies",
+  "license": "UNLICENSED",
+  "private": true,
+  "qpServerUrl": "https://print.hasulotstechnologies.com",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.hasulots.quickprint.shop",
+    "productName": "QuickPrint Shop",
+    "artifactName": "QuickPrint-Shop-Setup-${version}.${ext}",
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": ["main.js", "preload.js", "status.html", "package.json"],
+    "extraResources": [{ "from": "resources/SumatraPDF.exe", "to": "SumatraPDF.exe" }],
+    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }], "icon": "build/icon.ico" },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "QuickPrint Shop",
+      "runAfterFinish": true
+    }
+  }
+}
