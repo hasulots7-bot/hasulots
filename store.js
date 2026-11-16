@@ -9,12 +9,13 @@ const SEED_DIR = path.join(__dirname, 'seed');
 const FILES = {
   shops: path.join(DATA_DIR, 'shops.json'),
   settings: path.join(DATA_DIR, 'settings.json'),
-  orders: path.join(DATA_DIR, 'orders.json')
+  orders: path.join(DATA_DIR, 'orders.json'),
+  owner: path.join(DATA_DIR, 'owner.json')
 };
 
 let pool = null;
 let defaultSettings = {};
-const cache = { shops: [], settings: null, orders: [] };
+const cache = { shops: [], settings: null, orders: [], owner: {} };
 const snapshots = { shops: new Map(), orders: new Map() }; // key -> JSON string last written
 const TABLES = { shops: 'shops', orders: 'orders' };
 
@@ -116,6 +117,8 @@ async function init(defaults) {
     cache.orders = await loadTable('orders');
     const s = await pool.query(`SELECT data FROM config WHERE key = 'settings'`);
     cache.settings = s.rows[0] ? s.rows[0].data : null;
+    const o = await pool.query(`SELECT data FROM config WHERE key = 'owner'`);
+    cache.owner = o.rows[0] ? o.rows[0].data : {};
     // First run: import seed data
     if (!cache.shops.length) {
       cache.shops = readJson(path.join(SEED_DIR, 'shops.json'), []);
@@ -131,6 +134,7 @@ async function init(defaults) {
     cache.shops = readJson(FILES.shops, null) || readJson(path.join(SEED_DIR, 'shops.json'), []);
     cache.settings = readJson(FILES.settings, null) || readJson(path.join(SEED_DIR, 'settings.json'), defaultSettings);
     cache.orders = readJson(FILES.orders, []);
+    cache.owner = readJson(FILES.owner, {});
   }
 }
 
@@ -145,6 +149,11 @@ module.exports = {
   saveSettings: (settings) => {
     cache.settings = settings;
     if (pool) enqueue(() => saveConfig('settings', cache.settings)); else writeLocal('settings');
+  },
+  getOwnerConfig: () => cache.owner || {},
+  saveOwnerConfig: (cfg) => {
+    cache.owner = cfg;
+    if (pool) enqueue(() => saveConfig('owner', cache.owner)); else writeLocal('owner');
   },
   getOrders: () => cache.orders,
   saveOrders: (orders) => {

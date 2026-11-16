@@ -145,7 +145,7 @@ if (!fs.existsSync(path.join(__dirname, 'public', 'index.html'))) {
 }
 
 // ---------- Website-owner (super admin) ----------
-superadmin.mount(app, { getShops, saveShops, getSettings, saveSettings, broadcast });
+superadmin.mount(app, { getShops, saveShops, getSettings, saveSettings, broadcast, getOwnerConfig: store.getOwnerConfig, saveOwnerConfig: store.saveOwnerConfig });
 app.get(['/superadmin', '/superadmin.html', '/owner'], (req, res) => {
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
   res.sendFile(path.join(__dirname, 'public', 'superadmin.html'));

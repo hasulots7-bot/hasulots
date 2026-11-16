@@ -82,10 +82,10 @@ function clearFails(req) { attempts.delete(clientIp(req)); }
 // ---------- Licensing ----------
 const DAY = 24 * 60 * 60 * 1000;
 const PLANS = {
-  demo:     { label: 'Demo (1 week)',   days: 7 },
-  monthly:  { label: 'Monthly',         days: 30 },
-  yearly:   { label: 'Yearly',          days: 365 },
-  lifetime: { label: 'Lifetime',        days: null }
+  demo:     { label: 'Demo (1 week)',   days: 7,    price: 0 },
+  monthly:  { label: 'Monthly',         days: 30,   price: 299 },
+  yearly:   { label: 'Yearly',          days: 365,  price: 2999 },
+  lifetime: { label: 'Lifetime',        days: null, price: 9999 }
 };
 
 // Returns { state: active|expiring|expired|suspended, daysLeft, allowed }

@@ -61,3 +61,10 @@ DNS-la Render kudukkura **CNAME** add pannunga (`print` -> `xxxx.onrender.com`).
 - Neon free limit 1 GB. Thaandina new data save aagaadhu (bill varaadhu).
 - `uploads/` (customer files) Render disk-la temporary. Shops/orders/settings database-la safe.
 - Login security (open `/api/settings`, `admin`/`1234`, plain passwords) live-ku munna fix pannanum.
+
+## Owner panel (v2)
+- Sidebar: Dashboard, Shops, Requests, Payments, Settings.
+- **Settings**: demo days, plan prices/days, UPI + bank details, owner username/password change (saved in DB `config` table; overrides Render env login once changed).
+- **Create Shop**: username + password auto-generate (🔄 for another). Plan select panna amount auto-fill.
+- **Renew / Approve / Create**: payment method (UPI/Cash/Bank/Card/Cheque/Other), Paid / Pay-later, reference, UPI QR. Pay-later dues Payments tab-la "Mark paid".
+- **Shops → ⋯ → Extend days**: demo/licence-ku extra days kudukka.
