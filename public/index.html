@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuickPrint – QR Scan Print Software for Cyber Cafes & Print Shops | Hasulots Technologies</title>
+<meta name="description" content="Customer scans QR, uploads file, pays online and the print comes out automatically on your printer. No WhatsApp, no pendrive. Free demo.">
+<meta name="theme-color" content="#4f46e5">
+<link rel="manifest" href="/manifest.json">
+<script src="/site.js"></script>
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+:root{
+  --ink:#15151f; --ink2:#3d3d4e; --muted:#6b6b7e; --line:#e8e6f0; --bg:#f7f7fb; --card:#fff;
+  --indigo:#4f46e5; --indigo2:#3b36a7; --soft:#eef2ff; --violet:#7c3aed; --green:#10b981; --amber:#f59e0b;
+  --grad:linear-gradient(135deg,#4f46e5,#7c3aed);
+  --shadow:0 1px 2px rgba(20,20,40,.04),0 10px 30px rgba(20,20,40,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;border-radius:12px;font-weight:700;font-size:15px;border:2px solid transparent;cursor:pointer;transition:.18s;font-family:inherit}
+.btn-primary{background:var(--grad);color:#fff;box-shadow:0 8px 20px rgba(79,70,229,.3)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(79,70,229,.4)}
+.btn-ghost{background:#fff;color:var(--indigo);border-color:var(--indigo)}
+.btn-ghost:hover{background:var(--soft)}
+.btn-wa{background:#25d366;color:#fff}
+/* Demo signup modal */
+.dm-ov{position:fixed;inset:0;background:rgba(15,14,31,.55);display:none;align-items:center;justify-content:center;padding:14px;z-index:200;overflow-y:auto}
+.dm-ov.open{display:flex}
+.dm{background:#fff;border-radius:24px;padding:26px 24px;width:100%;max-width:420px;box-shadow:0 30px 80px rgba(0,0,0,.3);max-height:95vh;overflow-y:auto;text-align:center}
+.dm h3{font-size:22px;font-weight:800}
+.dm .dm-s{color:var(--muted);font-size:13.5px;margin:6px 0 12px}
+.dm .dm-tag{display:inline-block;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;border-radius:99px;padding:5px 14px;font-size:12.5px;font-weight:700;margin-bottom:14px}
+.dm input{width:100%;padding:13px 16px;border:1.5px solid #eee3c8;background:#fffdf6;border-radius:14px;font:inherit;font-size:15px;margin-bottom:10px;outline:none}
+.dm input:focus{border-color:var(--indigo)}
+.dm .dm-go{width:100%;padding:15px;border:0;border-radius:14px;background:#ff2d62;color:#fff;font:inherit;font-weight:800;font-size:16px;cursor:pointer;margin-top:4px}
+.dm .dm-go:disabled{opacity:.6;cursor:wait}
+.dm .dm-err{color:#e11d48;font-weight:700;font-size:13px;min-height:18px;margin:6px 0}
+.dm .dm-x{background:none;border:0;color:var(--muted);font:inherit;margin-top:10px;cursor:pointer}
+.dm .dm-hp{position:absolute;left:-9999px;opacity:0;height:0;width:0}
+/* Nav */
+header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px}
+.logo img{width:34px;height:34px;border-radius:9px}
+.logo small{display:block;font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.4px;margin-top:-3px}
+nav ul{display:flex;gap:26px;list-style:none;font-weight:600;font-size:14.5px;color:var(--ink2)}
+nav ul a:hover{color:var(--indigo)}
+.nav-cta{display:flex;gap:10px;align-items:center}
+.nav-cta .btn{padding:9px 18px;font-size:14px}
+.burger{display:none;background:none;border:0;font-size:26px;cursor:pointer}
+/* Hero */
+.hero{padding:56px 0 40px;background:radial-gradient(900px 400px at 85% 0,#ddd6fe55,transparent),radial-gradient(700px 400px at 0 20%,#c7d2fe55,transparent)}
+.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
+.pill{display:inline-flex;gap:8px;align-items:center;background:var(--soft);color:var(--indigo);font-weight:700;font-size:13px;padding:6px 14px;border-radius:99px;margin-bottom:18px}
+.flow{font-size:12.5px;letter-spacing:2px;font-weight:700;color:var(--violet);margin-bottom:10px}
+h1{font-size:clamp(32px,5vw,52px);line-height:1.12;font-weight:800;letter-spacing:-1px}
+h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.lead{font-size:18px;color:var(--ink2);margin:18px 0 8px;max-width:520px}
+.nos{display:flex;flex-wrap:wrap;gap:8px 18px;font-weight:600;color:var(--muted);font-size:14px;margin-bottom:26px}
+.hero-btns{display:flex;flex-wrap:wrap;gap:12px}
+/* Phone mockup */
+.stage{display:flex;justify-content:center;position:relative}
+.phone{width:250px;height:470px;background:#111827;border-radius:36px;padding:12px;box-shadow:0 30px 60px rgba(79,70,229,.3);position:relative}
+.screen{background:#fff;border-radius:26px;height:100%;padding:18px 14px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.screen .bar{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px}
+.qrbox{margin:6px auto;width:130px;height:130px;border-radius:14px;background:
+ conic-gradient(from 90deg at 3px 3px,#0000 90deg,#111 0) 0 0/10px 10px,#fff;border:6px solid #fff;outline:3px solid var(--indigo);position:relative}
+.qrbox::after{content:"";position:absolute;left:0;right:0;height:3px;background:var(--green);box-shadow:0 0 12px var(--green);animation:scan 2.2s infinite ease-in-out}
+@keyframes scan{0%,100%{top:4%}50%{top:92%}}
+.file{display:flex;align-items:center;justify-content:space-between;background:var(--soft);border-radius:10px;padding:9px 11px;font-size:12.5px;font-weight:600}
+.file b{color:var(--green);font-size:11px}
+.printing{margin-top:auto;background:var(--grad);color:#fff;border-radius:12px;text-align:center;font-weight:800;font-size:13px;padding:11px;letter-spacing:1px}
+.float{position:absolute;background:#fff;border-radius:14px;padding:10px 14px;font-weight:700;font-size:13px;box-shadow:var(--shadow);display:flex;gap:8px;align-items:center}
+.f1{top:40px;left:-10px}.f2{bottom:90px;right:-6px}
+/* Sections */
+section{padding:68px 0}
+.sec-head{text-align:center;max-width:680px;margin:0 auto 42px}
+.sec-head .tag{color:var(--violet);font-weight:800;font-size:13px;letter-spacing:1.5px;text-transform:uppercase}
+.sec-head h2{font-size:clamp(26px,3.6vw,38px);font-weight:800;letter-spacing:-.5px;margin:6px 0 10px;line-height:1.2}
+.sec-head p{color:var(--muted);font-size:16px}
+.stats{background:var(--grad);color:#fff;padding:34px 0}
+.stats .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;text-align:center}
+.stats b{display:block;font-size:34px;font-weight:800}
+.stats span{opacity:.85;font-size:14px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:var(--shadow)}
+.card .ic{width:50px;height:50px;border-radius:14px;background:var(--soft);display:grid;place-items:center;font-size:24px;margin-bottom:14px}
+.card h3{font-size:17px;margin-bottom:6px}
+.card p{color:var(--muted);font-size:14.5px}
+.step-n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--grad);color:#fff;font-weight:800;font-size:13px;margin-bottom:10px}
+.cards.three{grid-template-columns:repeat(3,1fr)}
+.cards.two{grid-template-columns:repeat(2,1fr)}
+/* Pain vs solution */
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.vs .card h3{margin-bottom:14px;font-size:19px}
+.vs ul{list-style:none;display:grid;gap:10px}
+.vs li{padding-left:28px;position:relative;font-size:15px;color:var(--ink2)}
+.vs .bad li::before{content:"✕";position:absolute;left:0;color:#e11d48;font-weight:800}
+.vs .good li::before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:800}
+.vs .good{border:2px solid var(--indigo)}
+/* Pricing */
+.price-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;align-items:stretch}
+.plan{background:#fff;border:1px solid var(--line);border-radius:20px;padding:26px;display:flex;flex-direction:column;box-shadow:var(--shadow);position:relative}
+.plan.best{border:2px solid var(--indigo);transform:translateY(-6px)}
+.plan .badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--grad);color:#fff;font-size:11px;font-weight:800;padding:4px 14px;border-radius:99px;letter-spacing:1px;white-space:nowrap}
+.plan h3{font-size:18px}
+.plan .amt{font-size:36px;font-weight:800;margin:10px 0 2px}
+.plan .amt small{font-size:14px;font-weight:600;color:var(--muted)}
+.plan .sub{color:var(--muted);font-size:13.5px;margin-bottom:16px}
+.plan ul{list-style:none;display:grid;gap:9px;margin-bottom:22px;font-size:14.5px}
+.plan li::before{content:"✅ ";}
+.plan .btn{margin-top:auto;width:100%}
+.note{text-align:center;color:var(--muted);font-size:13px;margin-top:20px}
+/* Privacy */
+.privacy{background:#0f0e1f;color:#fff}
+.privacy .sec-head p{color:#b9b8d6}
+.privacy .card{background:#1a1936;border-color:#2c2a55;box-shadow:none}
+.privacy .card p{color:#b9b8d6}
+.privacy .ic{background:#2c2a55}
+/* FAQ */
+.faq{max-width:780px;margin:0 auto;display:grid;gap:12px}
+details{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 20px}
+summary{font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:10px}
+summary::after{content:"+";font-size:22px;color:var(--indigo);line-height:1}
+details[open] summary::after{content:"–"}
+details p{margin-top:10px;color:var(--muted);font-size:15px}
+/* CTA */
+.cta{background:var(--grad);color:#fff;border-radius:26px;padding:48px 28px;text-align:center}
+.cta h2{font-size:clamp(26px,4vw,38px);font-weight:800;margin-bottom:10px}
+.cta p{opacity:.9;margin-bottom:24px}
+.cta .btn-ghost{border-color:#fff}
+.cta-btns{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+/* Footer */
+footer{background:#15151f;color:#b9b8d6;padding:44px 0 24px;font-size:14px}
+.fgrid{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:30px;margin-bottom:28px}
+footer h4{color:#fff;margin-bottom:10px}
+footer a{display:block;margin:6px 0}
+footer a:hover{color:#fff}
+.copy{border-top:1px solid #2c2a55;padding-top:18px;text-align:center;font-size:13px}
+.wa-fab{position:fixed;right:18px;bottom:18px;z-index:60;background:#25d366;color:#fff;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-size:28px;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+/* Responsive */
+@media(max-width:960px){
+  .hero-grid{grid-template-columns:1fr;text-align:center}
+  .hero p.lead{margin-left:auto;margin-right:auto}
+  .nos,.hero-btns{justify-content:center}
+  .cards,.price-grid{grid-template-columns:repeat(2,1fr)}
+  .stats .grid{grid-template-columns:repeat(2,1fr)}
+  .plan.best{transform:none}
+}
+@media(max-width:720px){
+  nav ul{display:none;position:absolute;top:64px;left:0;right:0;background:#fff;flex-direction:column;gap:0;border-bottom:1px solid var(--line);padding:8px 20px}
+  nav ul.open{display:flex}
+  nav ul li{padding:12px 0;border-bottom:1px solid var(--line)}
+  .burger{display:block}
+  .nav-cta .btn-ghost{display:none}
+  .cards,.cards.three,.cards.two,.price-grid,.vs,.fgrid{grid-template-columns:1fr}
+  section{padding:48px 0}
+  .f1{left:0}.f2{right:0}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a href="#top" class="logo"><img src="/icon-192.png" alt="QuickPrint"><div>QuickPrint<small>BY HASULOTS TECHNOLOGIES</small></div></a>
+    <nav>
+      <ul id="menu">
+        <li><a href="#top">Home</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="/setup-guide">How to Setup</a></li>
+        <li><a href="/features">Features</a></li>
+        <li><a href="/about">About</a></li>
+        <li><a href="/contact">Contact Us</a></li>
+      </ul>
+    </nav>
+    <div class="nav-cta">
+      <a href="/admin" class="btn btn-ghost">🔑 Shop Login</a>
+      <button class="burger" onclick="document.getElementById('menu').classList.toggle('open')" aria-label="Menu">☰</button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="pill">⚡ Auto Print Software for Cyber Cafes &amp; Print Shops</span>
+      <div class="flow">SCAN • UPLOAD • PAY • PRINT</div>
+      <h1>Customer phone-la irundhu <span>direct-a unga printer-ku</span></h1>
+      <p class="lead">Customer shop QR scan panni file upload pannitu pay pannuna pothum — print automatic-a nikkum. WhatsApp-um venam, pendrive-um venam.</p>
+      <div class="nos"><span>✔ No WhatsApp</span><span>✔ No Pendrive</span><span>✔ No File Transfer</span></div>
+      <div class="hero-btns">
+        <a href="#pricing" class="btn btn-primary">💰 See Plans</a>
+        <a href="#contact" class="btn btn-ghost" data-demo>🎯 Get 1 Week Free Demo</a>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="float f1">📄 Notes.pdf <span style="color:#10b981">✓ Sent</span></div>
+      <div class="phone"><div class="screen">
+        <div class="bar">🖨️ QuickPrint</div>
+        <div class="qrbox"></div>
+        <div style="text-align:center;font-size:12px;color:#6b6b7e;font-weight:600">Scanning…</div>
+        <div class="file">📄 Resume.pdf <b>Uploaded ✓</b></div>
+        <div class="file">🖼️ Photo.jpg <b>Paid ✓</b></div>
+        <div class="printing">PRINTING…</div>
+      </div></div>
+      <div class="float f2">💳 Paid ₹20 ✓</div>
+    </div>
+  </div>
+</section>
+
+<div class="stats"><div class="wrap grid">
+  <div><b>All</b><span>Printers supported</span></div>
+  <div><b>No Wi-Fi</b><span>Printer required</span></div>
+  <div><b>B&amp;W + Color</b><span>Both print modes</span></div>
+  <div><b>2 min</b><span>Setup time</span></div>
+</div></div>
+
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head"><div class="tag">How it works</div><h2>4 steps-la print ready</h2><p>Customer-ku app install panna vendam. Phone camera + browser pothum.</p></div>
+    <div class="cards">
+      <div class="card"><span class="step-n">1</span><div class="ic">🔲</div><h3>Scan QR</h3><p>Shop-la ottirukkura QR-a customer phone camera-la scan pannuvaanga.</p></div>
+      <div class="card"><span class="step-n">2</span><div class="ic">📤</div><h3>Upload</h3><p>PDF / photo upload panni B&amp;W or Color, pages, copies select pannuvaanga.</p></div>
+      <div class="card"><span class="step-n">3</span><div class="ic">💳</div><h3>Pay</h3><p>UPI / online payment, illa counter-la cash. Unga choice.</p></div>
+      <div class="card"><span class="step-n">4</span><div class="ic">🖨️</div><h3>Auto Print</h3><p>Unga PC-oda printer-la print thaanaave nikkum. Neenga onnum pannanum.</p></div>
+    </div>
+  </div>
+</section>
+
+<section style="background:#fff">
+  <div class="wrap">
+    <div class="sec-head"><div class="tag">Before vs After</div><h2>Ippo shop-la enna nadakkudhu?</h2></div>
+    <div class="vs">
+      <div class="card bad"><h3>😤 QuickPrint illama</h3><ul>
+        <li>Personal WhatsApp number ellarukkum kudukkanum</li>
+        <li>Pendrive virus risk, PC slow aagum</li>
+        <li>Yaar pay pannaanga, yaar baaki nu hisaab kuzhappam</li>
+        <li>Oru oru file-ayum open panni print kudukkanum</li></ul></div>
+      <div class="card good"><h3>✨ QuickPrint use pannaa</h3><ul>
+        <li>Number private, QR scan mattum</li>
+        <li>Virus risk zero, ellam phone-la irundhu</li>
+        <li>Payment record automatic</li>
+        <li>Print thaanaave nikkum, neenga counter-la relax</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head"><div class="tag">Features</div><h2>Print mattum illa, full shop system</h2><p>Ellam oru software-laye.</p></div>
+    <div class="cards">
+      <div class="card"><div class="ic">📄</div><h3>Multi-file Print</h3><p>Oru order-la pala PDF / photos, oru payment.</p></div>
+      <div class="card"><div class="ic">✂️</div><h3>Phone Editing</h3><p>Crop, rotate, brightness customer-e panniduvaanga.</p></div>
+      <div class="card"><div class="ic">📷</div><h3>Passport Photos</h3><p>4x6 sheet auto layout with cutting lines.</p></div>
+      <div class="card"><div class="ic">📝</div><h3>Resume Maker</h3><p>Extra income. Customer-e resume create panni print.</p></div>
+      <div class="card"><div class="ic">📐</div><h3>A3 + Duplex</h3><p>Big size and both-side print, each size-ku own rate.</p></div>
+      <div class="card"><div class="ic">💰</div><h3>Money Direct to You</h3><p>Payment unga account-ku. Commission per print illa.</p></div>
+      <div class="card"><div class="ic">📶</div><h3>Internet Pona Safe</h3><p>Jobs queue-la irukkum, net vandha print aagum.</p></div>
+      <div class="card"><div class="ic">📊</div><h3>Dashboard</h3><p>Daily orders, income, printer settings, ellam oru screen-la.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing" style="background:#fff">
+  <div class="wrap">
+    <div class="sec-head"><div class="tag">Pricing</div><h2>Unga plan-a choose pannunga</h2><p>Mudhal-la free demo try pannunga, pidichaa apram plan.</p></div>
+    <div class="price-grid">
+      <div class="plan"><h3>🎯 Demo</h3><div class="amt">₹0</div><div class="sub">1 week free trial</div>
+        <ul><li>7 days full software demo</li><li>Shop-ku QR</li><li>Limited prints</li><li>Setup guide</li></ul>
+        <a href="#contact" class="btn btn-ghost" data-demo>1 Week Free Demo</a></div>
+      <div class="plan"><h3>📅 Monthly</h3><div class="amt" data-price="monthly">₹99<small>/month</small></div><div class="sub">Jab venum stop pannalaam</div>
+        <ul><li>Unlimited print</li><li>All features</li><li>Printers support</li><li>Setup assistance</li></ul>
+        <a href="#contact" class="btn btn-ghost">Choose Monthly</a></div>
+      <div class="plan best"><span class="badge">MOST POPULAR</span><h3>🚀 Yearly</h3><div class="amt" data-price="yearly">₹999<small>/year</small></div><div class="sub">Saal-ku oru thadava</div>
+        <ul><li>Everything in Monthly</li><li>Priority support</li><li>New features free</li><li>Payment gateway help</li></ul>
+        <a href="#contact" class="btn btn-primary">Choose Yearly</a></div>
+      <div class="plan"><h3>♾️ Lifetime</h3><div class="amt" data-price="lifetime">₹1999<small> one-time</small></div><div class="sub">Oru thadava pay, eppovum use</div>
+        <ul><li>Everything in Yearly</li><li>No renewal</li><li>All future updates</li><li>Priority support</li></ul>
+        <a href="#contact" class="btn btn-ghost">Choose Lifetime</a></div>
+    </div>
+    <p class="note">0% commission • Customer payment direct unga account-ku • Prices sample, unga rates-ku maathikalaam</p>
+  </div>
+</section>
+
+<section class="privacy" id="privacy">
+  <div class="wrap">
+    <div class="sec-head"><div class="tag" style="color:#a78bfa">Privacy by design</div><h2>Customer file-a naanga vechukka maaten</h2><p>Print mudinjadhum file delete aagidum. Customer-ku full trust.</p></div>
+    <div class="cards three">
+      <div class="card"><div class="ic">🗑️</div><h3>Auto Delete</h3><p>Print mudinjadhum file server-la irundhu remove aagum.</p></div>
+      <div class="card"><div class="ic">🔒</div><h3>Shop Separation</h3><p>Oru shop-oda data innoru shop-ku theriyaadhu.</p></div>
+      <div class="card"><div class="ic">💳</div><h3>No Card Data</h3><p>Payment details payment provider-kitta mattum. Naanga store panna maaten.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-head"><div class="tag">FAQ</div><h2>Adikkadi ketkura kelvigal</h2></div>
+    <div class="faq">
+      <details><summary>Customer app install pannanuma?</summary><p>Illa. Phone camera and browser pothum. Account-um venam.</p></details>
+      <details><summary>Edhu maadhiri printer work aagum?</summary><p>Unga Windows PC-la already print aagura edhu printer-um work aagum: HP, Canon, Epson, Brother etc. Wi-Fi printer venam.</p></details>
+      <details><summary>Payment yaarukku pogum?</summary><p>Direct unga account / UPI-ku. Cash counter-la vaangavum option irukku.</p></details>
+      <details><summary>Internet pona enna aagum?</summary><p>Jobs queue-la safe-a irukkum. Net vandhadhum automatic-a print aagum.</p></details>
+      <details><summary>Setup evvalavu neram aagum?</summary><p>Shop register panna 2 minutes. Apram oru dhadava software install pannina pothum.</p></details>
+      <details><summary>Passport photo, resume print pannalaama?</summary><p>Aamaa, 4x6 passport photo layout and resume maker irukku.</p></details>
+    </div>
+  </div>
+</section>
+
+<section id="contact" style="padding-top:0">
+  <div class="wrap">
+    <div class="cta">
+      <h2>Unga shop-a smart print shop-a maathunga</h2>
+      <p>1 week free demo-ku register pannunga. Owner approve pannina udane login pannalaam.</p>
+      <div class="cta-btns">
+        <a class="btn btn-primary" href="#contact" data-demo>🎯 Start 1 Week Free Demo</a>
+        <a class="btn btn-wa" id="waBtn" href="#" target="_blank" rel="noopener">💬 WhatsApp Demo</a>
+        <a class="btn btn-ghost" href="/admin">🔑 Shop Owner Login</a>
+        <a class="btn btn-ghost" href="/order">📱 Try Customer Page</a>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div><div class="logo" style="color:#fff;margin-bottom:10px"><img src="/icon-192.png" alt=""><div>QuickPrint</div></div>
+        <p>Scan. Upload. Pay. Auto Print.<br>Cyber cafes, print shops and CSC centers-ku smart printing software.</p></div>
+      <div><h4>Product</h4><a href="/setup-guide">How to Setup</a><a href="/features">Features</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></div>
+      <div><h4>Contact</h4><a id="fPhone" href="#">📞 Phone</a><a id="fMail" href="#">📧 Email</a><a href="/about">About Us</a><a href="/admin">🔑 Shop Owner Login</a></div>
+    </div>
+    <div class="copy">© 2026 QuickPrint • Powered by Hasulots Technologies • All rights reserved</div>
+  </div>
+</footer>
+
+<div class="dm-ov" id="dmOv" role="dialog" aria-modal="true" aria-labelledby="dmTitle">
+  <div class="dm">
+    <div id="dmForm">
+      <h3 id="dmTitle">🎯 1 Week Free Demo</h3>
+      <p class="dm-s">Fill in the details. Owner approve pannina apram unga username &amp; password-la login pannalaam.</p>
+      <span class="dm-tag">🔒 Secure form · No payment · No card</span>
+      <input id="dmName" placeholder="Your name" autocomplete="name">
+      <input id="dmPhone" placeholder="WhatsApp number (10 digits)" inputmode="numeric" maxlength="10" autocomplete="tel">
+      <input id="dmShop" placeholder="Shop name" autocomplete="organization">
+      <input id="dmAddr" placeholder="Shop address" autocomplete="street-address">
+      <input id="dmEmail" type="email" placeholder="Email address" autocomplete="email">
+      <input id="dmUser" placeholder="Choose a username (letters / numbers)" autocomplete="off" autocapitalize="none">
+      <input id="dmPass" type="password" placeholder="Choose a password (min 6)" autocomplete="new-password">
+      <input class="dm-hp" id="dmHp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="dm-err" id="dmErr"></div>
+      <button class="dm-go" id="dmGo" type="button">Request My Free Demo ›</button>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px">Approval ku apram WhatsApp-la message varum · No payment</div>
+      <button class="dm-x" type="button" id="dmClose">Close</button>
+    </div>
+    <div id="dmDone" style="display:none">
+      <div style="font-size:54px">✅</div>
+      <h3>Request received!</h3>
+      <p class="dm-s">Owner unga shop-a approve pannina apram <b>1 week free demo</b> start aagum. WhatsApp-la message varum. Appo neenga register panna username &amp; password-la <a href="/admin" style="color:var(--indigo);font-weight:700">Shop Login</a> pannalaam.</p>
+      <button class="dm-go" type="button" id="dmOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<a class="wa-fab" id="waFab" href="#" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>
+
+<script>
+var CONFIG = window.SITE_CONFIG; /* contact details: edit public/site.js */
+(function(){
+  var wa = "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent(CONFIG.message);
+  ["waBtn","waFab"].forEach(function(id){ document.getElementById(id).href = wa; });
+  var p = document.getElementById("fPhone"); p.href = "tel:" + CONFIG.whatsapp; p.textContent = "📞 " + CONFIG.phone;
+  var m = document.getElementById("fMail"); m.href = "mailto:" + CONFIG.email; m.textContent = "📧 " + CONFIG.email;
+  /* ---- 1 week demo signup ---- */
+  var ov = document.getElementById("dmOv");
+  function $d(id){ return document.getElementById(id); }
+  function openDemo(e){ if (e) e.preventDefault(); $d("dmForm").style.display = ""; $d("dmDone").style.display = "none"; $d("dmErr").textContent = ""; ov.classList.add("open"); setTimeout(function(){ $d("dmName").focus(); }, 50); }
+  function closeDemo(){ ov.classList.remove("open"); }
+  document.querySelectorAll("[data-demo]").forEach(function(a){ a.addEventListener("click", openDemo); });
+  $d("dmClose").onclick = closeDemo; $d("dmOk").onclick = closeDemo;
+  ov.addEventListener("click", function(e){ if (e.target === ov) closeDemo(); });
+  $d("dmGo").onclick = function(){
+    var btn = $d("dmGo"); $d("dmErr").textContent = "";
+    var body = { name: $d("dmName").value, phone: $d("dmPhone").value, shopName: $d("dmShop").value, address: $d("dmAddr").value,
+                 email: $d("dmEmail").value, username: $d("dmUser").value, password: $d("dmPass").value, website: $d("dmHp").value };
+    btn.disabled = true; btn.textContent = "Sending...";
+    fetch("/api/shops/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+      .then(function(r){ return r.json().then(function(d){ return { ok: r.ok, d: d }; }); })
+      .then(function(x){
+        if (!x.ok) { $d("dmErr").textContent = x.d.error || "Something went wrong. Try again."; return; }
+        $d("dmForm").style.display = "none"; $d("dmDone").style.display = "";
+        ["dmName","dmPhone","dmShop","dmAddr","dmEmail","dmUser","dmPass"].forEach(function(id){ $d(id).value = ""; });
+      })
+      .catch(function(){ $d("dmErr").textContent = "Network error. Please try again."; })
+      .then(function(){ btn.disabled = false; btn.textContent = "Request My Free Demo ›"; });
+  };
+  if (location.search.indexOf("demo=1") > -1) openDemo();
+  document.querySelectorAll("#menu a").forEach(function(a){
+    a.addEventListener("click", function(){ document.getElementById("menu").classList.remove("open"); });
+  });
+})();
+</script>
+</body>
+</html>

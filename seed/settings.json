@@ -1,0 +1,22 @@
+{
+  "shopName": "Suprajaa Textiles",
+  "shopTagline": "Self-Service Mobile QR Printing",
+  "shopPhone": "",
+  "shopAddress": "",
+  "shopId": "QP_SUPRAJAATE_856",
+  "adminPin": "1234",
+  "adminPassword": "1234",
+  "upiId": "suprajaate@upi",
+  "upiName": "Suprajaa Textiles",
+  "pricing": {
+    "bwPerA4Page": 3,
+    "colorPerA4Page": 10,
+    "duplexDiscountPercent": 15,
+    "legalSurcharge": 2,
+    "a3Multiplier": 2.5
+  },
+  "publicUrl": "https://print.hasulotstechnologies.com",
+  "autoPrintEnabled": false,
+  "shopOpen": true,
+  "adminUsername": "Suprajaa_txt"
+}

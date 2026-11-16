@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>QuickPrint — Self-Service Mobile Print & Pay</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#7c3aed">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <link rel="stylesheet" href="/customer.css?v=4">
+  <style>
+    /* Online UPI QR and app links custom enhancements */
+    .upi-qr-card {
+      margin-top: 14px;
+      padding: 16px;
+      background: #faf8ff;
+      border: 1.5px solid var(--violet-soft);
+      border-radius: 16px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .upi-qr-card img {
+      width: 170px;
+      height: 170px;
+      border-radius: 12px;
+      background: #fff;
+      padding: 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    }
+    .upi-apps-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      width: 100%;
+      margin-top: 6px;
+    }
+    .upi-app-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      color: #fff;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.15s ease;
+    }
+    .upi-app-btn:active { transform: scale(0.96); }
+    .btn-gpay { background: #1a73e8; }
+    .btn-phonepe { background: #5f259f; }
+    .btn-paytm { background: #00b9f5; }
+    .btn-bhim { background: #00796b; }
+    .btn-sim-pay {
+      background: #16a34a;
+      color: #fff;
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 4px 14px rgba(22,163,74,0.3);
+      margin-top: 6px;
+    }
+    .status-tracker-box {
+      margin: 16px 0;
+      padding: 14px;
+      background: #f8f7fc;
+      border-radius: 14px;
+      text-align: left;
+    }
+    .status-step-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .status-step-row.active {
+      color: var(--violet);
+      font-weight: 800;
+    }
+    .status-step-row.done {
+      color: var(--green);
+    }
+    .status-step-row .step-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      background: #e2e0ed;
+      color: #666;
+    }
+    .status-step-row.done .step-icon {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+    .status-step-row.active .step-icon {
+      background: var(--violet);
+      color: #fff;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(124,58,237,0.4); }
+      70% { box-shadow: 0 0 0 8px rgba(124,58,237,0); }
+      100% { box-shadow: 0 0 0 0 rgba(124,58,237,0); }
+    }
+  
+    /* === Enhanced Customer Portal Styles (Screenshot Matching) === */
+    .shop-header {
+      background: linear-gradient(145deg, #181329 0%, #110e1e 100%) !important;
+      border: 1px solid rgba(255,255,255,0.08) !important;
+      border-radius: 24px !important;
+      padding: 14px 16px !important;
+    }
+    .verified-tick {
+      background: #3b82f6;
+      color: #fff;
+      border-radius: 50%;
+      width: 17px;
+      height: 17px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+      box-shadow: 0 2px 6px rgba(59,130,246,0.4);
+    }
+    .price-badge-bw {
+      background: rgba(255,255,255,0.08) !important;
+      border: 1px solid rgba(255,255,255,0.18) !important;
+      color: #f8fafc !important;
+      border-radius: 99px !important;
+      padding: 4px 12px !important;
+      font-weight: 700 !important;
+      font-size: 11px !important;
+    }
+    .price-badge-clr {
+      background: linear-gradient(135deg,#7c3aed,#ec2a7a) !important;
+      border: none !important;
+      color: #fff !important;
+      border-radius: 99px !important;
+      padding: 4px 12px !important;
+      font-weight: 800 !important;
+      font-size: 11px !important;
+      box-shadow: 0 2px 8px rgba(236,42,122,0.3) !important;
+    }
+
+    /* Modal Overlays */
+    .cust-modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+    }
+    .cust-modal-content {
+      width: 100%;
+      max-width: 440px;
+      max-height: 92vh;
+      overflow-y: auto;
+      border-radius: 24px;
+      padding: 22px 18px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+      animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalPop {
+      0% { transform: scale(0.92); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Dark Theme Modal (for Auto Crop) */
+    .cust-modal-content.dark-theme {
+      background: #11101b;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .dark-theme .modal-close-x {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .dark-theme .modal-head-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .dark-theme .modal-step-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+      margin: 16px 0 4px;
+      text-align: center;
+    }
+    .dark-theme .modal-step-sub {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 18px;
+      line-height: 1.5;
+      text-align: center;
+    }
+    .dark-theme .modal-opt-card {
+      width: 100%;
+      background: #1c1a2e;
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-align: left;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: all 0.15s ease;
+    }
+    .dark-theme .modal-opt-card:active {
+      transform: scale(0.98);
+      border-color: #a78bfa;
+      background: #25223d;
+    }
+    .dark-theme .modal-opt-ic {
+      font-size: 26px;
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.06);
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+    .dark-theme .modal-opt-tx b {
+      display: block;
+      font-size: 14px;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+    .dark-theme .modal-opt-tx small {
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.35;
+      display: block;
+    }
+    .dark-theme .modal-back-btn {
+      width: 100%;
+      background: #25223d;
+      color: #cbd5e1;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      padding: 12px;
+      font-weight: 700;
+      font-size: 13px;
+      margin-top: 8px;
+      cursor: pointer;
+    }
+
+    /* White Theme Modal (for Passport & Resume) */
+    .cust-modal-content.white-theme {
+      background: #fff;
+      color: #1e293b;
+      border: 1px solid #e2e8f0;
+    }
+    .white-theme .modal-close-x {
+      background: #f1f5f9;
+      color: #64748b;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .modal-sheet-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .sheet-opt-box {
+      border: 2px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 16px;
+      background: #faf8ff;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .sheet-opt-box:hover, .sheet-opt-box.sel {
+      border-color: #7c3aed;
+      background: #f5f3ff;
+    }
+    .count-pills-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .count-pill {
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1.5px solid #cbd5e1;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      cursor: pointer;
+    }
+    .count-pill.active {
+      background: #7c3aed;
+      color: #fff;
+      border-color: #7c3aed;
+    }
+
+    /* Resume Templates Grid */
+    .resume-modal-wide {
+      max-width: 480px;
+    }
+    .grid-resume-templates {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .tpl-card {
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      background: #fff;
+      transition: all 0.15s;
+    }
+    .tpl-card.sel {
+      border-color: #7c3aed;
+      background: #faf8ff;
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+    }
+    .tpl-mockup {
+      height: 85px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px;
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .m-line {
+      height: 4px;
+      background: #cbd5e1;
+      border-radius: 2px;
+    }
+    .m-line.bold {
+      height: 6px;
+      background: #475569;
+    }
+    .m-head-blue {
+      height: 14px;
+      background: #1e3a8a;
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+    .tpl-name {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #1e293b;
+    }
+    .tpl-sub {
+      font-size: 10px;
+      color: #64748b;
+      display: block;
+    }
+    .btn-grad-continue {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #7c3aed, #ec2a7a);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+    }
+    .resume-form-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .form-lbl {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 3px;
+    }
+    .form-input {
+      width: 100%;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #0f172a;
+      outline: none;
+      font-family: inherit;
+    }
+    .form-input:focus {
+      border-color: #7c3aed;
+    }
+    .resume-stepper {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+    .r-step {
+      font-size: 12px;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+    .r-step.active {
+      color: #7c3aed;
+      font-weight: 800;
+    }
+
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="shop-header">
+    <div class="shop-icon" id="shopIconBox" style="background:#000; border:2.5px solid #f59e0b; border-radius:18px; width:58px; height:58px; display:grid; place-items:center; font-size:28px;">🖨️</div>
+    <div class="shop-info">
+      <h2 id="shopName" style="display:flex; align-items:center; justify-content:center; gap:6px;">
+        <span>Hasulots technologies</span>
+        <span class="verified-tick">✓</span>
+      </h2>
+      <p id="shopAddr" style="font-size:11px; color:#cbd5e1; margin-top:2px;">📍 Main Road, Opp. Bus Stand</p>
+      <div class="price-badges">
+        <span class="price-badge-bw" id="priceBWBadge">B&W: ₹5/page</span>
+        <span class="price-badge-clr" id="priceColorBadge">Color: ₹10/page</span>
+      </div>
+    </div>
+    <button type="button" class="shop-infobtn" onclick="openShopInfo()">ⓘ Shop Info</button>
+  </div>
+  <div id="shopInfoModal" onclick="if(event.target===this)closeShopInfo()"><div class="si-box" id="shopInfoBox"></div></div>
+
+  
+  <!-- ============================================================ -->
+  <!-- 🌙 SHOP CLOSED SCREEN (When Shopkeeper sets Shop Closed)      -->
+  <!-- ============================================================ -->
+  <div id="secShopClosed" class="hidden" style="text-align: center; padding: 24px 10px;">
+    <div class="card" style="padding: 34px 20px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); max-width: 440px; margin: 0 auto; background: #fff; border: 1px solid #e2e8f0;">
+      
+      <!-- Moon / Closed Icon -->
+      <div style="width: 76px; height: 76px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: grid; place-items: center; font-size: 38px; margin: 0 auto 16px; box-shadow: 0 6px 20px rgba(220,38,38,0.18);">
+        🌙
+      </div>
+
+      <h2 style="font-size: 22px; font-weight: 900; color: #0f172a; margin-bottom: 4px;">
+        Shop is Currently Closed
+      </h2>
+      <p style="font-size: 15px; font-weight: 800; color: #dc2626; margin-bottom: 18px;">
+        கடை தற்போது மூடப்பட்டுள்ளது
+      </p>
+
+      <!-- Opening Time Callout Box -->
+      <div style="background: #fffbeb; border: 2px dashed #f59e0b; border-radius: 18px; padding: 18px; margin-bottom: 22px;">
+        <span style="display: inline-block; background: #f59e0b; color: #fff; font-size: 11px; font-weight: 900; padding: 4px 12px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+          ⏰ REOPENING SCHEDULE
+        </span>
+        <p style="font-size: 16px; font-weight: 900; color: #78350f; margin: 6px 0 2px;">
+          Will Reopen Tomorrow Morning at 9:00 AM
+        </p>
+        <p style="font-size: 13.5px; font-weight: 700; color: #92400e; margin: 0;">
+          மீண்டும் நாளை காலை 9:00 மணிக்கு திறக்கப்படும்
+        </p>
+      </div>
+
+      <div style="border-top: 1px solid #f1f5f9; padding-top: 18px; font-size: 13px; color: #64748b; line-height: 1.6;">
+        <p style="margin: 0 0 4px; font-weight: 600;">For urgent xerox / printing inquiries:</p>
+        <p style="font-size: 16px; font-weight: 900; color: #7c3aed; margin: 0;" id="closedShopPhone">
+          +91 98765 43210
+        </p>
+        <p style="font-size: 12px; font-weight: 700; color: #94a3b8; margin-top: 8px;" id="closedShopName">
+          Hasulots technologies
+        </p>
+      </div>
+
+      <button type="button" onclick="location.reload()" style="margin-top: 20px; width: 100%; padding: 12px; border-radius: 12px; background: #f1f5f9; color: #475569; font-weight: 800; font-size: 13px; border: none; cursor: pointer;">
+        🔄 Refresh / புதுப்பிக்கவும்
+      </button>
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step active" id="s1"><div class="dot">1</div><div class="step-lbl">Upload</div></div>
+    <div class="step" id="s2"><div class="dot">2</div><div class="step-lbl">Edit</div></div>
+    <div class="step" id="s3"><div class="dot">3</div><div class="step-lbl">Preview</div></div>
+    <div class="step" id="s4"><div class="dot">4</div><div class="step-lbl">Pay</div></div>
+  </div>
+
+  <!-- STEP 1: Upload & Services Grid -->
+  <div id="secUpload">
+    
+    <!-- LEFT: Main Upload Document Card -->
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.doc,.docx,.rtf,.odt,.txt,.xls,.xlsx,.ods,.csv,.ppt,.pptx,.pps,.ppsx,.odp" multiple onchange="handleFileUpload(this)">
+      
+      <div class="upload-icon" style="width:68px; height:68px; border-radius:50%; background:#ede9fe; display:grid; place-items:center; margin:0 auto 10px;">
+        <svg viewBox="0 0 24 24" style="width:34px; height:34px; stroke:#7c3aed; fill:none; stroke-width:2;">
+          <path d="M6.2 18.5h11a4.2 4.2 0 0 0 .5-8.37 6 6 0 0 0-11.65-1.2A3.9 3.9 0 0 0 6.2 18.5Z"/>
+          <path d="M12 15.4V9.6"/><path d="M9.4 12 12 9.4l2.6 2.6"/>
+        </svg>
+      </div>
+
+      <h3 style="color:#7c3aed; font-weight:800; font-size:22px; margin-bottom:4px;">Upload Document</h3>
+      <p class="up-basic" style="font-size:12px; color:#64748b; margin-bottom:4px;">PDF, photo, Word, Excel, PowerPoint — all supported</p>
+      <p style="font-size:11px; font-weight:700; color:#475569; margin-bottom:12px;">📚 You can select multiple files at once — all print in one order</p>
+
+      <!-- Supported Type Pills (Exact Match to Screenshot) -->
+      <div class="ftypes" style="display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:14px;">
+        <span class="ft" style="border:1.5px solid #fecdd3; color:#e11d48; background:#fff1f2; font-size:11px; padding:3px 10px; border-radius:8px;">PDF</span>
+        <span class="ft" style="border:1.5px solid #bbf7d0; color:#16a34a; background:#f0fdf4; font-size:11px; padding:3px 10px; border-radius:8px;">JPG</span>
+        <span class="ft" style="border:1.5px solid #bae6fd; color:#0284c7; background:#f0f9ff; font-size:11px; padding:3px 10px; border-radius:8px;">PNG</span>
+        <span class="ft" onclick="openPasswordModal()" style="border:1.5px solid #cbd5e1; color:#334155; background:#fff; font-size:11px; padding:3px 10px; border-radius:8px; cursor:pointer;">🔒 Password-protected PDF</span>
+        <span class="ft" style="border:1.5px solid #bae6fd; color:#0369a1; background:#f0f9ff; font-size:11px; padding:3px 10px; border-radius:8px;">📱 iPhone photo</span>
+        <span class="ft" style="border:1.5px solid #bfdbfe; color:#1d4ed8; background:#eff6ff; font-size:11px; padding:3px 10px; border-radius:8px;">Word</span>
+        <span class="ft" style="border:1.5px solid #bbf7d0; color:#15803d; background:#f0fdf4; font-size:11px; padding:3px 10px; border-radius:8px;">Excel</span>
+        <span class="ft" style="border:1.5px solid #fed7aa; color:#c2410c; background:#fff7ed; font-size:11px; padding:3px 10px; border-radius:8px;">PowerPoint</span>
+        <span class="ft" onclick="showDsigInfo()" style="border:1.5px solid #bbf7d0; color:#047857; background:#ecfdf5; font-size:11px; padding:3px 10px; border-radius:8px; cursor:pointer;">✍️ Digital Sign verify</span>
+      </div>
+
+      <!-- Language Selector Dropdown -->
+      <div style="display:flex; justify-content:flex-start; margin-bottom:8px;">
+        <select id="custLangSelect" onchange="changeCustLang(this.value)" style="border:1.5px solid #cbd5e1; border-radius:8px; padding:3px 8px; font-size:11px; font-weight:700; color:#475569; background:#fff; outline:none; cursor:pointer;">
+          <option value="en">English ⌵</option>
+          <option value="ta">தமிழ் (Tamil) ⌵</option>
+        </select>
+      </div>
+
+      <!-- Dropzone / Tap Button -->
+      <div class="upbtn-wrap" style="border:2px dashed #c4b5fd; border-radius:18px; padding:18px 12px; background:#faf8ff; text-align:center; position:relative;">
+        <div style="font-size:24px; color:#7c3aed; margin-bottom:6px;">☁️</div>
+        <p class="upbtn-hint" style="font-size:12px; font-weight:700; color:#6d28d9; margin-bottom:6px;">👉 Tap here or drag & drop your file</p>
+        <div class="or-line" style="font-size:11px; color:#94a3b8; margin:4px 0;">or</div>
+        <span class="upbtn" style="display:inline-block; background:linear-gradient(135deg, #7c3aed, #ec2a7a); color:#fff; font-size:14px; font-weight:800; padding:12px 28px; border-radius:14px; box-shadow:0 6px 18px rgba(124,58,237,0.3); pointer-events:none;">Choose Files</span>
+        <p class="safe-line" style="font-size:10.5px; color:#64748b; margin-top:10px;">🔒 Your files are secure & private</p>
+      </div>
+    </div>
+
+    <!-- RIGHT: Quick-Services Sidebar (6 Dedicated Tiles Matching Screenshot) -->
+    <div id="svcMenu">
+      
+      <!-- 1. Auto Crop Aadhaar PAN Voter -->
+      <div class="svc-card" data-svc="crop" onclick="openAutoCropModal()">
+        <div style="background:#ede9fe; color:#7c3aed;">📸</div>
+        <div style="color:#1e293b; font-weight:700; font-size:11px;">Auto Crop Aadhaar PAN Voter</div>
+        <div>Automatic smart card alignment</div>
+      </div>
+
+      <!-- 2. Passport Photo -->
+      <div class="svc-card" data-svc="photo" onclick="openPassportModal()">
+        <div style="background:#fce7f3; color:#ec4899;">📷</div>
+        <div style="color:#db2777; font-weight:700; font-size:11px;">Passport Photo</div>
+        <div>4×6 and A4 photo sheets</div>
+      </div>
+
+      <!-- 3. Mini Print -->
+      <div class="svc-card" data-svc="mini" onclick="openMiniPrintFromMenu()">
+        <div style="background:#e0f2fe; color:#0284c7;">🗒️</div>
+        <div style="color:#0369a1; font-weight:700; font-size:11px;">Mini Print</div>
+        <div>Multiple pages on sheet</div>
+      </div>
+
+      <!-- 4. Resume Maker -->
+      <div class="svc-card" data-svc="resume" onclick="openResumeModal()">
+        <div style="background:#ede9fe; color:#7c3aed;">📝</div>
+        <div style="color:#7c3aed; font-weight:700; font-size:11px;">Resume Maker</div>
+        <div>Instant ready resume</div>
+      </div>
+
+      <!-- 5. Big Size Print -->
+      <div class="svc-card" data-svc="big" onclick="openBigSizeModal()">
+        <div style="background:#e0f2fe; color:#0891b2;">📐</div>
+        <div style="color:#0891b2; font-weight:700; font-size:11px;">Big Size Print</div>
+        <div>A3 drawings & posters</div>
+      </div>
+
+      <!-- 6. Document Print (Selected / Default Active) -->
+      <div class="svc-card sel" data-svc="doc" id="cardDocPrint" onclick="selectDocPrint()">
+        <div style="background:#ede9fe; color:#7c3aed;">📄</div>
+        <div style="color:#1e293b; font-weight:700; font-size:11px;">Document Print</div>
+        <div>Standard laser print</div>
+      </div>
+
+    </div>
+
+    <!-- Trust Badges -->
+    <div class="trust-row">
+      <div class="trust-item"><div class="ti">🛡️</div><b>Secure &amp; Safe</b><span>Your files are 100% safe</span></div>
+      <div class="trust-item"><div class="ti">⚡</div><b>Fast Printing</b><span>Quick &amp; reliable service</span></div>
+      <div class="trust-item"><div class="ti">🏅</div><b>Best Quality</b><span>Clear &amp; sharp prints</span></div>
+    </div>
+
+  </div>
+
+  <!-- STEP 2: A4 Canvas Editor -->
+  <!-- ═══ DIGITAL SIGNATURE ka status (work-53) — choice / editor / payment par dikhta hai ═══ -->
+  <div id="dsigBanner" class="dsig-banner hidden" role="status" aria-live="polite"></div>
+
+  <!-- ═══ CHOICE: sab theek hai ya edit karna hai ═══ -->
+  <div id="secChoice" class="hidden">
+    <div class="card">
+      <h2 style="margin-bottom:4px;">👀 File Received <span style="font-size:15px;color:var(--violet);font-weight:700;">/ கோப்பு பெறப்பட்டது</span></h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;" id="choiceSub">—</p>
+
+      <div id="choiceThumb" style="background:#f8f7fc;border:1.5px solid var(--line);border-radius:16px;padding:14px;display:flex;justify-content:center;margin-bottom:16px;">
+        <canvas id="choiceCanvas" style="max-width:100%;max-height:340px;border-radius:9px;box-shadow:0 6px 20px rgba(0,0,0,.10);"></canvas>
+      </div>
+
+      <button onclick="chooseAllGood()" style="width:100%;background:#16a34a;color:#fff;border:none;border-radius:15px;padding:17px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 8px 22px rgba(22,163,74,.26);margin-bottom:8px;">
+        ✅ All Good — Continue / அச்சிடச் செல்க
+      </button>
+      <p style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:14px;line-height:1.5;">
+        File prints exactly as it is — cleanest and fastest
+      </p>
+
+      <button onclick="chooseEdit()" style="width:100%;background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:15px;padding:15px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;cursor:pointer;">
+        ✏️ Want to Edit / திருத்த விரும்புகிறேன்
+      </button>
+      <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:6px;line-height:1.5;">
+        To rotate, crop, adjust brightness or add more documents
+      </p>
+    </div>
+  </div>
+
+  <div id="secEditor" class="hidden">
+    <div class="card">
+      <h3>📋 Adjust Document</h3>
+      <div id="serviceBadge" style="display:none;margin:6px 0 2px;"><span id="serviceBadgeTxt" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-weight:800;font-size:13px;padding:6px 14px;border-radius:999px;"></span></div>
+      <p style="font-size:12px;color:#7a7a8c;margin-bottom:10px;">Rotate or adjust brightness and contrast</p>
+      <div class="a4-canvas-wrap">
+        <div class="a4-canvas" id="a4Canvas"></div>
+      </div>
+
+      <div class="page-indicator-row">
+        <button class="page-nav-btn hidden-btn" id="editorPrevBtn" onclick="changeEditorPage(-1)">‹</button>
+        <p class="page-indicator" id="pageIndicator">Showing Page 1 of 1 Pages</p>
+        <button class="page-nav-btn hidden-btn" id="editorNextBtn" onclick="changeEditorPage(1)">›</button>
+      </div>
+
+      <button class="add-doc-btn" onclick="triggerAddDocument()">➕ Add Document (Back Side, etc.)</button>
+      <input type="file" id="addDocInput" accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.doc,.docx,.rtf,.odt,.txt,.xls,.xlsx,.ods,.csv,.ppt,.pptx,.pps,.ppsx,.odp" multiple class="hidden" onchange="handleAddDocument(this)">
+
+      <div class="edit-toolbar">
+        <select class="edit-btn" id="paperSizeSel" onchange="changePaperSize()" style="appearance:auto;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:12px;background:#fff;color:#1e293b;">
+          <option value="4x6">📷 4×6 Photo</option>
+          <option value="a4" selected>📄 A4</option>
+          <option value="a5">📄 A5</option>
+          <option value="letter">📄 Letter</option>
+          <option value="legal">📄 Legal</option>
+          <option value="a3">📄 A3</option>
+          <option value="a2">📄 A2</option>
+          <option value="a1">📄 A1</option>
+        </select>
+        <button class="edit-btn" id="orientBtn" onclick="toggleOrientation()">📄 Portrait</button>
+        <span id="zoomWrap" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #e8e6f0;border-radius:12px;padding:6px 10px;">🔍<input type="range" id="zoomSlider" min="0" max="100" value="26" oninput="zoomSliderInput(this.value)" style="width:110px;accent-color:#7c3aed;"></span>
+        <button class="edit-btn" onclick="toolAutoA4()">🤖 Auto Fit</button>
+        <button class="edit-btn" id="rotateBtn" onclick="toolToggleRotate()">🔄 Rotate</button>
+        <button class="edit-btn" id="adjustBtn" onclick="toolToggleAdjust()">🎨 Brightness/Contrast</button>
+        <button class="edit-btn" onclick="toolPerspectiveCrop()">📐 Perspective Crop</button>
+        <button class="edit-btn" id="borderBtn" onclick="toolToggleBorder()" style="display:none;">⬛ Photo Border</button>
+      </div>
+
+      <div id="borderPanel" class="adjust-panel hidden">
+        <div class="adjust-row">
+          <label>⬛ Black Border</label>
+          <button class="edit-btn" id="borderToggleBtn" onclick="toggleBorderOn()">Off</button>
+        </div>
+        <div class="adjust-row">
+          <label>📏 Thickness</label>
+          <input type="range" id="borderSlider" min="1" max="20" value="4" oninput="onBorderSlider()">
+          <span id="borderVal">4</span>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin:2px 4px 0;line-height:1.6;">
+          Sheet ki <b>har photo</b> ke chaaron taraf border lagega — kaatne me aasani hoti hai
+        </p>
+      </div>
+
+      <div id="rotatePanel" class="adjust-panel hidden">
+        <div class="adjust-row">
+          <label>🎛️ Free Rotate</label>
+          <input type="range" id="rotSlider" min="-180" max="180" value="0" oninput="onRotateSlider()">
+          <span id="rotVal">0°</span>
+        </div>
+        <div class="adjust-row" style="justify-content:center;gap:8px;flex-wrap:wrap;">
+          <button class="edit-btn" onclick="nudgeRotation(-90)">↺ Left 90°</button>
+          <button class="edit-btn" onclick="nudgeRotation(90)">↻ Right 90°</button>
+          <button class="edit-btn" onclick="nudgeRotation(180)">🔃 180°</button>
+        </div>
+        <button class="edit-btn" style="width:100%;justify-content:center;background:#f0ebe3;" onclick="resetRotation()">↺ Reset Rotation (0°)</button>
+      </div>
+
+      <div id="adjustPanel" class="adjust-panel hidden">
+        <div class="adjust-row">
+          <label>☀️ Brightness</label>
+          <input type="range" id="adjBrightness" min="-100" max="100" value="0" oninput="applyAdjustments()">
+          <span id="adjBrightnessVal">0</span>
+        </div>
+        <div class="adjust-row">
+          <label>🎨 Contrast</label>
+          <input type="range" id="adjContrast" min="-100" max="100" value="0" oninput="applyAdjustments()">
+          <span id="adjContrastVal">0</span>
+        </div>
+        <button class="edit-btn" style="width:100%;justify-content:center;background:#f0ebe3;" onclick="resetAdjustments()">↺ Reset</button>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-grey" onclick="backToChoice()">← Back</button>
+      <button class="btn btn-green" onclick="confirmEditorAndProceed()">✅ OK, Continue</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Print Preview + Options (work-54 — Rupesh ka 4-step design)
+       Pehle Preview aur Options do alag screen the (asal me 5 step). Ab ek hi
+       screen: baayein page preview, daayein pages / print type / duplex.
+       Saari purani id wahi hain — purana JS (range, color, duplex) waise hi chalta hai. -->
+  <div id="secPreviewStep" class="hidden">
+    <div class="card pv-card">
+      <div class="pv-head">
+        <h3>👀 Print Preview & Options <span style="font-size:13px;color:var(--violet);font-weight:700;">/ அச்சு மாதிரிக்காட்சி</span></h3>
+        <span class="pv-pill" id="pvPagesPill">1 Page</span>
+      </div>
+      <div class="pv-grid">
+        <div class="pv-left">
+          <div class="final-preview-wrap">
+            <img id="finalPreviewImg" alt="preview">
+          </div>
+          <div class="page-nav" id="previewPageNav" style="display:none;">
+            <button class="page-nav-btn" id="prevPgBtn" onclick="changePreviewPage(-1)">‹</button>
+            <span class="page-info">Page <span id="curPgNum">1</span> / <span id="totalPgNum">1</span></span>
+            <button class="page-nav-btn" id="nextPgBtn" onclick="changePreviewPage(1)">›</button>
+          </div>
+        </div>
+
+        <div class="pv-right">
+          <div class="page-range-box pv-box" id="pageRangeBox" style="display:none;">
+            <label>📄 Which Pages to Print? / எந்த பக்கங்களை அச்சிட வேண்டும்?</label>
+            <div class="range-toggle">
+              <button class="tog-btn on" id="rangeAllBtn" onclick="setPageRangeMode('all')">All Pages</button>
+              <button class="tog-btn" id="rangeCustomBtn" onclick="setPageRangeMode('custom')">Custom Range</button>
+            </div>
+            <input type="text" class="range-input hidden" id="rangeInput" placeholder="e.g. 1, 3, 5-7" oninput="updateRangeFromInput()">
+            <div class="range-hint">Total document pages: <span id="rangeTotalPages">1</span></div>
+          </div>
+
+          <div class="pv-box">
+            <div class="pv-box-h">⚙️ Print Color Mode / வண்ண முறை</div>
+            <div class="opt-toggle pv-types">
+              <div class="opt-card sel" id="optBW" onclick="setColorMode('bw')">
+                <span class="pv-radio" aria-hidden="true"></span>
+                <div class="ic">⬛</div>
+                <div class="lbl">Black & White</div>
+                <div class="pr" id="optBWPrice">₹-/page</div>
+              </div>
+              <div class="opt-card" id="optColor" onclick="setColorMode('color')">
+                <span class="pv-radio" aria-hidden="true"></span>
+                <div class="ic">🌈</div>
+                <div class="lbl">Color</div>
+                <div class="pr" id="optColorPrice">₹-/page</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="duplexRow" style="display:none;">
+            <div class="opt-card pv-box pv-duplex" id="optDuplex" onclick="toggleDuplex()" role="switch">
+              <div class="ic">📄</div>
+              <div class="pv-dup-tx">
+                <div class="lbl">Dual-Side (Duplex) Print</div>
+                <div class="pr" id="duplexNote">Prints on both sides of the sheet</div>
+              </div>
+              <span class="pv-switch" aria-hidden="true"><i></i></span>
+            </div>
+            <p id="duplexCopyNote" style="display:none;font-size:11px;color:#c2410c;margin:6px 0 0;">Note: Duplex applies to selected pages</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ UPLOAD PROGRESS — preview ke theek neeche ═══ -->
+    <div id="upProgWrap" style="display:none;margin:14px 0 4px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+        <span id="upProgLabel" style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:14px;color:var(--ink);">📤 Uploading File…</span>
+        <span id="upProgPct" style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:#7c3aed;">0%</span>
+      </div>
+      <div style="height:10px;background:#eceaf4;border-radius:99px;overflow:hidden;">
+        <div id="upProgBar" style="height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#7c3aed,#ec2a7a);transition:width .25s ease;position:relative;overflow:hidden;">
+          <span id="upProgShine" style="position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:translateX(-100%);animation:upShine 1.1s linear infinite;"></span>
+        </div>
+      </div>
+      <div id="upProgHint" style="font-size:11.5px;color:var(--muted);margin-top:7px;">Please wait, do not close this window</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-grey" onclick="backToEditor()">← Back</button>
+      <button class="btn btn-green" onclick="goToOptions()">✅ Continue to Pay / கட்டணம் செலுத்த செல்க →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4a: Options (B&W/Color, Copies, Price) -->
+  <!-- MINI PRINT — ek A4 sheet par kai pages. Koi editing tool nahi:
+       sirf pages-per-sheet aur border. Live preview turant banta hai. -->
+  <div id="secMini" class="hidden">
+    <div class="card">
+      <h3>🗒️ Mini Print</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+        Ek A4 page par kai pages — kagaz aur paisa dono bachta hai.
+      </p>
+
+      <label style="display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:8px">
+        Ek sheet par kitne pages?</label>
+      <div class="mini-grid" id="miniOpts"></div>
+
+      <label style="display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:8px">
+        Sheet ka rukh</label>
+      <div class="mini-orient" id="miniOrient">
+        <button class="mini-ori" id="miniOriP" onclick="setMiniOrient('portrait')">📄 Portrait</button>
+        <button class="mini-ori" id="miniOriL" onclick="setMiniOrient('landscape')">📃 Landscape</button>
+      </div>
+      <div class="mini-ori-hint" id="miniOriHint">Apne aap chuna — jisme page sabse bade aayein</div>
+
+      <div class="mini-border-row">
+        <div>
+          <b>Page ka border</b>
+          <span>Har chhote page ke chaaro taraf patli line</span>
+        </div>
+        <button class="mini-switch on" id="miniBorderBtn" onclick="toggleMiniBorder()"
+                aria-label="Border on/off"><i></i></button>
+      </div>
+
+      <div class="mini-sum" id="miniSummary"></div>
+
+      <label style="display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin:16px 0 8px">
+        Live Preview</label>
+      <div class="mini-preview" id="miniPreview">
+        <div class="mini-loading">Preview ban raha hai…</div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-grey" onclick="miniBack()">← Back</button>
+      <button class="btn btn-green" id="miniNextBtn" onclick="miniConfirm()">Aage Bado →</button>
+    </div>
+  </div>
+
+  <!-- Purana "Print Options" screen ab Step 3 / Step 4 me baant diya (work-54).
+       Khaali div bacha hai taaki koi purana hide/show('secOptions') na toote. -->
+  <div id="secOptions" class="hidden"></div>
+
+  <!-- STEP 4: Make Payment (work-54) — copies + hisaab + payment ka tareeka.
+       "Confirm & Pay" dabate hi: Online = seedha payment page, Counter = print.
+       onlineBtn / counterBtn purane button chhupe hue hain (payOnline /
+       payCounter wahi purane function hain). -->
+  <div id="secPayment" class="hidden">
+    <div class="card pay-card">
+      <h3>💳 Payment & Copies <span style="font-size:14px;color:var(--violet);font-weight:700;">/ கட்டணம்</span></h3>
+
+      <div class="copies-row pay-copies">
+        <span class="lbl">📑 Copies</span>
+        <div class="copies-ctrl">
+          <button onclick="changeCopies(-1)" aria-label="minus">−</button>
+          <span id="copiesNum">1</span>
+          <button onclick="changeCopies(1)" aria-label="plus">+</button>
+        </div>
+      </div>
+      <p id="copiesCapNote" style="display:none;font-size:11px;color:#c2410c;margin:6px 0 0;"></p>
+
+      <div class="price-summary pay-sum">
+        <div class="price-row"><span id="sumType">B&W Print</span><span id="sumPerPage">₹0/page</span></div>
+        <div class="price-row"><span id="sumPages">1 page × 1 copy</span><span id="sumPagesAmt">₹0</span></div>
+        <div class="price-total"><span>Total</span><strong id="sumTotal">₹0</strong></div>
+      </div>
+
+      <div class="pay-h">💳 Payment Method / பணம் செலுத்தும் முறை</div>
+      <div class="pay-methods" id="payMethods">
+        <button type="button" class="pay-m" id="pmCounter" onclick="selectPayMethod('counter')">
+          <span class="pm-radio" aria-hidden="true"></span>
+          <span class="pm-art" aria-hidden="true">🐢</span>
+          <span class="pm-tx"><b>Pay Cash at Counter</b><small>கவுண்டரில் பணம் செலுத்தவும்</small></span>
+        </button>
+        <button type="button" class="pay-m" id="pmOnline" onclick="selectPayMethod('online')">
+          <span class="pm-radio" aria-hidden="true"></span>
+          <span class="pm-art" aria-hidden="true">⚡</span>
+          <span class="pm-tx"><b>Pay Online (UPI)</b><small>GPay / PhonePe / Paytm / BHIM</small></span>
+        </button>
+      </div>
+      
+      <!-- Enhanced UPI Section inside secPayment -->
+      <div id="upiQrWrap" class="upi-qr-card hidden">
+        <div style="font-weight:800;font-size:14px;color:var(--ink);">Scan QR to Pay via Any UPI App</div>
+        <p style="font-size:12px;color:var(--muted);margin:0;">GPay / PhonePe / Paytm / BHIM</p>
+        <img id="upiQrImg" alt="UPI QR Code" src="">
+        <div style="font-size:13px;font-weight:800;color:var(--violet);" id="upiQrAmount">Amount: ₹0</div>
+        <div class="upi-apps-row">
+          <a id="btnGPay" class="upi-app-btn btn-gpay" href="#">GPay</a>
+          <a id="btnPhonePe" class="upi-app-btn btn-phonepe" href="#">PhonePe</a>
+          <a id="btnPaytm" class="upi-app-btn btn-paytm" href="#">Paytm</a>
+          <a id="btnBhim" class="upi-app-btn btn-bhim" href="#">Any UPI</a>
+        </div>
+        <button type="button" class="btn-sim-pay" onclick="simulatePaymentSuccess()">⚡ I Have Paid / Test Auto-Print</button>
+      </div>
+
+      <div class="pay-note" id="payNote">Loading...</div>
+
+      <button class="pay-btn pay-online-btn pay-legacy" id="onlineBtn" onclick="payOnline()">💳 Pay Online via UPI</button>
+      <button class="pay-btn pay-counter-btn pay-legacy" id="counterBtn" onclick="payCounter()">💵 Pay Cash at Counter</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-grey" onclick="backToOptions()">← Back</button>
+      <button class="btn btn-green pay-confirm" id="payConfirmBtn" onclick="confirmAndPay()">
+        <span class="pc-tx">💳 Confirm & Pay / உறுதிசெய்து அச்சிடவும்</span> <span class="pc-amt" id="payConfirmAmt"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success-screen" id="secSuccess">
+    <div class="thank-you-emoji">🎉</div>
+    <h2 class="thank-you-text">Thank You!</h2>
+    <div class="sicon" id="successIcon">✓</div>
+    <h2 id="successTitle">Printing in Progress! / அச்சிடப்படுகிறது!</h2>
+    <div class="order-id" id="orderId">ORDER #...</div>
+    <div class="ordno-box" id="ordNoBox" style="display:none">
+      <div class="ordno-lb">Your Token Number / உங்கள் டோக்கன் எண்</div>
+      <div class="ordno-num" id="ordNoNum"></div>
+      <div class="ordno-hint">Show this token at the counter to collect your prints</div>
+    </div>
+    <div class="collect-box" id="collectBox">
+      <h3 id="collectTitle">🖨️ Printing in Progress!</h3>
+      <p id="collectMsg">Your document is printing silently on the shop printer.</p>
+    </div>
+    
+    <!-- Live Status Tracker -->
+    <div class="status-tracker-box">
+      <div class="status-step-row done" id="track1"><span class="step-icon">✓</span><span>1. Order Received</span></div>
+      <div class="status-step-row done" id="track2"><span class="step-icon">✓</span><span>2. Payment Verified</span></div>
+      <div class="status-step-row active" id="track3"><span class="step-icon">🖨️</span><span id="track3Text">3. Sending to Physical Printer...</span></div>
+      <div class="status-step-row" id="track4"><span class="step-icon">🎉</span><span id="track4Text">4. Printed & Ready at Counter</span></div>
+    </div>
+
+    <div class="amount-box">
+      <span id="amountLabel">Amount</span>
+      <strong id="finalAmount">₹5</strong>
+    </div>
+
+    <!-- Resume yahin bana tha, customer ke paas copy nahi hoti — isliye
+         payment ke baad download ka option dete hain -->
+    <div id="dlBox" style="display:none;margin:16px 0;padding:16px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:14px;text-align:center;">
+      <div style="font-size:13.5px;font-weight:800;color:#166534;margin-bottom:4px;">📄 Apna Resume Save Kar Lo</div>
+      <div style="font-size:11.5px;color:#3f7a52;margin-bottom:12px;">Aage kabhi kaam aayega — abhi download kar lo</div>
+      <button onclick="downloadMyPdf()" style="width:100%;background:#166534;color:#fff;border:none;border-radius:12px;padding:14px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:15px;cursor:pointer;">⬇️ PDF Download Karo</button>
+    </div>
+    <div id="fbBox" style="text-align:center;margin:16px 0;padding:14px;background:#f8f7fc;border-radius:14px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;">How was your print experience?</div>
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <button onclick="sendFeedback(true)" style="background:#dcfce7;border:1.5px solid #86efac;border-radius:14px;padding:12px 22px;font-size:24px;cursor:pointer;">👍</button>
+        <button onclick="sendFeedback(false)" style="background:#fee2e2;border:1.5px solid #fca5a5;border-radius:14px;padding:12px 22px;font-size:24px;cursor:pointer;">👎</button>
+      </div>
+      <div id="fbThanks" style="display:none;font-size:13px;color:#16a34a;font-weight:700;margin-top:8px;">🙏 Shukriya!</div>
+    </div>
+    <button class="btn-primary" onclick="location.reload()">🖨️ Print Another Document / புதிய அச்சு</button>
+  </div>
+
+  <div class="footer">
+    <p style="font-weight:700;color:#7a7a8c;">⚡ Powered by <b>QuickPrint</b></p>
+    <p style="font-size:10px;color:#9a9aab;" id="footerLegal">© QuickPrint Self-Service Printing System</p>
+  </div>
+
+</div>
+
+<!-- Perspective Crop full-screen overlay (Screenshot 2) -->
+<div class="crop-overlay hidden" id="cropOverlay">
+  <div class="crop-header">
+    <div class="crop-title">📐 Perspective Crop</div>
+    <div class="crop-sub">Drag the 4 corners to the document's corners — even a tilted photo becomes straight</div>
+  </div>
+  <div class="crop-stage" id="cropStage" style="position:relative; width:100%; height:62vh; display:flex; align-items:center; justify-content:center; touch-action:none;">
+    <canvas id="cropCanvas" style="max-width:100%; max-height:100%; display:block; border-radius:12px;"></canvas>
+  </div>
+  <div style="text-align:center; padding: 6px 0 10px;">
+    <span style="display:inline-block; background:rgba(16,185,129,0.18); color:#34d399; border:1px solid #10b981; font-size:12px; font-weight:800; padding:4px 16px; border-radius:99px;">
+      ✓ Document mil gaya
+    </span>
+  </div>
+  <div class="crop-toolbar">
+    <button class="crop-btn grey" onclick="cropCancel()">✕ Cancel</button>
+    <button class="crop-btn grey" onclick="cropFullPhoto()">↺ Full Photo</button>
+    <button class="crop-btn primary" onclick="cropApply()">✂️ Crop</button>
+  </div>
+</div>
+
+
+<!-- Password-protected PDF — full screen overlay -->
+<div class="pw-overlay hidden" id="pwOverlay">
+  <div class="pw-box">
+    <div class="pw-lock">&#128274;</div>
+    <h3>🔒 Password Protected PDF</h3>
+    <p class="pw-sub"><span class="pw-file" id="pwFileName">document.pdf</span><br>
+      Kholne ke liye password daalo</p>
+
+    <div class="pw-err hidden" id="pwErr"></div>
+
+    <div class="pw-field">
+      <input type="password" id="pwInput" inputmode="text" autocomplete="off"
+             autocapitalize="off" autocorrect="off" spellcheck="false"
+             placeholder="Enter PDF password" onkeydown="onPwKeyDown(event)">
+      <button type="button" class="pw-eye" id="pwEye" onclick="togglePwVisible()"
+              aria-label="Password dikhao">&#128065;&#65039;</button>
+    </div>
+
+    <button type="button" class="pw-go" onclick="submitPdfPassword()">&#128275; Unlock PDF</button>
+    <button type="button" class="pw-cancel" onclick="cancelPdfPassword()">Cancel</button>
+
+    <p class="pw-note">🔒 Password is processed privately on your device and never stored</p>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+
+  <!-- Audio Chimes -->
+  <audio id="audioSuccess" preload="auto" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU"></audio>
+  <script src="/app.js?v=32"></script>
+
+<!-- ============================================================ -->
+<!-- 1. AUTO CROP MODAL (Screenshots 2 & 6)                        -->
+<!-- ============================================================ -->
+<div id="modalAutoCrop" class="cust-modal-overlay hidden" onclick="if(event.target===this)closeAutoCropModal()">
+  <div class="cust-modal-content dark-theme">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:22px;">📸</span>
+        <h3 class="modal-head-title" style="margin:0;">Auto Crop Aadhaar PAN Voter</h3>
+      </div>
+      <button type="button" class="modal-close-x" onclick="closeAutoCropModal()">✕</button>
+    </div>
+
+    <!-- Step 1: Kya scan kar rahe ho? (Screenshot 9) -->
+    <div id="cropStepDocType">
+      <h4 class="modal-step-title">Kya scan kar rahe ho? / எதை ஸ்கேன் செய்கிறீர்கள்?</h4>
+      <p class="modal-step-sub">Sahi chunne se naap apne aap theek baithta hai — crop ke baad document seedha layout me lock ho jayega.<br><span style="color:#a78bfa;">சரியான அளவை தேர்வு செய்தால் தானாக லேஅவுட் லாக் ஆகும்.</span></p>
+
+      <div class="modal-btn-options">
+        <button type="button" class="modal-opt-card" onclick="selectCropDocType('idcard')">
+          <div class="modal-opt-ic" style="color:#38bdf8;">🪪</div>
+          <div class="modal-opt-tx">
+            <b>ID Card (Aadhaar · PAN · Voter · DL)</b>
+            <small>Front &amp; back ek page par / முன் மற்றும் பின் இரு பக்கங்களும் ஒரே தாளில்</small>
+          </div>
+        </button>
+
+        <button type="button" class="modal-opt-card" onclick="selectCropDocType('certificate')">
+          <div class="modal-opt-ic" style="color:#a78bfa;">📜</div>
+          <div class="modal-opt-tx">
+            <b>Certificate / சான்றிதழ்</b>
+            <small>Poora A4 document — marksheet, certificate, letter / முழு A4 சான்றிதழ்</small>
+          </div>
+        </button>
+
+        <button type="button" class="modal-opt-card" onclick="selectCropDocType('admit')">
+          <div class="modal-opt-ic" style="color:#c084fc;">📑</div>
+          <div class="modal-opt-tx">
+            <b>Admit Card / Marksheet</b>
+            <small>Aadha page — front upar, back neeche, ek hi kagaz par / பாதி தாள் ஆவணம்</small>
+          </div>
+        </button>
+
+        <button type="button" class="modal-opt-card" onclick="selectCropDocType('auto')">
+          <div class="modal-opt-ic" style="color:#4ade80;">🔲</div>
+          <div class="modal-opt-tx">
+            <b>Auto / தானாக கண்டறிதல்</b>
+            <small>System khud naap pehchane / சிஸ்டமே தானாக அளவு கண்டறியும்</small>
+          </div>
+        </button>
+      </div>
+
+      <button type="button" class="modal-back-btn" onclick="closeAutoCropModal()">‹ Close / மூடு</button>
+    </div>
+
+    <!-- Step 2: Photo kahan se lein? (Screenshot 10) -->
+    <div id="cropStepSource" class="hidden">
+      <h4 class="modal-step-title">Photo kahan se lein? / புகைப்படத்தை எவ்வாறு எடுக்க வேண்டும்?</h4>
+      <p class="modal-step-sub">Dono ka nateeja ek jaisa — kone theek karna aur safai dono me hoti hai.<br><span style="color:#a78bfa;">இரு வழிகளிலும் விளிம்புகள் தானாக நேராக்கப்பட்டு தெளிவாகும்.</span></p>
+
+      <div class="modal-btn-options">
+        <button type="button" class="modal-opt-card" onclick="triggerCameraCapture()">
+          <div class="modal-opt-ic">📷</div>
+          <div class="modal-opt-tx">
+            <b>Camera / நேரடி கேமரா</b>
+            <small>Abhi photo kheencho — document saamne ho to yahi tez hai / ஆவணம் முன் இருந்தால் உடனே படம் எடுக்கலாம்</small>
+          </div>
+        </button>
+
+        <button type="button" class="modal-opt-card" onclick="triggerFilePickerForCrop()">
+          <div class="modal-opt-ic">📁</div>
+          <div class="modal-opt-tx">
+            <b>Files / கேலரி கோப்புகள்</b>
+            <small>Phone ya computer me pehle se rakhi photo chuno / ஏற்கனவே உள்ள போட்டோவை தேர்வு செய்யவும்</small>
+          </div>
+        </button>
+      </div>
+
+      <button type="button" class="modal-back-btn" onclick="showCropStepDocType()">‹ Peeche / பின்செல்க</button>
+    </div>
+
+    <!-- Step 3: Front side ho gaya (Screenshot 5) -->
+    <div id="cropStepFrontDone" class="hidden" style="text-align:center;">
+      <h4 class="modal-step-title">Front side ho gaya / முன்பக்கம் முடிந்தது</h4>
+      
+      <!-- Front Preview Box -->
+      <div style="background:#fff; border-radius:14px; padding:12px; margin:14px auto; max-width:260px; box-shadow:0 6px 20px rgba(0,0,0,0.35);">
+        <canvas id="frontPreviewCanvas" style="max-width:100%; height:auto; border-radius:8px; display:block; margin:0 auto;"></canvas>
+      </div>
+
+      <p class="modal-step-sub" style="margin-bottom:14px;">
+        Bas itna hi ho to Print Karo dabao — peeche bhi chhapa ho to neeche se add kar lo.<br>
+        <span style="color:#a78bfa;">முன்பக்கம் மட்டும் போதும் என்றால் Print Karo கொடுக்கவும். பின்புறமும் சேர்க்க Add Back Side கொடுக்கவும்.</span>
+      </p>
+
+      <div style="display:flex; flex-direction:column; gap:9px;">
+        <button type="button" class="modal-back-btn" onclick="rotateFrontCrop()" style="background:#25223d; color:#e2e8f0; font-weight:700;">
+          🔄 Ghumao (90°) / சுழற்று
+        </button>
+        <button type="button" class="modal-back-btn" onclick="printFrontOnly()" style="background:#16a34a; color:#fff; font-weight:800; border:none; box-shadow:0 4px 14px rgba(22,163,74,0.35);">
+          ✅ Ho Gaya — Print Karo / பிரிண்ட் செய்க
+        </button>
+        <button type="button" class="modal-back-btn" onclick="startBackSideCapture()" style="background:#1c1a2e; color:#fbbf24; border:1.5px solid #f59e0b; font-weight:800;">
+          ➕ Add Back Side / பின் பக்கத்தை சேர்க்க
+        </button>
+      </div>
+      <p style="font-size:11px; color:#94a3b8; margin-top:10px;">1 page taiyaar</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 2. PASSPORT PHOTO MODAL (Screenshot 3)                        -->
+<!-- ============================================================ -->
+<div id="modalPassport" class="cust-modal-overlay hidden" onclick="if(event.target===this)closePassportModal()">
+  <div class="cust-modal-content white-theme">
+    <div style="display:flex; justify-content:flex-end;">
+      <button type="button" class="modal-close-x" onclick="closePassportModal()">✕</button>
+    </div>
+    <div style="text-align:center; padding:0 0 16px;">
+      <div style="font-size:40px; margin-bottom:6px;">📷</div>
+      <h3 style="font-size:20px; font-weight:800; color:#1e293b; margin:0 0 4px;">Which page do you need?</h3>
+      <p style="font-size:12.5px; color:#64748b; margin:0;">Which paper should the passport photos be printed on?<br><span style="color:#7c3aed; font-weight:600;">எந்த தாளில் பாஸ்போர்ட் போட்டோக்கள் அச்சிட வேண்டும்?</span></p>
+    </div>
+
+    <div class="modal-sheet-options">
+      <!-- 4x6 Sheet Option -->
+      <div class="sheet-opt-box sel" id="sheet4x6Box" onclick="selectPassportSheet('4x6')">
+        <h4 style="font-size:16px; font-weight:800; color:#1e293b; margin-bottom:4px;">4×6 Sheet</h4>
+        <p style="font-size:12px; color:#64748b; margin-bottom:10px;">4 · 6 · 8 · 10 · 12 Photos</p>
+        <div class="count-pills-row">
+          <span class="count-pill active" onclick="event.stopPropagation(); setPassportCount(4, this)">4</span>
+          <span class="count-pill" onclick="event.stopPropagation(); setPassportCount(6, this)">6</span>
+          <span class="count-pill" onclick="event.stopPropagation(); setPassportCount(8, this)">8</span>
+          <span class="count-pill" onclick="event.stopPropagation(); setPassportCount(10, this)">10</span>
+          <span class="count-pill" onclick="event.stopPropagation(); setPassportCount(12, this)">12</span>
+        </div>
+      </div>
+
+      <!-- A4 Sheet Option -->
+      <div class="sheet-opt-box" id="sheetA4Box" onclick="selectPassportSheet('a4')">
+        <h4 style="font-size:16px; font-weight:800; color:#1e293b; margin-bottom:4px;">A4 Sheet</h4>
+        <p style="font-size:12px; color:#64748b; margin-bottom:4px;">6 · 12 · 18 · 24 · 30 · 36 · 40 Photos</p>
+        <span style="display:inline-block; background:#ede9fe; color:#7c3aed; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:6px; margin-bottom:8px;">Passport size 30×39 mm</span>
+        <div class="count-pills-row">
+          <span class="count-pill" onclick="event.stopPropagation(); setPassportCount(6, this)">6</span>
+          <span class="count-pill" onclick="event.stopPropagation(); setPassportCount(12, this)">12</span>
+          <span class="count-pill" onclick="event.stopPropagation(); setPassportCount(18, this)">18</span>
+          <span class="count-pill active" onclick="event.stopPropagation(); setPassportCount(24, this)">24</span>
+          <span class="count-pill" onclick="event.stopPropagation(); setPassportCount(30, this)">30</span>
+          <span class="count-pill" onclick="event.stopPropagation(); setPassportCount(36, this)">36</span>
+          <span class="count-pill" onclick="event.stopPropagation(); setPassportCount(40, this)">40</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px; display:flex; gap:10px;">
+      <button type="button" class="btn btn-grey" onclick="closePassportModal()" style="flex:1;">Cancel</button>
+      <button type="button" class="btn btn-green" onclick="triggerPassportUpload()" style="flex:2;">Upload Photo / போட்டோ தேர்வு →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 3. RESUME MAKER MODAL (Screenshot 1)                          -->
+<!-- ============================================================ -->
+<div id="modalResume" class="cust-modal-overlay hidden" onclick="if(event.target===this)closeResumeModal()">
+  <div class="cust-modal-content white-theme resume-modal-wide">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:10px; margin-bottom:12px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:22px;">📝</span>
+        <h3 style="font-size:17px; font-weight:800; color:#1e293b; margin:0;">Resume Maker / ரெஸ்யூம் மேக்கர்</h3>
+      </div>
+      <button type="button" class="modal-close-x" onclick="closeResumeModal()">✕</button>
+    </div>
+
+    <!-- Stepper inside Resume -->
+    <div class="resume-stepper">
+      <div class="r-step active" id="rs1">1 Template</div>
+      <div class="r-step" id="rs2">2 Details</div>
+      <div class="r-step" id="rs3">3 Preview</div>
+    </div>
+
+    <!-- Template Chooser Screen -->
+    <div id="resumeStepTemplate">
+      <h4 style="font-size:15px; font-weight:800; color:#0f172a; margin-bottom:2px;">Choose a Template</h4>
+      <p style="font-size:11.5px; color:#64748b; margin-bottom:12px;">Select the design you like / நீங்கள் விரும்பும் மாதிரியைத் தேர்ந்தெடுக்கவும்</p>
+
+      <div class="grid-resume-templates">
+        <!-- 1. Classic Standard -->
+        <div class="tpl-card sel" id="tplClassic" onclick="selectResumeTpl('classic')">
+          <div class="tpl-mockup">
+            <div class="m-line bold" style="width:55%;"></div>
+            <div class="m-line" style="width:85%;"></div>
+            <div style="height:1px; background:#e2e8f0; margin:4px 0;"></div>
+            <div class="m-line" style="width:95%;"></div>
+            <div class="m-line" style="width:70%;"></div>
+          </div>
+          <b class="tpl-name">Classic Standard</b>
+          <small class="tpl-sub">Your shop's style / கடையின் ஸ்டாண்டர்ட்</small>
+        </div>
+
+        <!-- 2. Blue Formal -->
+        <div class="tpl-card" id="tplBlue" onclick="selectResumeTpl('blue')">
+          <div class="tpl-mockup">
+            <div class="m-head-blue"></div>
+            <div class="m-line bold" style="width:60%;"></div>
+            <div class="m-line" style="width:80%;"></div>
+            <div class="m-line" style="width:90%;"></div>
+          </div>
+          <b class="tpl-name">Blue Formal</b>
+          <small class="tpl-sub">Nursing / Medical / அரசு பணி</small>
+        </div>
+
+        <!-- 3. Modern Sidebar -->
+        <div class="tpl-card" id="tplModern" onclick="selectResumeTpl('modern')">
+          <div class="tpl-mockup" style="flex-direction:row; gap:6px;">
+            <div style="width:24px; background:#1e293b; border-radius:4px; height:100%;"></div>
+            <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
+              <div class="m-line bold" style="width:70%;"></div>
+              <div class="m-line" style="width:90%;"></div>
+              <div class="m-line" style="width:60%;"></div>
+            </div>
+          </div>
+          <b class="tpl-name">Modern Sidebar</b>
+          <small class="tpl-sub">IT / Creative Jobs / சாப்ட்வேர்</small>
+        </div>
+
+        <!-- 4. CV Style -->
+        <div class="tpl-card" id="tplCV" onclick="selectResumeTpl('cv')">
+          <div class="tpl-mockup" style="border:1.5px solid #0f172a;">
+            <div class="m-line bold" style="width:65%; margin:0 auto;"></div>
+            <div style="height:1px; background:#0f172a; margin:4px 0;"></div>
+            <div class="m-line" style="width:85%;"></div>
+            <div class="m-line" style="width:75%;"></div>
+          </div>
+          <b class="tpl-name">CV Style</b>
+          <small class="tpl-sub">Formal • Border Design</small>
+        </div>
+      </div>
+
+      <button type="button" class="btn-grad-continue" onclick="proceedToResumeDetails()">
+        ✅ Continue →
+      </button>
+      <button type="button" class="btn-demo-check" onclick="generateDemoResumeAndPrint()" style="width:100%;margin-top:10px;background:#fff;color:#7c3aed;border:1.5px dashed #7c3aed;border-radius:14px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <span>🖨️</span> Demo Print Check
+      </button>
+    </div>
+
+    <!-- Details Form Screen -->
+    <div id="resumeStepDetails" class="hidden">
+      <h4 style="font-size:14px; font-weight:800; color:#0f172a; margin-bottom:8px;">Enter Your Details / உங்கள் விபரங்கள்</h4>
+      
+      <div class="resume-form-grid">
+        <div>
+          <label class="form-lbl">Full Name / முழு பெயர் *</label>
+          <input type="text" id="resName" class="form-input" placeholder="e.g. Ramesh Kumar">
+        </div>
+        <div>
+          <label class="form-lbl">Mobile Phone / தொலைபேசி எண் *</label>
+          <input type="tel" id="resPhone" class="form-input" placeholder="e.g. 9876543210">
+        </div>
+        <div>
+          <label class="form-lbl">Email / மின்னஞ்சல்</label>
+          <input type="email" id="resEmail" class="form-input" placeholder="e.g. ramesh@gmail.com">
+        </div>
+        <div>
+          <label class="form-lbl">Job Title / தொழில் அல்லது படிப்பு</label>
+          <input type="text" id="resRole" class="form-input" placeholder="e.g. Graphic Designer / Nurse / B.Com Graduate">
+        </div>
+        <div>
+          <label class="form-lbl">Education / கல்வித் தகுதி</label>
+          <input type="text" id="resEdu" class="form-input" placeholder="e.g. B.Com (2022) - Madras University">
+        </div>
+        <div>
+          <label class="form-lbl">Experience / Skills / அனுபவம் & திறன்கள்</label>
+          <textarea id="resExp" class="form-input" rows="2" placeholder="e.g. 2 years experience, MS Office, Tally, Tamil & English typing"></textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:14px; display:flex; gap:10px;">
+        <button type="button" class="btn btn-grey" onclick="backToResumeTemplate()" style="flex:1;">← Back</button>
+        <button type="button" class="btn btn-green" onclick="generateResumeAndPrint()" style="flex:2;">⚡ Generate &amp; Print Resume →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 4. BIG SIZE PRINT MODAL                                      -->
+<!-- ============================================================ -->
+<div id="modalBigSize" class="cust-modal-overlay hidden" onclick="if(event.target===this)closeBigSizeModal()">
+  <div class="cust-modal-content white-theme">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:22px;">📐</span>
+        <h3 style="font-size:18px; font-weight:800; color:#1e293b; margin:0;">Big Size Print / பெரிய அளவு அச்சு</h3>
+      </div>
+      <button type="button" class="modal-close-x" onclick="closeBigSizeModal()">✕</button>
+    </div>
+    <p style="font-size:12.5px; color:#64748b; margin-bottom:14px;">Select the paper format for your drawings, blueprints, or agreements:</p>
+
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button type="button" class="sheet-opt-box" onclick="selectBigSizeFormat('a3')">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="font-size:24px; background:#e0f2fe; color:#0891b2; width:44px; height:44px; border-radius:12px; display:grid; place-items:center;">📄</div>
+          <div>
+            <b style="font-size:14px; color:#0f172a; display:block;">A3 Size (297 × 420 mm)</b>
+            <small style="font-size:11px; color:#64748b;">Blueprints, engineering drawings, posters</small>
+          </div>
+        </div>
+      </button>
+      <button type="button" class="sheet-opt-box" onclick="selectBigSizeFormat('legal')">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="font-size:24px; background:#fef3c7; color:#d97706; width:44px; height:44px; border-radius:12px; display:grid; place-items:center;">📑</div>
+          <div>
+            <b style="font-size:14px; color:#0f172a; display:block;">Legal / Folio (216 × 356 mm)</b>
+            <small style="font-size:11px; color:#64748b;">Court documents, rental agreements, stamp papers</small>
+          </div>
+        </div>
+      </button>
+    </div>
+
+    <button type="button" class="btn btn-grey" onclick="closeBigSizeModal()" style="width:100%; margin-top:14px;">Cancel</button>
+  </div>
+</div>
+
+<!-- Hidden inputs for specialized flows -->
+<input type="file" id="cameraCaptureInput" accept="image/*" capture="environment" style="display:none;" onchange="handleFileUpload(this)">
+<input type="file" id="cropCameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleCropFileInput(this)">
+<input type="file" id="cropFileInput" accept="image/*" style="display:none;" onchange="handleCropFileInput(this)">
+<input type="file" id="passportFileInput" accept="image/*" style="display:none;" onchange="handlePassportImageFile(this)">
+
+
+<!-- ============================================================ -->
+<!-- LIVE CAMERA SCANNER OVERLAY (Screenshot 7)                  -->
+<!-- ============================================================ -->
+<div id="modalLiveCamera" class="hidden" style="position:fixed; inset:0; z-index:100020; background:#050508; display:none; flex-direction:column; align-items:center; justify-content:space-between; touch-action:none;">
+  <!-- Top bar -->
+  <div style="width:100%; display:flex; justify-content:space-between; align-items:center; padding:16px 20px; z-index:10; background:linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);">
+    <button type="button" onclick="closeLiveCamera()" style="background:rgba(255,255,255,0.15); color:#fff; border:none; border-radius:50%; width:40px; height:40px; font-size:18px; font-weight:800; cursor:pointer;">✕</button>
+    <div style="color:#fff; font-weight:800; font-size:14px; letter-spacing:0.5px;">Auto Crop Camera Scanner</div>
+    <button type="button" onclick="flipLiveCamera()" style="background:rgba(255,255,255,0.15); color:#fff; border:none; border-radius:50%; width:40px; height:40px; font-size:16px; cursor:pointer;" title="Flip Camera">🔄</button>
+  </div>
+
+  <!-- Video Viewport with Center Guide Box (Screenshot 7) -->
+  <div style="position:relative; width:100%; flex:1; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+    <video id="liveCameraVideo" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover;"></video>
+    
+    <!-- Green Alignment Guide (Screenshot 7) -->
+    <div style="position:absolute; width:84%; max-width:380px; height:62%; max-height:480px; border:2.5px solid #22c55e; border-radius:24px; box-shadow:0 0 0 9999px rgba(0,0,0,0.52); pointer-events:none; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; padding-bottom:14px;">
+      <span style="background:rgba(34,197,94,0.25); color:#4ade80; border:1.5px solid #22c55e; border-radius:99px; padding:5px 16px; font-size:12px; font-weight:800; display:flex; align-items:center; gap:6px; backdrop-blur-xs;">
+        ✓ Document mil gaya / ஆவணம் கண்டறியப்பட்டது
+      </span>
+    </div>
+  </div>
+
+  <!-- Bottom Shutter Bar -->
+  <div style="width:100%; padding:20px 20px 36px; display:flex; align-items:center; justify-content:space-around; z-index:10; background:linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
+    <button type="button" onclick="triggerFilePickerForCrop()" style="background:rgba(255,255,255,0.12); color:#e2e8f0; border:none; border-radius:14px; padding:10px 14px; font-size:12px; font-weight:700; cursor:pointer;">📁 Gallery</button>
+    <button type="button" onclick="captureLiveCameraFrame()" style="width:74px; height:74px; border-radius:50%; background:#fff; border:5px solid rgba(255,255,255,0.35); box-shadow:0 4px 20px rgba(0,0,0,0.6); cursor:pointer; active:scale-95; transition:transform 0.1s;" aria-label="Take Photo"></button>
+    <div style="width:68px;"></div>
+  </div>
+</div>
+
+</body>
+</html>

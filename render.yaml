@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: hasulots-quickprint
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/settings
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false   # Render dashboard-la Neon connection string paste pannunga
+      - key: SUPERADMIN_USER
+        sync: false   # Owner panel login username (/superadmin)
+      - key: SUPERADMIN_PASS
+        sync: false   # Owner panel password (use a strong one)
+      - key: AUTH_SECRET
+        generateValue: true   # keeps logins valid across restarts

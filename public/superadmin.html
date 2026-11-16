@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Owner Panel – QuickPrint</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+:root{--ink:#15151f;--muted:#6b6b7e;--line:#e8e6f0;--bg:#f4f4f8;--indigo:#4f46e5;--violet:#7c3aed;--soft:#eef2ff;
+ --green:#059669;--gsoft:#d1fae5;--amber:#b45309;--asoft:#fef3c7;--red:#e11d48;--rsoft:#ffe4e6;--grey:#475569;--gys:#e2e8f0;
+ --grad:linear-gradient(135deg,#4f46e5,#7c3aed);--shadow:0 1px 2px rgba(20,20,40,.04),0 8px 26px rgba(20,20,40,.07)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14.5px;line-height:1.5}
+button,input,select,textarea{font-family:inherit;font-size:inherit}
+.hidden{display:none!important}
+/* login */
+#login{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(800px 400px at 80% 0,#ddd6fe66,transparent),var(--bg)}
+.box{background:#fff;border-radius:22px;box-shadow:var(--shadow);padding:34px 30px;width:100%;max-width:400px}
+.box .ic{width:54px;height:54px;border-radius:16px;background:var(--grad);display:grid;place-items:center;font-size:26px;margin:0 auto 12px}
+.box h1{font-size:22px;text-align:center}.box p.s{text-align:center;color:var(--muted);margin-bottom:20px;font-size:13.5px}
+label{display:block;font-weight:700;font-size:12.5px;color:#3d3d4e;margin:12px 0 5px}
+input,select,textarea{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--indigo)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:10px;border:0;font-weight:700;cursor:pointer;transition:.15s}
+.btn-p{background:var(--grad);color:#fff}.btn-p:hover{filter:brightness(1.08)}
+.btn-o{background:#fff;border:1.5px solid var(--line);color:var(--ink)}.btn-o:hover{border-color:var(--indigo);color:var(--indigo)}
+.btn-g{background:var(--gsoft);color:var(--green)}.btn-r{background:var(--rsoft);color:var(--red)}.btn-a{background:var(--asoft);color:var(--amber)}
+.btn-sm{padding:6px 10px;font-size:12.5px;border-radius:8px}
+.err{color:var(--red);font-weight:700;font-size:13px;min-height:18px;margin-top:10px;text-align:center}
+/* app */
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.top{max-width:1200px;margin:0 auto;padding:0 18px;height:60px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;gap:10px;align-items:center;font-weight:800;font-size:17px}
+.brand span.b{width:34px;height:34px;border-radius:10px;background:var(--grad);display:grid;place-items:center}
+.brand small{color:var(--muted);font-weight:600;font-size:11px;display:block;margin-top:-3px}
+main{max-width:1200px;margin:0 auto;padding:20px 18px 60px}
+.cards{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-bottom:20px}
+.sc{background:#fff;border-radius:16px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.sc b{display:block;font-size:26px;font-weight:800}.sc span{color:var(--muted);font-size:12.5px;font-weight:600}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.bar input{max-width:280px}.bar select{max-width:170px}.bar .sp{flex:1}
+.tw{background:#fff;border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--line);overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:900px}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);padding:12px 14px;border-bottom:1px solid var(--line);background:#fafafd}
+td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.sn{font-weight:800}.sm{color:var(--muted);font-size:12.5px}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:800}
+.b-active{background:var(--gsoft);color:var(--green)}.b-expiring{background:var(--asoft);color:var(--amber)}
+.b-expired{background:var(--rsoft);color:var(--red)}.b-suspended{background:var(--gys);color:var(--grey)}
+.b-pending{background:#dbeafe;color:#1d4ed8}.b-rejected{background:var(--rsoft);color:var(--red)}
+.pend{background:#eff6ff;border:1.5px solid #bfdbfe;color:#1e40af;border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;font-weight:700;cursor:pointer}
+.acts{display:flex;flex-wrap:wrap;gap:6px}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(15,14,31,.5);display:grid;place-items:center;padding:16px;z-index:50;overflow-y:auto}
+.md{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:480px;box-shadow:0 30px 80px rgba(0,0,0,.3);max-height:92vh;overflow-y:auto}
+.md h2{font-size:19px;margin-bottom:4px}.md p.s{color:var(--muted);font-size:13px;margin-bottom:8px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mf{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.hist{margin-top:10px;display:grid;gap:8px}
+.hi{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#15151f;color:#fff;padding:11px 20px;border-radius:12px;font-weight:700;z-index:99;box-shadow:var(--shadow)}
+@media(max-width:1000px){.cards{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:900px){.cards{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){.cards{grid-template-columns:repeat(2,1fr)}.row2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="box">
+    <div class="ic">👑</div>
+    <h1>Owner Panel</h1>
+    <p class="s">QuickPrint · Hasulots Technologies</p>
+    <label>Owner Username</label><input id="lu" autocomplete="username">
+    <label>Password</label><input id="lp" type="password" autocomplete="current-password">
+    <button class="btn btn-p" style="width:100%;margin-top:18px" id="lbtn">Login →</button>
+    <div class="err" id="lerr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <header><div class="top">
+    <div class="brand"><span class="b">👑</span><div>Owner Panel<small>QuickPrint licence manager</small></div></div>
+    <div style="display:flex;gap:8px"><a class="btn btn-o btn-sm" href="/" target="_blank">🌐 Website</a><button class="btn btn-o btn-sm" id="logout">Logout</button></div>
+  </div></header>
+  <main>
+    <div class="cards" id="cards"></div>
+    <div class="pend hidden" id="pendBanner"></div>
+    <div class="bar">
+      <input id="q" placeholder="🔍 Search shop / username / phone">
+      <select id="f">
+        <option value="all">All shops</option><option value="pending">⏳ Pending approval</option><option value="active">Active</option>
+        <option value="expiring">Expiring (7 days)</option><option value="expired">Expired</option><option value="suspended">Suspended</option><option value="rejected">Rejected</option>
+      </select>
+      <div class="sp"></div>
+      <button class="btn btn-p" id="addBtn">➕ Create Shop</button>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>Shop</th><th>Login</th><th>Plan</th><th>Expiry</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table></div>
+  </main>
+</div>
+
+<div id="modal" class="ov hidden"><div class="md" id="mbody"></div></div>
+
+<script>
+var TOKEN = sessionStorage.getItem('qp_owner_token') || '';
+var DATA = { shops: [], summary: {}, plans: {} };
+var $ = function (id) { return document.getElementById(id); };
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+function toast(m) { var t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2600); }
+function fmtDate(iso) { if (!iso) return '—'; var d = new Date(iso); return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); }
+
+async function api(path, method, body) {
+  var res = await fetch('/api/super' + path, {
+    method: method || 'GET',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  var data = await res.json().catch(function () { return {}; });
+  if (res.status === 401 && path !== '/login') { logout(); throw new Error('Session expired. Login again.'); }
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+/* ---------- login ---------- */
+async function doLogin() {
+  $('lerr').textContent = '';
+  try {
+    var r = await api('/login', 'POST', { username: $('lu').value, password: $('lp').value });
+    TOKEN = r.token; sessionStorage.setItem('qp_owner_token', TOKEN);
+    showApp();
+  } catch (e) { $('lerr').textContent = e.message; }
+}
+function logout() { TOKEN = ''; sessionStorage.removeItem('qp_owner_token'); $('app').classList.add('hidden'); $('login').classList.remove('hidden'); $('lp').value = ''; }
+$('lbtn').onclick = doLogin;
+$('lp').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+$('logout').onclick = logout;
+
+async function showApp() {
+  try { await load(); } catch (e) { return; }
+  $('login').classList.add('hidden'); $('app').classList.remove('hidden');
+}
+
+/* ---------- list ---------- */
+async function load() {
+  DATA = await api('/shops');
+  renderCards(); renderTable();
+}
+function renderCards() {
+  var s = DATA.summary || {};
+  var items = [['Total shops', s.total || 0], ['⏳ Pending', s.pending || 0], ['Active', s.active || 0], ['Expiring ≤7d', s.expiring || 0], ['Expired', s.expired || 0], ['Suspended', s.suspended || 0], ['Revenue', '₹' + (s.revenue || 0).toLocaleString('en-IN')]];
+  $('cards').innerHTML = items.map(function (i) { return '<div class="sc"><b>' + i[1] + '</b><span>' + i[0] + '</span></div>'; }).join('');
+  var pb = $('pendBanner'), n = s.pending || 0;
+  document.title = (n ? '(' + n + ') ' : '') + 'Owner Panel – QuickPrint';
+  if (n) { pb.textContent = '⏳ ' + n + ' new shop request' + (n > 1 ? 's' : '') + ' waiting for your approval — click to review'; pb.classList.remove('hidden'); }
+  else pb.classList.add('hidden');
+}
+$('pendBanner').onclick = function () { $('f').value = 'pending'; renderTable(); };
+function stateBadge(s) {
+  var txt = { pending: 'Pending approval', rejected: 'Rejected', active: 'Active', expiring: 'Expiring', expired: 'Expired', suspended: 'Suspended' }[s.state] || s.state;
+  var extra = '';
+  if (s.state === 'active' || s.state === 'expiring') extra = s.daysLeft == null ? ' · Lifetime' : ' · ' + s.daysLeft + 'd left';
+  if (s.state === 'expired' && s.daysLeft != null) extra = ' · ' + Math.abs(s.daysLeft) + 'd ago';
+  return '<span class="badge b-' + s.state + '">' + txt + extra + '</span>';
+}
+function renderTable() {
+  var q = $('q').value.trim().toLowerCase(), f = $('f').value;
+  var list = DATA.shops.filter(function (s) {
+    if (f !== 'all' && s.state !== f) return false;
+    return !q || (s.shopName + ' ' + s.username + ' ' + s.phone + ' ' + s.shopId).toLowerCase().indexOf(q) >= 0;
+  });
+  list.sort(function (a, b) { return (b.state === 'pending') - (a.state === 'pending'); });
+  if (!list.length) { $('tb').innerHTML = '<tr><td colspan="6" class="empty">No shops found. Click “Create Shop” to add one.</td></tr>'; return; }
+  $('tb').innerHTML = list.map(function (s) {
+    var live = DATA.activeShopId === s.shopId ? ' <span class="badge b-active" style="font-size:10px">LIVE</span>' : '';
+    if (s.state === 'pending' || s.state === 'rejected') {
+      var wa = s.phone ? ' · <a href="https://wa.me/91' + esc(s.phone) + '" target="_blank">' + esc(s.phone) + '</a>' : '';
+      return '<tr>' +
+        '<td><div class="sn">' + esc(s.shopName) + '</div><div class="sm">' + esc(s.ownerName) + wa + '</div><div class="sm">' + esc(s.email) + '</div><div class="sm">' + esc(s.address) + '</div></td>' +
+        '<td><b>' + esc(s.username) + '</b><div class="sm">Requested ' + fmtDate(s.createdAt) + '</div></td>' +
+        '<td>' + esc(s.planLabel) + '</td><td>—</td><td>' + stateBadge(s) + '</td>' +
+        '<td><div class="acts">' +
+          '<button class="btn btn-g btn-sm" data-a="approve" data-id="' + esc(s.shopId) + '">✅ Approve</button>' +
+          (s.state === 'pending' ? '<button class="btn btn-a btn-sm" data-a="reject" data-id="' + esc(s.shopId) + '">✖ Reject</button>' : '') +
+          '<button class="btn btn-r btn-sm" data-a="del" data-id="' + esc(s.shopId) + '">🗑</button>' +
+        '</div></td></tr>';
+    }
+    return '<tr>' +
+      '<td><div class="sn">' + esc(s.shopName) + live + '</div><div class="sm">' + esc(s.shopId) + (s.phone ? ' · ' + esc(s.phone) : '') + '</div></td>' +
+      '<td><b>' + esc(s.username) + '</b></td>' +
+      '<td>' + esc(s.planLabel) + '</td>' +
+      '<td>' + (s.plan === 'lifetime' ? 'Never' : fmtDate(s.expiresAt)) + '</td>' +
+      '<td>' + stateBadge(s) + '</td>' +
+      '<td><div class="acts">' +
+        '<button class="btn btn-g btn-sm" data-a="renew" data-id="' + esc(s.shopId) + '">🔁 Renew</button>' +
+        '<button class="btn btn-o btn-sm" data-a="edit" data-id="' + esc(s.shopId) + '">✏️ Edit</button>' +
+        '<button class="btn btn-o btn-sm" data-a="pass" data-id="' + esc(s.shopId) + '">🔑 Password</button>' +
+        '<button class="btn btn-o btn-sm" data-a="hist" data-id="' + esc(s.shopId) + '">📜 History</button>' +
+        (s.licenseStatus === 'suspended'
+          ? '<button class="btn btn-g btn-sm" data-a="activate" data-id="' + esc(s.shopId) + '">▶ Activate</button>'
+          : '<button class="btn btn-a btn-sm" data-a="suspend" data-id="' + esc(s.shopId) + '">⏸ Suspend</button>') +
+        '<button class="btn btn-r btn-sm" data-a="del" data-id="' + esc(s.shopId) + '">🗑</button>' +
+      '</div></td></tr>';
+  }).join('');
+}
+$('q').oninput = renderTable; $('f').onchange = renderTable;
+$('tb').addEventListener('click', function (e) {
+  var b = e.target.closest('button[data-a]'); if (!b) return;
+  var s = DATA.shops.find(function (x) { return x.shopId === b.dataset.id; }); if (!s) return;
+  ({ approve: openApprove, reject: doReject, renew: openRenew, edit: openEdit, pass: openPass, hist: openHist, suspend: function (x) { setStatus(x, 'suspended'); }, activate: function (x) { setStatus(x, 'active'); }, del: delShop })[b.dataset.a](s);
+});
+$('addBtn').onclick = openCreate;
+
+/* ---------- modal helpers ---------- */
+function openModal(html) { $('mbody').innerHTML = html; $('modal').classList.remove('hidden'); }
+function closeModal() { $('modal').classList.add('hidden'); }
+$('modal').addEventListener('click', function (e) { if (e.target === $('modal')) closeModal(); });
+function planOptions(sel) {
+  return Object.keys(DATA.plans).map(function (k) { return '<option value="' + k + '"' + (k === sel ? ' selected' : '') + '>' + esc(DATA.plans[k].label) + '</option>'; }).join('');
+}
+function val(id) { return $(id).value; }
+function modalErr(m) { $('merr').textContent = m; }
+async function submit(fn) {
+  modalErr('');
+  try { await fn(); } catch (e) { modalErr(e.message); }
+}
+
+/* ---------- create ---------- */
+function openCreate() {
+  openModal(
+    '<h2>➕ Create Shop</h2><p class="s">Shop owner will login with this username & password.</p>' +
+    '<label>Shop name *</label><input id="c_name">' +
+    '<div class="row2"><div><label>Username *</label><input id="c_user" autocomplete="off"></div><div><label>Password * (min 6)</label><input id="c_pass" autocomplete="off"></div></div>' +
+    '<div class="row2"><div><label>Phone</label><input id="c_phone" type="tel"></div><div><label>UPI ID</label><input id="c_upi" placeholder="shop@upi"></div></div>' +
+    '<div class="row2"><div><label>B&W rate ₹/page</label><input id="c_bw" type="number" value="3"></div><div><label>Color rate ₹/page</label><input id="c_col" type="number" value="10"></div></div>' +
+    '<div class="row2"><div><label>Plan</label><select id="c_plan">' + planOptions('monthly') + '</select></div><div><label>Amount received ₹</label><input id="c_amt" type="number" value="0"></div></div>' +
+    '<div class="err" id="merr"></div>' +
+    '<div class="mf"><button class="btn btn-o" onclick="closeModal()">Cancel</button><button class="btn btn-p" id="mok">Create Shop</button></div>'
+  );
+  $('c_pass').value = Math.random().toString(36).slice(2, 10);
+  $('mok').onclick = function () {
+    submit(async function () {
+      var r = await api('/shops', 'POST', { shopName: val('c_name'), username: val('c_user'), password: val('c_pass'), phone: val('c_phone'), upiId: val('c_upi'), bwRate: val('c_bw'), colorRate: val('c_col'), plan: val('c_plan'), amount: val('c_amt') });
+      var u = r.shop.username, p = val('c_pass');
+      openModal('<h2>✅ Shop created</h2><p class="s">Send these login details to the shop owner. The password cannot be viewed again.</p>' +
+        '<div class="hi"><b>Shop:</b> ' + esc(r.shop.shopName) + '<br><b>Login page:</b> ' + esc(location.origin) + '/admin<br><b>Username:</b> ' + esc(u) + '<br><b>Password:</b> ' + esc(p) + '<br><b>Plan:</b> ' + esc(r.shop.planLabel) + (r.shop.expiresAt ? ' (till ' + fmtDate(r.shop.expiresAt) + ')' : '') + '</div>' +
+        '<div class="mf"><button class="btn btn-o" id="cp">📋 Copy details</button><button class="btn btn-p" onclick="closeModal()">Done</button></div>');
+      $('cp').onclick = function () {
+        var t = 'QuickPrint login\nURL: ' + location.origin + '/admin\nUsername: ' + u + '\nPassword: ' + p;
+        navigator.clipboard.writeText(t).then(function () { toast('Copied'); });
+      };
+      load();
+    });
+  };
+}
+
+/* ---------- edit ---------- */
+function openEdit(s) {
+  openModal(
+    '<h2>✏️ Edit Shop</h2><p class="s">' + esc(s.shopId) + '</p>' +
+    '<label>Shop name</label><input id="e_name" value="' + esc(s.shopName) + '">' +
+    '<div class="row2"><div><label>Username</label><input id="e_user" value="' + esc(s.username) + '"></div><div><label>Phone</label><input id="e_phone" value="' + esc(s.phone) + '"></div></div>' +
+    '<label>UPI ID</label><input id="e_upi" value="' + esc(s.upiId) + '">' +
+    '<label>Address</label><input id="e_addr" value="' + esc(s.address) + '">' +
+    '<div class="row2"><div><label>B&W ₹/page</label><input id="e_bw" type="number" value="' + esc((s.pricing || {}).bwPerA4Page || 3) + '"></div><div><label>Color ₹/page</label><input id="e_col" type="number" value="' + esc((s.pricing || {}).colorPerA4Page || 10) + '"></div></div>' +
+    '<div class="err" id="merr"></div>' +
+    '<div class="mf"><button class="btn btn-o" onclick="closeModal()">Cancel</button><button class="btn btn-p" id="mok">Save</button></div>'
+  );
+  $('mok').onclick = function () {
+    submit(async function () {
+      await api('/shops/' + encodeURIComponent(s.shopId), 'PUT', { shopName: val('e_name'), username: val('e_user'), phone: val('e_phone'), upiId: val('e_upi'), address: val('e_addr'), bwRate: val('e_bw'), colorRate: val('e_col') });
+      closeModal(); toast('Saved'); load();
+    });
+  };
+}
+
+/* ---------- renew ---------- */
+function openRenew(s) {
+  openModal(
+    '<h2>🔁 Renew Licence</h2><p class="s"><b>' + esc(s.shopName) + '</b> · now: ' + esc(s.planLabel) + ' · ' + (s.plan === 'lifetime' ? 'Lifetime' : 'expires ' + fmtDate(s.expiresAt)) + '</p>' +
+    '<div class="row2"><div><label>Plan</label><select id="r_plan">' + planOptions(s.plan === 'demo' ? 'monthly' : s.plan || 'monthly') + '</select></div><div><label>Amount received ₹</label><input id="r_amt" type="number" value="0"></div></div>' +
+    '<label>Custom days (optional)</label><input id="r_days" type="number" placeholder="Leave empty for plan default">' +
+    '<label>Note (payment ref, etc.)</label><input id="r_note" placeholder="e.g. UPI 4839201">' +
+    '<p class="s" style="margin-top:10px" id="r_prev"></p>' +
+    '<div class="err" id="merr"></div>' +
+    '<div class="mf"><button class="btn btn-o" onclick="closeModal()">Cancel</button><button class="btn btn-p" id="mok">Renew</button></div>'
+  );
+  function preview() {
+    var plan = val('r_plan'), p = DATA.plans[plan];
+    if (plan === 'lifetime') { $('r_prev').textContent = 'New expiry: Never (lifetime)'; return; }
+    var days = Number(val('r_days')) > 0 ? Number(val('r_days')) : p.days;
+    var base = (s.plan !== 'lifetime' && s.expiresAt && new Date(s.expiresAt) > new Date()) ? new Date(s.expiresAt) : new Date();
+    $('r_prev').textContent = 'New expiry: ' + fmtDate(new Date(base.getTime() + days * 86400000).toISOString()) + ' (+' + days + ' days' + (base > new Date() ? ', added to current expiry' : ', from today') + ')';
+  }
+  $('r_plan').onchange = preview; $('r_days').oninput = preview; preview();
+  $('mok').onclick = function () {
+    submit(async function () {
+      await api('/shops/' + encodeURIComponent(s.shopId) + '/renew', 'POST', { plan: val('r_plan'), amount: val('r_amt'), days: val('r_days'), note: val('r_note') });
+      closeModal(); toast('Licence renewed ✓'); load();
+    });
+  };
+}
+
+/* ---------- password ---------- */
+function openPass(s) {
+  openModal(
+    '<h2>🔑 Reset Password</h2><p class="s">' + esc(s.shopName) + ' · login: <b>' + esc(s.username) + '</b></p>' +
+    '<label>New password (min 6)</label><input id="p_pass" autocomplete="off">' +
+    '<div class="err" id="merr"></div>' +
+    '<div class="mf"><button class="btn btn-o" onclick="closeModal()">Cancel</button><button class="btn btn-p" id="mok">Set Password</button></div>'
+  );
+  $('p_pass').value = Math.random().toString(36).slice(2, 10);
+  $('mok').onclick = function () {
+    submit(async function () {
+      var p = val('p_pass');
+      await api('/shops/' + encodeURIComponent(s.shopId) + '/password', 'POST', { password: p });
+      openModal('<h2>✅ Password changed</h2><p class="s">Share with the shop owner:</p><div class="hi"><b>Username:</b> ' + esc(s.username) + '<br><b>New password:</b> ' + esc(p) + '</div><div class="mf"><button class="btn btn-p" onclick="closeModal()">Done</button></div>');
+    });
+  };
+}
+
+/* ---------- history ---------- */
+function openHist(s) {
+  var rows = (s.renewals || []).map(function (r) {
+    return '<div class="hi"><b>' + fmtDate(r.date) + '</b> · ' + esc((DATA.plans[r.plan] || {}).label || r.plan) + ' · ₹' + (r.amount || 0) +
+      '<br><span class="sm">' + (r.expiresAt ? 'Valid till ' + fmtDate(r.expiresAt) : 'Lifetime') + (r.note ? ' · ' + esc(r.note) : '') + '</span></div>';
+  }).join('') || '<div class="empty">No renewals yet</div>';
+  openModal('<h2>📜 Renewal History</h2><p class="s">' + esc(s.shopName) + '</p><div class="hist">' + rows + '</div><div class="mf"><button class="btn btn-p" onclick="closeModal()">Close</button></div>');
+}
+
+/* ---------- approve / reject ---------- */
+function openApprove(s) {
+  openModal(
+    '<h2>✅ Approve Shop</h2><p class="s"><b>' + esc(s.shopName) + '</b> · ' + esc(s.ownerName) + ' · ' + esc(s.phone) + '</p>' +
+    '<div class="row2"><div><label>Plan</label><select id="a_plan">' + planOptions('demo') + '</select></div><div><label>Amount received ₹</label><input id="a_amt" type="number" value="0"></div></div>' +
+    '<label>Custom days (optional)</label><input id="a_days" type="number" placeholder="Leave empty for plan default">' +
+    '<p class="s" style="margin-top:10px" id="a_prev"></p>' +
+    '<div class="err" id="merr"></div>' +
+    '<div class="mf"><button class="btn btn-o" onclick="closeModal()">Cancel</button><button class="btn btn-p" id="mok">Approve &amp; Activate</button></div>'
+  );
+  function preview() {
+    var plan = val('a_plan'), p = DATA.plans[plan];
+    if (plan === 'lifetime') { $('a_prev').textContent = 'Valid: lifetime'; return; }
+    var days = Number(val('a_days')) > 0 ? Number(val('a_days')) : p.days;
+    $('a_prev').textContent = 'Valid for ' + days + ' days from today (till ' + fmtDate(new Date(Date.now() + days * 86400000).toISOString()) + ')';
+  }
+  $('a_plan').onchange = preview; $('a_days').oninput = preview; preview();
+  $('mok').onclick = function () {
+    submit(async function () {
+      var r = await api('/shops/' + encodeURIComponent(s.shopId) + '/approve', 'POST', { plan: val('a_plan'), amount: val('a_amt'), days: val('a_days') });
+      var msg = 'Hello ' + (s.ownerName || '') + ', your QuickPrint shop "' + s.shopName + '" is approved! ✅\nLogin: ' + location.origin + '/admin\nUsername: ' + s.username + '\nPassword: (the one you chose while registering)\nPlan: ' + r.shop.planLabel + (r.shop.expiresAt ? ' (valid till ' + fmtDate(r.shop.expiresAt) + ')' : '');
+      var wa = 'https://wa.me/91' + encodeURIComponent(s.phone) + '?text=' + encodeURIComponent(msg);
+      openModal('<h2>✅ Shop approved</h2><p class="s">' + esc(s.shopName) + ' can login now. Send them a WhatsApp message:</p>' +
+        '<div class="hi" style="white-space:pre-line">' + esc(msg) + '</div>' +
+        '<div class="mf"><button class="btn btn-o" onclick="closeModal()">Close</button><a class="btn btn-p" target="_blank" href="' + wa + '" onclick="closeModal()">💬 Send on WhatsApp</a></div>');
+      load();
+    });
+  };
+}
+async function doReject(s) {
+  if (!confirm('Reject the request from ' + s.shopName + '?')) return;
+  try { await api('/shops/' + encodeURIComponent(s.shopId) + '/reject', 'POST'); toast('Rejected'); load(); }
+  catch (e) { alert(e.message); }
+}
+// Check for new requests every minute while the panel is open
+setInterval(function () { if (TOKEN && !$('app').classList.contains('hidden') && $('modal').classList.contains('hidden')) load().catch(function () {}); }, 60000);
+
+/* ---------- suspend / delete ---------- */
+async function setStatus(s, status) {
+  if (status === 'suspended' && !confirm('Suspend ' + s.shopName + '? They cannot login or take orders.')) return;
+  try { await api('/shops/' + encodeURIComponent(s.shopId) + '/status', 'POST', { status: status }); toast(status === 'suspended' ? 'Suspended' : 'Activated'); load(); }
+  catch (e) { alert(e.message); }
+}
+async function delShop(s) {
+  if (!confirm('DELETE ' + s.shopName + ' permanently? This cannot be undone.')) return;
+  try { await api('/shops/' + encodeURIComponent(s.shopId), 'DELETE'); toast('Deleted'); load(); }
+  catch (e) { alert(e.message); }
+}
+
+if (TOKEN) showApp();
+</script>
+</body>
+</html>

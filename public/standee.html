@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop Counter QR Standee - QuickPrint</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/style.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        background: white !important;
+        padding: 0 !important;
+      }
+      .standee-poster {
+        border: none !important;
+        box-shadow: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        height: 100vh !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-200 min-h-screen p-6 flex flex-col items-center justify-center font-sans antialiased">
+
+  <!-- Floating Control Bar (Hidden when printed) -->
+  <div class="no-print mb-6 flex items-center space-x-3 bg-white p-3 rounded-2xl shadow-lg border border-slate-200">
+    <button onclick="window.print()" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md shadow-brand-500/20 flex items-center gap-2 transition">
+      <i data-lucide="printer" class="w-4 h-4"></i>
+      <span>Print A4 Poster (Ctrl + P)</span>
+    </button>
+    <a href="/admin.html" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm flex items-center gap-2 transition">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+      <span>Back to Admin</span>
+    </a>
+  </div>
+
+  <!-- A4 Printable Standee Poster -->
+  <div class="standee-poster bg-white max-w-[540px] w-full rounded-3xl p-8 border-4 border-slate-900 shadow-2xl flex flex-col justify-between text-center relative overflow-hidden">
+    
+    <!-- Decorative Corner Badges -->
+    <div class="absolute top-0 left-0 w-24 h-24 bg-brand-600 -translate-x-12 -translate-y-12 rotate-45"></div>
+    <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-500 translate-x-12 -translate-y-12 rotate-45"></div>
+
+    <!-- Header Section -->
+    <div class="space-y-1.5 relative z-10 pt-2">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-black uppercase tracking-wider mb-2">
+        <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+        <span>Instant Self-Service Print Kiosk</span>
+      </div>
+      <h1 id="standee-shop-name" class="font-heading text-3xl font-black text-slate-900 tracking-tight">
+        QuickPrint Store
+      </h1>
+      <p class="text-sm font-bold text-brand-600">
+        SCAN &bull; PAY &bull; COLLECT / ஸ்கேன் &bull; பணம் செலுத்துங்கள் &bull; பிரிண்ட் எடுங்கள்
+      </p>
+    </div>
+
+    <!-- Giant QR Code Box -->
+    <div class="my-6 p-6 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-300 inline-block mx-auto shadow-inner relative">
+      <img id="standee-qr-image" class="w-64 h-64 mx-auto rounded-2xl shadow-sm" alt="Counter QR Code">
+      <div class="mt-3">
+        <p class="text-xs font-black uppercase tracking-widest text-slate-700">Point Camera to Scan</p>
+        <p id="standee-url-label" class="text-[11px] font-mono text-slate-400 mt-0.5">http://192.168.1.x:4000</p>
+      </div>
+    </div>
+
+    <!-- 3 Easy Steps (English & Tamil) -->
+    <div class="grid grid-cols-3 gap-3 my-2 text-left">
+      
+      <div class="p-3 bg-brand-50/70 rounded-2xl border border-brand-100">
+        <span class="w-6 h-6 rounded-full bg-brand-600 text-white font-black text-xs flex items-center justify-center mb-1.5">1</span>
+        <p class="text-xs font-black text-slate-900 leading-tight">Scan QR</p>
+        <p class="text-[10px] text-slate-500 mt-0.5">போன் கேமராவில் ஸ்கேன் செய்யுங்கள்</p>
+      </div>
+
+      <div class="p-3 bg-indigo-50/70 rounded-2xl border border-indigo-100">
+        <span class="w-6 h-6 rounded-full bg-indigo-600 text-white font-black text-xs flex items-center justify-center mb-1.5">2</span>
+        <p class="text-xs font-black text-slate-900 leading-tight">Upload File</p>
+        <p class="text-[10px] text-slate-500 mt-0.5">PDF / Photos தேர்வு செய்யவும்</p>
+      </div>
+
+      <div class="p-3 bg-emerald-50/70 rounded-2xl border border-emerald-100">
+        <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center mb-1.5">3</span>
+        <p class="text-xs font-black text-slate-900 leading-tight">UPI & Print</p>
+        <p class="text-[10px] text-slate-500 mt-0.5">GPay/PhonePe மூலம் Pay செய்யுங்கள்</p>
+      </div>
+
+    </div>
+
+    <!-- Supported UPI Badges & Footer -->
+    <div class="pt-5 border-t-2 border-slate-100 mt-3 flex items-center justify-between text-left">
+      <div>
+        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Supported Payments</p>
+        <p class="text-xs font-extrabold text-slate-800">Google Pay &bull; PhonePe &bull; Paytm &bull; UPI</p>
+      </div>
+      <div class="text-right">
+        <p class="text-[10px] text-slate-400">Need Help?</p>
+        <p id="standee-phone" class="text-xs font-bold text-slate-900">+91 98765 43210</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    async function loadStandee() {
+      try {
+        const res = await fetch('/api/info');
+        const data = await res.json();
+        
+        document.getElementById('standee-shop-name').textContent = data.settings.shopName || 'QuickPrint';
+        document.getElementById('standee-phone').textContent = data.settings.shopPhone || '';
+        document.getElementById('standee-url-label').textContent = data.baseUrl;
+
+        // Generate high-res QR for base URL
+        const qrRes = await fetch(`/api/qr?text=${encodeURIComponent(data.baseUrl)}&width=400`);
+        const qrData = await qrRes.json();
+        document.getElementById('standee-qr-image').src = qrData.qr;
+
+        if (window.lucide) lucide.createIcons();
+      } catch (err) {
+        console.error('Failed to load standee QR', err);
+      }
+    }
+    window.addEventListener('DOMContentLoaded', loadStandee);
+  </script>
+</body>
+</html>

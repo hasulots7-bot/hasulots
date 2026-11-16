@@ -1,0 +1,800 @@
+
+/* === STYLESHEET CHUNK 0 === */
+/* ══════════════════════════════════════════════════════════════
+   QR SE PRINT — CUSTOMER UI  (v2.0 design)
+
+   IMPORTANT — ye file sirf DIKHNE ka kaam karti hai:
+   - Har purani class ka naam waisa ka waisa hai. JS inme se
+     .hidden .active .dragover .up-done .sel .on .done toggle karta
+     hai — sab yahan defined hain.
+   - Koi text nahi badla. i18n.js source text se match karke
+     English/Hinglish karta hai, isliye ek bhi string chhedna
+     translation tod deta.
+   - Advance unlock hone par 4 service cards aate hain
+     (Document / Resume / 4×6 Photo / Big Size) aur grid 1,2,3,4
+     kisi bhi ginti me ban sakta hai — teeno layouts yahan handle hain.
+   ══════════════════════════════════════════════════════════════ */
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+:root{
+  --ink:#15151f; --ink-2:#3d3d4e; --muted:#7a7a8c;
+  --line:#e8e6f0; --bg:#f4f4f8; --card:#fff;
+  --violet:#7c3aed; --violet-2:#6d28d9; --violet-soft:#ede9fe;
+  --pink:#ec2a7a; --pink-2:#d81b60; --pink-soft:#fce7f3;
+  --grad:linear-gradient(135deg,#7c3aed,#ec2a7a);
+  --grad-soft:linear-gradient(135deg,#f3e8ff,#fce7f3);
+  --green:#16a34a; --green-soft:#f0fdf4; --green-line:#bbf7d0;
+  --amber:#f59e0b; --amber-soft:#fffbeb; --amber-line:#fde68a;
+  --red:#e11d48; --red-soft:#fef2f2; --red-line:#fecaca;
+  --r:16px; --r-lg:22px;
+  --shadow:0 1px 2px rgba(20,20,40,.04),0 8px 28px rgba(20,20,40,.07);
+  --shadow-sm:0 1px 2px rgba(20,20,40,.04),0 3px 10px rgba(20,20,40,.05);
+}
+
+body{
+  font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:var(--bg); color:var(--ink);
+  min-height:100vh; padding:14px 12px 90px;
+  font-size:14.5px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:520px;margin:0 auto}
+.hidden{display:none!important}
+
+/* ── SHOP HEADER ───────────────────────────────────────────── */
+.shop-header{
+  display:flex;align-items:center;gap:12px;
+  background:linear-gradient(145deg,#181822,#101018 60%,#14141e);
+  border-radius:var(--r-lg);padding:14px;margin-bottom:16px;
+  position:relative;overflow:hidden;
+  box-shadow:0 10px 34px rgba(16,16,28,.26);
+}
+.shop-header::after{
+  content:'';position:absolute;top:-40px;right:-30px;width:150px;height:150px;
+  background:radial-gradient(circle,rgba(124,58,237,.24),transparent 70%);pointer-events:none;
+}
+.shop-icon{
+  width:62px;height:62px;flex:0 0 62px;border-radius:16px;background:#fff;
+  display:grid;place-items:center;font-size:32px;overflow:hidden;
+  box-shadow:0 6px 18px rgba(0,0,0,.28);
+}
+.shop-icon img{width:100%;height:100%;object-fit:contain;padding:5px;display:block}
+.shop-info{min-width:0;flex:1 1 auto;position:relative;z-index:1}
+.shop-info h2{
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:19px;color:#fff;
+  letter-spacing:-.3px;line-height:1.2;display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+}
+.shop-info h2::after{
+  content:'✓';flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  background:#3b82f6;color:#fff;font-size:11px;font-weight:700;
+  display:grid;place-items:center;line-height:1;
+}
+.shop-info p{font-size:12.5px;color:#a8a8bd;margin-top:5px;line-height:1.5}
+/* Ek hi line me rakho — flex-wrap nahi. Phone par do line lene se
+   Upload card neeche chala jaata tha aur jagah barbaad hoti thi. */
+.price-badges{display:flex;gap:6px;margin-top:9px;flex-wrap:nowrap}
+.price-badge{
+  background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.14);
+  color:#fff;font-size:11.5px;font-weight:700;padding:6px 11px;border-radius:999px;
+  backdrop-filter:blur(4px);white-space:nowrap;flex:0 1 auto;
+  overflow:hidden;text-overflow:ellipsis;
+}
+.price-badge.color{background:var(--grad);border-color:transparent;box-shadow:0 4px 14px rgba(236,42,122,.34)}
+
+/* ── STEPS ─────────────────────────────────────────────────── */
+.steps{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;padding:0 4px}
+.step{flex:1 1 0;display:flex;flex-direction:column;align-items:center;position:relative;min-width:0}
+.step:not(:last-child)::after{
+  content:'';position:absolute;top:23px;left:calc(50% + 26px);right:calc(-50% + 26px);
+  height:2.5px;background:var(--line);border-radius:2px;
+}
+.step.done:not(:last-child)::after{background:var(--violet)}
+.step .dot{
+  width:46px;height:46px;border-radius:50%;display:grid;place-items:center;
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;
+  background:#e9e7f2;color:#9997ab;transition:.25s;position:relative;z-index:1;
+}
+.step.active .dot{
+  background:var(--grad);color:#fff;
+  box-shadow:0 0 0 5px rgba(124,58,237,.15),0 6px 18px rgba(124,58,237,.34);
+}
+.step.done .dot{background:var(--violet);color:#fff}
+.step-lbl{font-size:12.5px;font-weight:700;color:var(--muted);margin-top:9px;text-align:center}
+.step.active .step-lbl{color:var(--violet)}
+.step.done .step-lbl{color:var(--ink-2)}
+
+/* ── CARD ──────────────────────────────────────────────────── */
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:22px 18px;margin-bottom:14px;box-shadow:var(--shadow);
+}
+.card h2,.card h3{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;letter-spacing:-.2px}
+.card h2{font-size:18px}
+.card h3{font-size:16px;margin-bottom:12px}
+
+/* ── UPLOAD ZONE ───────────────────────────────────────────── */
+.upload-zone{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:30px 18px 24px;text-align:center;position:relative;
+  box-shadow:var(--shadow);margin-bottom:14px;
+}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:5}
+.upload-zone.dragover{border-color:var(--violet);background:#faf8ff}
+.upload-icon{
+  width:82px;height:82px;margin:0 auto 16px;border-radius:50%;
+  background:var(--violet-soft);display:grid;place-items:center;
+}
+.upload-icon svg{width:38px;height:38px;stroke:var(--violet);fill:none;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round}
+.upload-zone h3{
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:25px;letter-spacing:-.4px;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;margin-bottom:9px;line-height:1.15;
+}
+.upload-zone > p{font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:14px}
+.upload-zone > p b{color:var(--ink-2);font-weight:700}
+.ftypes{display:flex;gap:9px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
+.ft{
+  font-size:12.5px;font-weight:700;padding:7px 17px;border-radius:11px;
+  border:1.5px solid var(--line);background:#fff;color:var(--muted);
+}
+.ft:nth-child(1){color:#e11d48;border-color:#fbcfe0;background:#fff5f8}
+.ft:nth-child(2){color:#16a34a;border-color:#bbf7d0;background:#f3fdf6}
+.ft:nth-child(3){color:#2563eb;border-color:#c7dbfe;background:#f5f8ff}
+
+/* dashed drop area */
+.upbtn-wrap{
+  border:2px dashed #cfc6f3;border-radius:18px;background:#fbfaff;
+  padding:26px 16px;margin-bottom:14px;position:relative;
+}
+.upload-zone.dragover .upbtn-wrap{border-color:var(--violet);background:#f5f1ff}
+.upbtn-wrap::before{
+  content:'';display:block;width:32px;height:32px;margin:0 auto 12px;
+  background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237c3aed' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 16V4'/%3E%3Cpath d='M7 9l5-5 5 5'/%3E%3Cpath d='M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2'/%3E%3C/svg%3E");
+}
+.upbtn-hint{
+  font-size:13.5px;font-weight:700;color:var(--violet);
+  margin:0 0 12px;display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.upbtn-wrap .or-line{font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.upbtn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  background:var(--grad);color:#fff;border:none;border-radius:14px;
+  padding:15px 34px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15.5px;
+  cursor:pointer;box-shadow:0 8px 24px rgba(124,58,237,.3);transition:.16s;
+}
+.upbtn:active{transform:scale(.975)}
+.upbtn svg{width:20px;height:20px}
+.up-dots{display:none}
+.up-done .upbtn{background:linear-gradient(135deg,#16a34a,#15803d);box-shadow:0 8px 24px rgba(22,163,74,.3)}
+.safe-line{
+  font-size:12.5px;color:var(--muted);display:flex;align-items:center;
+  justify-content:center;gap:7px;margin-top:2px;
+}
+
+/* ── SERVICE CARDS (advance unlock) ────────────────────────── */
+/* Ginti 1 / 2 / 3 / 4 — grid JS set karta hai, dikhna yahan se. */
+#svcMenu{display:grid;gap:11px;margin-bottom:14px}
+.svc-card{
+  background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-lg);
+  padding:18px 14px;text-align:center;cursor:pointer;transition:.16s;
+  box-shadow:var(--shadow-sm);
+}
+.svc-card:active{transform:scale(.985)}
+.svc-card > div:first-child{
+  width:56px;height:56px;margin:0 auto 11px;border-radius:50%;
+  background:var(--violet-soft);display:grid;place-items:center;font-size:26px;line-height:1;
+}
+.svc-card > div:nth-child(2){
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;
+  color:var(--violet);letter-spacing:-.2px;
+}
+.svc-card > div:nth-child(3){font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:4px}
+/* har card ka apna rang — mockup jaisa */
+.svc-card[data-svc="photo"] > div:first-child{background:var(--pink-soft)}
+.svc-card[data-svc="photo"] > div:nth-child(2){color:var(--pink)}
+.svc-card[data-svc="big"] > div:first-child{background:#e0f2fe}
+.svc-card[data-svc="big"] > div:nth-child(2){color:#0284c7}
+.svc-card[data-svc="doc"] > div:first-child{background:#e0e7ff}
+.svc-card[data-svc="doc"] > div:nth-child(2){color:#4f46e5}
+.svc-card.sel,.svc-card.on{border-color:var(--violet);background:#faf8ff;
+  box-shadow:0 0 0 3px rgba(124,58,237,.09),var(--shadow-sm)}
+/* 1 card ya 3 card ka pehla — poori chaudai, icon side me */
+.svc-card.svc-wide{display:grid;grid-template-columns:auto minmax(0,1fr);
+  gap:0 15px;text-align:left;align-items:center;padding:17px 16px}
+.svc-card.svc-wide > div:first-child{grid-row:1/3;margin:0}
+.svc-card.svc-wide > div:nth-child(2){grid-column:2;grid-row:1}
+.svc-card.svc-wide > div:nth-child(3){grid-column:2;grid-row:2;margin-top:2px}
+
+/* Upload zone HAMESHA sabse upar, service cards uske neeche.
+   JS svcMenu ko zone se PEHLE insert karta hai, isliye order se sudhaarte
+   hain — DOM chhedne ki zaroorat nahi. */
+#secUpload{display:flex;flex-direction:column}
+#secUpload #uploadZone{order:1}
+#secUpload #svcMenu{order:2;margin-top:0;margin-bottom:14px}
+#secUpload .trust-row{order:3}          /* sabse neeche — pehle Upload dikhe */
+
+/* ── TRUST ROW ─────────────────────────────────────────────── */
+.trust-row{
+  display:flex;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r);padding:10px 6px;margin-bottom:14px;box-shadow:var(--shadow-sm);
+}
+.trust-item{flex:1 1 0;text-align:center;padding:0 6px;min-width:0}
+.trust-item + .trust-item{border-left:1px solid var(--line)}
+.trust-item .ti{font-size:15px;line-height:1;margin-bottom:3px}
+.trust-item b{display:block;font-size:11px;font-weight:700;letter-spacing:0}
+.trust-item span{display:block;font-size:9.5px;color:var(--muted);margin-top:1px;line-height:1.35}
+
+/* ── BUTTONS ───────────────────────────────────────────────── */
+.btn-row{display:flex;gap:10px;margin-bottom:14px}
+.btn{
+  flex:1 1 0;border:none;border-radius:15px;padding:16px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;cursor:pointer;
+  transition:.16s;background:#fff;color:var(--ink);border:1.5px solid var(--line);
+}
+.btn:active{transform:scale(.98)}
+.btn-full{width:100%;flex:1 1 100%}
+.btn-grey{background:#fff;color:var(--ink-2);border-color:var(--line)}
+.btn-green{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border-color:transparent;
+  box-shadow:0 8px 22px rgba(22,163,74,.26)}
+.btn-red{background:var(--red);color:#fff;border-color:transparent}
+.btn-primary{
+  width:100%;background:var(--grad);color:#fff;border:none;border-radius:15px;padding:17px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15.5px;cursor:pointer;
+  box-shadow:0 8px 24px rgba(124,58,237,.3);
+}
+.btn-primary:active{transform:scale(.98)}
+
+/* ── EDITOR ────────────────────────────────────────────────── */
+.a4-canvas-wrap{display:flex;justify-content:center;margin-bottom:12px}
+.a4-canvas{
+  width:280px;height:396px;background:#fff;border:1.5px solid var(--line);
+  border-radius:10px;position:relative;overflow:hidden;
+  box-shadow:0 8px 26px rgba(20,20,40,.13);
+}
+.canvas-doc{position:absolute;cursor:move;touch-action:none}
+.canvas-doc.active{outline:2.5px solid var(--violet);outline-offset:2px}
+.canvas-doc img,.canvas-doc canvas{width:100%;height:100%;display:block;pointer-events:none}
+.resize-handle{
+  position:absolute;right:-9px;bottom:-9px;width:26px;height:26px;border-radius:50%;
+  background:var(--violet);border:2.5px solid #fff;cursor:se-resize;touch-action:none;
+  box-shadow:0 3px 9px rgba(0,0,0,.24);
+}
+.remove-item-handle{
+  position:absolute;right:-9px;top:-9px;width:26px;height:26px;border-radius:50%;
+  background:var(--red);border:2.5px solid #fff;color:#fff;font-size:15px;font-weight:700;
+  display:grid;place-items:center;cursor:pointer;box-shadow:0 3px 9px rgba(0,0,0,.24);
+}
+.edit-toolbar{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
+.edit-btn{
+  background:#fff;border:1.5px solid var(--line);border-radius:13px;padding:13px 9px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer;
+  color:var(--ink-2);transition:.14s;
+}
+.edit-btn:active{transform:scale(.97)}
+.edit-btn.on{background:#faf8ff;border-color:var(--violet);color:var(--violet)}
+.add-doc-btn{
+  width:100%;background:#faf8ff;border:1.5px dashed #cfc6f3;border-radius:13px;
+  padding:14px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13.5px;
+  color:var(--violet);cursor:pointer;margin-bottom:12px;
+}
+.adjust-panel,.border-panel,.rotate-panel{
+  background:#f8f7fc;border:1px solid var(--line);border-radius:14px;
+  padding:14px;margin-bottom:12px;
+}
+.adjust-row{display:flex;align-items:center;gap:11px;margin-bottom:11px;font-size:13px;font-weight:700}
+.adjust-row:last-child{margin-bottom:0}
+.adjust-row input[type=range]{flex:1 1 auto;accent-color:var(--violet)}
+.page-indicator-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}
+.page-indicator{font-size:13px;font-weight:700;color:var(--muted)}
+
+/* ── PREVIEW ───────────────────────────────────────────────── */
+.final-preview-wrap{
+  background:#f8f7fc;border:1px solid var(--line);border-radius:16px;
+  padding:14px;display:flex;justify-content:center;margin-bottom:12px;
+}
+.final-preview-wrap img{max-width:100%;max-height:400px;border-radius:9px;
+  box-shadow:0 8px 24px rgba(20,20,40,.14)}
+.page-nav{display:flex;align-items:center;justify-content:center;gap:15px}
+.page-nav-btn{
+  width:42px;height:42px;border-radius:50%;border:1.5px solid var(--line);
+  background:#fff;font-size:20px;font-weight:700;color:var(--ink-2);cursor:pointer;
+}
+.page-nav-btn:disabled{opacity:.35}
+.page-info{font-size:13.5px;font-weight:700}
+.page-range-box{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:18px;margin-bottom:14px;box-shadow:var(--shadow-sm);
+}
+.page-range-box label{display:block;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+  font-size:15px;margin-bottom:11px}
+.range-toggle{display:flex;gap:9px;margin-bottom:11px}
+.tog-btn{
+  flex:1 1 0;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:12px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13.5px;cursor:pointer;color:var(--ink-2);
+}
+.tog-btn.on{background:var(--grad);color:#fff;border-color:transparent}
+.range-input{
+  width:100%;border:1.5px solid var(--line);border-radius:12px;padding:13px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:14.5px;outline:none;
+}
+.range-input:focus{border-color:var(--violet)}
+.range-hint{font-size:12px;color:var(--muted);margin-top:8px}
+
+/* ── MINI PRINT ────────────────────────────────────────────── */
+.mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.mini-opt{
+  border:1.5px solid var(--line);background:#fff;border-radius:13px;padding:11px 4px;
+  cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:.14s;text-align:center;
+}
+.mini-opt:active{transform:scale(.96)}
+.mini-opt b{display:block;font-size:19px;font-weight:800;line-height:1.1}
+.mini-opt span{display:block;font-size:9.5px;color:var(--muted);margin-top:2px}
+.mini-opt.sel{border-color:var(--violet);background:#faf8ff;
+  box-shadow:0 0 0 3px rgba(124,58,237,.1)}
+.mini-opt.sel b{color:var(--violet)}
+.mini-border-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:13px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+}
+.mini-border-row b{display:block;font-size:13.5px;font-weight:700}
+.mini-border-row span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.mini-switch{
+  flex:0 0 auto;width:50px;height:29px;border-radius:99px;border:none;cursor:pointer;
+  background:#d7d5e2;position:relative;transition:background .18s;padding:0;
+}
+.mini-switch i{
+  position:absolute;top:3px;left:3px;width:23px;height:23px;border-radius:50%;
+  background:#fff;transition:left .18s;box-shadow:0 1px 4px rgba(0,0,0,.25);
+}
+.mini-switch.on{background:var(--violet)}
+.mini-switch.on i{left:24px}
+.mini-sum{
+  background:#faf8ff;border:1px solid #e6dffb;border-radius:13px;
+  padding:13px;margin-top:14px;font-size:13px;line-height:1.75;
+}
+.mini-sum b{font-weight:800;color:var(--violet)}
+.mini-preview{
+  background:#f8f7fc;border:1px solid var(--line);border-radius:14px;
+  padding:12px;display:flex;justify-content:center;min-height:180px;align-items:center;
+}
+.mini-preview img{max-width:100%;max-height:400px;border-radius:8px;
+  box-shadow:0 6px 20px rgba(20,20,40,.16)}
+.mini-loading{font-size:12.5px;color:var(--muted)}
+
+/* ── OPTIONS ───────────────────────────────────────────────── */
+.opt-toggle{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.opt-card{
+  border:1.5px solid var(--line);border-radius:16px;padding:16px 11px;text-align:center;
+  cursor:pointer;transition:.16s;background:#fff;
+}
+.opt-card:active{transform:scale(.985)}
+.opt-card .ic{font-size:26px;line-height:1}
+.opt-card .lbl{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14.5px;margin-top:7px}
+.opt-card .pr{font-size:12.5px;color:var(--muted);margin-top:3px}
+.opt-card.sel{border-color:var(--violet);background:#faf8ff;
+  box-shadow:0 0 0 3px rgba(124,58,237,.09)}
+.copies-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-top:14px;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+}
+.copies-row .lbl{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px}
+.copies-ctrl{display:flex;align-items:center;gap:15px}
+.copies-ctrl button{
+  width:40px;height:40px;border-radius:12px;border:1.5px solid var(--line);background:#fff;
+  font-size:21px;font-weight:700;color:var(--ink-2);cursor:pointer;line-height:1;
+}
+.copies-ctrl button:active{transform:scale(.94)}
+.copies-ctrl span{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:19px;min-width:26px;text-align:center}
+.price-summary{margin-top:15px}
+.price-row{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;
+  color:var(--ink-2);margin-bottom:9px}
+.price-total{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding-top:13px;border-top:2px solid var(--line);
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;
+}
+.price-total strong{font-size:25px;font-weight:800;background:var(--grad);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+
+/* ── PAYMENT ───────────────────────────────────────────────── */
+.pay-btn{
+  width:100%;border:none;border-radius:16px;padding:19px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;cursor:pointer;
+  margin-bottom:11px;transition:.16s;
+}
+.pay-btn:active{transform:scale(.985)}
+.pay-online-btn{background:var(--grad);color:#fff;box-shadow:0 8px 26px rgba(124,58,237,.3)}
+.pay-counter-btn{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.pay-btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.pay-note{font-size:12.5px;color:var(--muted);text-align:center;margin-top:9px;line-height:1.6}
+
+/* ── SUCCESS / WAITING ─────────────────────────────────────── */
+.success-screen{display:none;text-align:center;padding:8px 0}
+.success-screen.show{display:block;animation:pop .34s cubic-bezier(.34,1.3,.64,1)}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.thank-you-emoji{font-size:52px;line-height:1;margin-bottom:6px}
+.thank-you-text{
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.4px;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;margin-bottom:18px;
+}
+.sicon{
+  width:88px;height:88px;margin:0 auto 16px;border-radius:50%;
+  background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;
+  display:grid;place-items:center;font-size:42px;
+  box-shadow:0 10px 30px rgba(22,163,74,.32);
+}
+.sicon.counter{background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 10px 30px rgba(245,158,11,.32)}
+.sicon.online{background:linear-gradient(135deg,#16a34a,#15803d)}
+.success-screen h2{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:23px;margin-bottom:9px}
+.order-id{
+  display:inline-block;background:#f2f1f7;border:1px solid var(--line);border-radius:11px;
+  padding:9px 17px;font-size:13px;font-weight:700;color:var(--ink-2);
+  letter-spacing:.5px;margin-bottom:17px;
+}
+.collect-box{
+  background:var(--green-soft);border:1px solid var(--green-line);border-radius:var(--r-lg);
+  padding:19px;margin-bottom:14px;text-align:left;
+}
+.collect-box.counter{background:var(--amber-soft);border-color:var(--amber-line)}
+.collect-box.online{background:var(--green-soft);border-color:var(--green-line)}
+.collect-box h3{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16.5px;margin-bottom:7px}
+.collect-box p{font-size:13.5px;color:var(--ink-2);line-height:1.65}
+.amount-box{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:18px;margin-bottom:14px;box-shadow:var(--shadow-sm);
+}
+.amount-box span{font-size:14px;font-weight:700;color:var(--muted)}
+.amount-box strong{
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:27px;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+
+/* ── CROP OVERLAY ──────────────────────────────────────────── */
+.crop-overlay{
+  /* Smart Scanner ka overlay 99999 par hai. Crop usi ke upar khulta hai
+     (scan ke kone theek karne ke liye), isliye isse zyada hona zaroori. */
+  position:fixed;inset:0;z-index:100010;background:#0d0d14;
+  display:flex;flex-direction:column;
+}
+.crop-header{padding:16px;text-align:center;flex:0 0 auto}
+.crop-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:#fff}
+.crop-sub{font-size:12px;color:#a8a8bd;margin-top:5px;line-height:1.5}
+.crop-stage{flex:1 1 auto;position:relative;display:flex;align-items:center;
+  justify-content:center;overflow:hidden;padding:8px}
+#cropCanvas{max-width:100%;max-height:100%;touch-action:none}
+.crop-toolbar{display:flex;gap:9px;padding:14px;flex:0 0 auto}
+.crop-btn{
+  flex:1 1 0;border:none;border-radius:13px;padding:15px 9px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;cursor:pointer;
+}
+.crop-btn.grey{background:#23232f;color:#e6e6f0}
+.crop-btn.primary{background:var(--grad);color:#fff}
+
+/* ── TOAST ─────────────────────────────────────────────────── */
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,140%);
+  background:var(--ink);color:#fff;border-radius:14px;padding:14px 22px;
+  font-size:13.5px;font-weight:700;z-index:1000;max-width:calc(100vw - 34px);
+  text-align:center;box-shadow:0 12px 34px rgba(0,0,0,.28);transition:transform .3s cubic-bezier(.4,0,.2,1);
+}
+.toast.show{transform:translate(-50%,0)}
+
+/* ── FOOTER ────────────────────────────────────────────────── */
+.footer{text-align:center;padding:22px 10px 10px;line-height:1.7}
+.footer p{font-size:12.5px}
+.footer b{background:var(--grad);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;font-weight:700}
+.footer-insta{display:inline-block;margin-top:8px}
+
+/* ── LANGUAGE SWITCH ───────────────────────────────────────── */
+#langSwitch{position:fixed;bottom:14px;left:12px;z-index:400}
+#langSel{
+  border:1px solid var(--line);border-radius:13px;padding:11px 13px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;
+  background:#fff;color:var(--ink);box-shadow:var(--shadow-sm);cursor:pointer;outline:none;
+}
+
+/* ── UPLOAD PROGRESS ───────────────────────────────────────── */
+@keyframes upShine{to{transform:translateX(100%)}}
+@media(prefers-reduced-motion:reduce){
+  #upProgShine{animation:none}
+  .up-done,.success-screen.show{animation:none}
+}
+
+/* ── SMALL PHONES ──────────────────────────────────────────── */
+@media(max-width:400px){
+  body{padding:12px 10px 86px}
+  .shop-icon{width:54px;height:54px;flex-basis:54px;font-size:24px}
+  .price-badge{font-size:10.5px;padding:5px 9px}
+  .shop-info h2{font-size:18px}
+  .upload-zone h3{font-size:25px}
+  .step .dot{width:41px;height:41px;font-size:15.5px}
+  .step:not(:last-child)::after{top:20px;left:calc(50% + 24px);right:calc(-50% + 24px)}
+  .a4-canvas{width:248px;height:351px}
+}
+
+/* ── Password-protected PDF overlay ── */
+.pw-overlay{position:fixed;inset:0;z-index:1200;background:rgba(21,21,31,.62);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+.pw-overlay.hidden{display:none !important}
+.pw-box{background:var(--card);border-radius:var(--r-lg);padding:24px 20px;
+  width:100%;max-width:380px;box-shadow:0 20px 60px rgba(20,20,40,.32);text-align:center}
+.pw-lock{width:58px;height:58px;border-radius:50%;background:var(--violet-soft);
+  display:flex;align-items:center;justify-content:center;font-size:27px;margin:0 auto 12px}
+.pw-box h3{font-size:17px;font-weight:800;margin-bottom:5px;color:var(--ink)}
+.pw-box .pw-sub{font-size:12.5px;color:var(--muted);line-height:1.55;margin-bottom:16px}
+.pw-file{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;vertical-align:bottom;font-weight:700;color:var(--ink-2)}
+.pw-field{position:relative;margin-bottom:10px}
+.pw-field input{width:100%;padding:15px 46px 15px 15px;border-radius:13px;
+  border:1.5px solid var(--line);font-size:15px;font-family:inherit;color:var(--ink);
+  background:#fff;outline:none;letter-spacing:.4px}
+.pw-field input:focus{border-color:var(--violet);box-shadow:0 0 0 3px var(--violet-soft)}
+.pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  width:38px;height:38px;border:none;background:transparent;font-size:17px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pw-err{background:var(--red-soft);border:1.5px solid var(--red-line);color:var(--red);
+  border-radius:11px;padding:10px 12px;font-size:12.5px;font-weight:700;margin-bottom:10px}
+.pw-err.hidden{display:none !important}
+.pw-go{width:100%;padding:16px;border-radius:14px;border:none;background:var(--grad);
+  color:#fff;font-family:inherit;font-weight:800;font-size:15px;cursor:pointer;
+  box-shadow:0 8px 22px rgba(124,58,237,.28)}
+.pw-go:active{transform:scale(.98)}
+.pw-cancel{width:100%;margin-top:9px;padding:13px;border-radius:13px;background:#fff;
+  border:1.5px solid var(--line);color:var(--ink-2);font-family:inherit;
+  font-weight:700;font-size:14px;cursor:pointer}
+.pw-note{font-size:11px;color:var(--muted);margin-top:12px;line-height:1.55}
+
+/* === STYLESHEET CHUNK 1 === */
+/* Mini Print — Portrait / Landscape (work-46) */
+  .mini-orient{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+  .mini-ori{
+    border:1.5px solid var(--line);background:#fff;border-radius:13px;padding:11px 6px;
+    cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:13.5px;font-weight:700;
+    color:var(--ink-2);transition:.14s;
+  }
+  .mini-ori:active{transform:scale(.97)}
+  .mini-ori.sel{border-color:var(--violet);background:#faf8ff;color:var(--violet);
+    box-shadow:0 0 0 3px rgba(124,58,237,.1)}
+  .mini-ori-hint{font-size:11.5px;color:var(--muted);margin:0 0 14px}
+  .mini-ori-hint.off{visibility:hidden}
+
+/* === STYLESHEET CHUNK 2 === */
+/* 4×6 Photo patti ka dropdown — patti ke andar hi, safed text (work-47) */
+  #serviceBadgeTxt .qsp-pc-sel{
+    -webkit-appearance:none;appearance:none;cursor:pointer;
+    font:inherit;font-weight:800;color:#fff;
+    background:rgba(255,255,255,.2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 9px center/10px 7px;
+    border:1px solid rgba(255,255,255,.55);border-radius:999px;
+    padding:3px 26px 3px 11px;margin-left:4px;vertical-align:middle;outline:none;
+  }
+  #serviceBadgeTxt .qsp-pc-sel:focus{box-shadow:0 0 0 3px rgba(255,255,255,.35)}
+  #serviceBadgeTxt .qsp-pc-sel option{color:#1f1f2e;background:#fff;font-weight:700}
+
+/* === STYLESHEET CHUNK 3 === */
+/* 4×6 Photo: Adjust page par SIRF Portrait/Landscape, Brightness/Contrast
+     aur Photo Border (+ upar photos ka dropdown). Sheet lock hai — drag,
+     size, zoom, rotate, crop, doosra document jodna, kagaz badalna: kuch
+     kaam ka nahi, sirf uljhan. (work-47) */
+  body.qsp-photo-mode #secEditor .add-doc-btn,
+  body.qsp-photo-mode #secEditor #paperSizeSel,
+  body.qsp-photo-mode #secEditor #zoomWrap,
+  body.qsp-photo-mode #secEditor button[onclick="toolAutoA4()"],
+  body.qsp-photo-mode #secEditor #rotateBtn,
+  body.qsp-photo-mode #secEditor #rotatePanel,
+  body.qsp-photo-mode #secEditor button[onclick="toolPerspectiveCrop()"],
+  body.qsp-photo-mode #secEditor #serviceBadge + p{display:none !important}
+
+/* === STYLESHEET CHUNK 4 === */
+/* work-53 — digital signature ka status (file mil gayi / editor / payment par) */
+.dsig-banner{margin:0 0 14px;display:flex;flex-direction:column;gap:8px}
+.dsig-row{display:flex;gap:10px;align-items:flex-start;border-radius:14px;padding:11px 13px;border:1.5px solid}
+.dsig-row.ok{background:#f0fdf4;border-color:#86efac}
+.dsig-row.bad{background:#fffbeb;border-color:#fcd34d}
+.dsig-ic{font-size:18px;line-height:1.25;flex:none}
+.dsig-tx{min-width:0;font-size:13px;line-height:1.5;color:#1f2937}
+.dsig-tx b{display:block;font-size:13.5px;color:#14532d}
+.dsig-row.bad .dsig-tx b{color:#92400e}
+.dsig-who{font-size:12px;color:#374151;font-weight:600;word-break:break-word}
+.dsig-note{font-size:11.5px;color:#4b5563;margin-top:2px}
+/* upload screen par (nayi file chunte waqt) purana status mat dikhao */
+#secUpload:not(.hidden) ~ #dsigBanner{display:none}
+
+/* === STYLESHEET CHUNK 5 === */
+/* work-54 — 4 step design: Step 3 = Preview + Options (do column), Step 4 = Make Payment */
+.pv-card{padding:16px 12px}
+.pv-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.pv-head h3{margin:0;font-size:16px;min-width:0}
+.pv-pill{flex:none;background:#f1f0f6;color:var(--ink-2);font-weight:700;font-size:12px;padding:6px 11px;border-radius:99px;white-space:nowrap}
+.pv-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:10px;align-items:start}
+.pv-left .final-preview-wrap{padding:10px;margin-bottom:10px;border-radius:14px}
+.pv-left .final-preview-wrap img{max-height:340px}
+.pv-left .page-nav{gap:8px}
+.pv-left .page-nav-btn{width:36px;height:36px;font-size:18px;border-radius:10px}
+.pv-left .page-info{font-size:12.5px;white-space:nowrap}
+.pv-right{display:flex;flex-direction:column;gap:10px;min-width:0}
+.pv-box,.pv-right .page-range-box{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:none;margin:0}
+.pv-right .page-range-box label,.pv-box-h{display:block;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:12.5px;line-height:1.3;margin-bottom:8px}
+.pv-right .range-toggle{gap:5px;margin-bottom:8px}
+.pv-right .tog-btn{padding:7px 2px;font-size:10.5px;line-height:1.2;letter-spacing:-.1px;border-radius:10px}
+.pv-right .range-input{padding:9px;font-size:13px;border-radius:10px;margin-bottom:4px}
+.pv-right .range-hint{font-size:11px}
+.pv-types{grid-template-columns:1fr;gap:8px}
+.pv-types .opt-card{position:relative;padding:12px 8px 10px}
+.pv-types .opt-card .ic{font-size:22px}
+.pv-types .opt-card .lbl{font-size:13px;margin-top:4px;line-height:1.25}
+.pv-types .opt-card .pr{font-size:11.5px}
+.pv-radio{position:absolute;top:7px;right:7px;width:20px;height:20px;border-radius:50%;border:1.5px solid #cfcbe0;background:#fff}
+.opt-card.sel .pv-radio{background:var(--violet);border-color:var(--violet)}
+.opt-card.sel .pv-radio::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:800;line-height:1}
+/* patli column: upar icon + switch, neeche poori chaudai me naam */
+.pv-duplex{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;text-align:left;cursor:pointer;padding:10px}
+.pv-duplex .ic{font-size:20px;flex:none;order:0}
+.pv-duplex .pv-switch{order:1}
+.pv-dup-tx{order:2;flex:1 0 100%;min-width:0;margin-top:6px}
+.pv-duplex .lbl{font-size:12.5px;margin:0;line-height:1.25}
+.pv-duplex .pr{font-size:11px;margin-top:2px}
+.pv-switch{flex:none;width:38px;height:22px;border-radius:99px;background:#dcd9e8;position:relative;transition:.2s}
+.pv-switch i{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:.2s}
+.pv-duplex.sel{background:#faf8ff}
+.pv-duplex.sel .pv-switch{background:var(--violet)}
+.pv-duplex.sel .pv-switch i{left:19px}
+@media(max-width:330px){.pv-grid{grid-template-columns:1fr}}
+
+.pay-card h3{margin-bottom:14px}
+.pay-copies{margin-top:0;border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.pay-copies .copies-ctrl{gap:8px}
+.pay-copies .copies-ctrl span{min-width:52px;height:40px;display:grid;place-items:center;border:1.5px solid var(--line);border-radius:12px;font-size:17px}
+.pay-sum{border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:12px}
+.pay-sum .price-row span:last-child{color:var(--muted);text-align:right}
+.pay-sum .price-total{margin-top:2px}
+.pay-sum .price-total strong{font-size:26px}
+.pay-h{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:15px;margin:16px 0 9px}
+.pay-methods{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.pay-methods.one{grid-template-columns:1fr}
+.pay-m{position:relative;display:flex;align-items:center;gap:8px;text-align:left;border:1.5px solid var(--line);border-radius:16px;
+  background:#fff;padding:14px 26px 14px 10px;cursor:pointer;font-family:inherit;min-height:84px;transition:.16s;color:var(--ink)}
+.pay-m:active{transform:scale(.985)}
+.pm-art{font-size:34px;line-height:1;flex:none}
+.pm-tx{min-width:0;overflow-wrap:anywhere}      /* Tamil/Telugu ke lambe shabd card ke bahar na jaayein */
+.pm-tx b{display:block;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;line-height:1.25}
+.pm-tx small{display:block;font-size:11px;color:var(--muted);line-height:1.35;margin-top:2px}
+.pm-radio{position:absolute;top:9px;right:9px;width:20px;height:20px;border-radius:50%;border:1.5px solid #cfcbe0;background:#fff}
+.pay-m.sel{border-color:#f59e0b;background:#fffbeb;box-shadow:0 0 0 3px rgba(245,158,11,.13)}
+.pay-m.sel .pm-radio{border-color:#f59e0b}
+.pay-m.sel .pm-radio::after{content:'';position:absolute;inset:3px;border-radius:50%;background:#f59e0b}
+.pay-m:disabled{opacity:.45;cursor:not-allowed}
+.pay-legacy{display:none !important}
+.pay-confirm{display:flex;align-items:center;justify-content:center;gap:6px;flex:1.45 1 0;
+  font-size:14.5px;line-height:1.2;padding:13px 8px;min-width:0}
+.pay-confirm .pc-tx{min-width:0;overflow-wrap:anywhere}   /* lambi bhasha me 2 line, English me 1 */
+.pay-confirm .pc-amt{white-space:nowrap;flex:none}
+.pay-confirm:disabled{opacity:.6;cursor:wait}
+@media(max-width:380px){.pay-confirm{font-size:13.5px;gap:4px}}
+/* Tamil/Telugu/Kannada/Bangla ke shabd lambe — phone par tasveer upar, text neeche poori chaudai me */
+@media(max-width:480px){
+  html[lang="ta"] .pay-m,html[lang="te"] .pay-m,html[lang="kn"] .pay-m,html[lang="bn"] .pay-m,html[lang^="mni"] .pay-m{
+    flex-direction:column;align-items:flex-start;gap:6px;padding:12px 10px}
+  html[lang="ta"] .pm-art,html[lang="te"] .pm-art,html[lang="kn"] .pm-art,html[lang="bn"] .pm-art,html[lang^="mni"] .pm-art{font-size:28px}
+  html[lang="ta"] .pm-tx,html[lang="te"] .pm-tx,html[lang="kn"] .pm-tx,html[lang="bn"] .pm-tx,html[lang^="mni"] .pm-tx{overflow-wrap:break-word}
+}
+@media(max-width:360px){.pm-art{font-size:28px}.pm-tx b{font-size:13px}.pay-confirm{font-size:13px}}
+
+/* === STYLESHEET CHUNK 6 === */
+/* work-55: upload screen — naye format (iPhone photo, Word/Excel/PPT) + Digital Sign verify.
+   Word/Excel/PPT wali line aur chip sirf us shop par jahan shop PC unhe khol sakta hai. */
+.up-office, .ft-office { display: none; }
+body.qsp-office-on .up-basic { display: none; }
+body.qsp-office-on .up-office { display: block; }
+body.qsp-office-on .ft-office { display: inline-block; }
+.ft.ft-heic   { color: #0369a1; border-color: #bae6fd; background: #f0f9ff; }
+.ft.ft-office { color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; }
+.ft.ft-dsig   { color: #15803d; border-color: #bbf7d0; background: #f0fdf4; }
+
+/* === STYLESHEET CHUNK 7 === */
+/* work-60 — Passport Photo: page chuno modal + A4 photo panel */
+.qsp-ppm{position:fixed;inset:0;background:rgba(15,10,30,.55);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px}
+.qsp-ppm-box{background:#fff;border-radius:22px;padding:22px 18px 16px;max-width:360px;width:100%;text-align:center;
+  font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 24px 60px rgba(60,20,120,.3)}
+.qsp-ppm-ic{font-size:34px}
+.qsp-ppm-box h3{margin:6px 0 2px;font-size:19px;font-weight:800;color:#1a1030}
+.qsp-ppm-sub{font-size:12.5px;color:#7a7a8c;margin:0 0 14px}
+.qsp-ppm-opt{display:flex;flex-direction:column;gap:3px;width:100%;text-align:center;margin-bottom:10px;cursor:pointer;
+  font-family:inherit;border:2px solid #e8e3f5;background:#fff;border-radius:16px;padding:14px 12px}
+.qsp-ppm-opt:hover,.qsp-ppm-opt:active{border-color:#7c3aed;background:#faf7ff}
+.qsp-ppm-opt .t{font-size:18px;font-weight:800;color:#1a1030}
+.qsp-ppm-opt .g{font-size:12px;color:#9b9aa8;font-weight:600;line-height:1.5}
+.qsp-ppm-x{background:none;border:none;color:#9b9690;font-size:12.5px;cursor:pointer;margin-top:2px;font-family:inherit}
+.a4pp{margin:8px 0 10px;border:1.5px solid #e8e3f5;border-radius:16px;padding:12px;background:#fbfaff}
+.a4pp-top{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12.5px;font-weight:700;color:#4b4658}
+.a4pp-cnt{color:#7c3aed;font-weight:800}
+.a4pp-lab{font-size:11.5px;color:#9b9aa8;font-weight:600;margin:10px 0 5px}
+.a4pp-presets{display:flex;gap:5px}
+#a4PhotoPanel + p{display:none !important}   /* photo mode me "drag karo" wali line nahi */
+.a4pp-presets button{flex:1 1 0;min-width:0;padding:8px 0;border:1.5px solid #e0daf3;background:#fff;border-radius:10px;
+  font-weight:800;font-size:14px;color:#4b4658;cursor:pointer;font-family:inherit}
+.a4pp-presets button.on{background:#7c3aed;border-color:#7c3aed;color:#fff}
+.a4pp-list{margin-top:10px;display:flex;flex-direction:column;gap:7px}
+.a4pp-row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #ece7f5;border-radius:12px;padding:6px 8px}
+.a4pp-row img{width:34px;height:44px;border-radius:5px;object-fit:cover;border:1px solid #e5e1f0;flex:none}
+.a4pp-nm{flex:1;font-size:13px;font-weight:700;color:#1a1030}
+.a4pp-st{display:flex;align-items:center;gap:6px}
+.a4pp-st button{width:30px;height:30px;border-radius:50%;border:1.5px solid #d9caf9;background:#fff;color:#7c3aed;
+  font-size:18px;font-weight:800;line-height:1;cursor:pointer;font-family:inherit}
+.a4pp-st b{min-width:26px;text-align:center;font-size:15px}
+.a4pp-rm{border:none;background:#fee2e2;color:#b91c1c;width:28px;height:28px;border-radius:8px;cursor:pointer;font-weight:800}
+.a4pp-add{width:100%;margin-top:10px;padding:11px;border-radius:12px;border:1.5px dashed #b7a1ee;background:#fff;
+  color:#7c3aed;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit}
+
+/* === STYLESHEET CHUNK 8 === */
+/* work-63 — payment/cash ke baad BADA order number (M-000001) */
+.ordno-box{margin:14px auto 6px;max-width:320px;padding:16px 14px 14px;border-radius:20px;background:linear-gradient(135deg,#7c3aed,#c026d3);color:#fff;text-align:center;box-shadow:0 10px 28px rgba(124,58,237,.28)}
+.ordno-lb{font-size:12.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;opacity:.9}
+.ordno-num{font-size:42px;line-height:1.15;font-weight:900;letter-spacing:2px;margin:6px 0 4px;font-family:'Plus Jakarta Sans',system-ui,sans-serif;word-break:break-all}
+.ordno-hint{font-size:11.5px;font-weight:600;opacity:.88;line-height:1.5}
+
+/* === STYLESHEET CHUNK 9 === */
+/* ══ work-64: upload screen — services ki list (icon left), wide screen par 2 column, Shop Info ══ */
+#secUpload #svcMenu{grid-template-columns:minmax(0,1fr) !important;gap:9px}
+.svc-card,.svc-card.svc-wide{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 14px;text-align:left;align-items:center;padding:12px 14px;grid-column:auto !important}
+.svc-card > div:first-child,.svc-card.svc-wide > div:first-child{grid-row:1/3;margin:0;width:50px;height:50px;border-radius:14px;font-size:24px}
+.svc-card > div:nth-child(2),.svc-card.svc-wide > div:nth-child(2){grid-column:2;grid-row:1;font-size:15px}
+.svc-card > div:nth-child(3),.svc-card.svc-wide > div:nth-child(3){grid-column:2;grid-row:2;margin-top:1px;font-size:12px}
+@media (min-width:720px){
+  .wrap:has(#secUpload:not(.hidden) #svcMenu){max-width:1000px}
+  /* right list screen ka ~1/4 hissa (left drop zone ~3/4) — cards chhote */
+  #secUpload:not(.hidden):has(#svcMenu){display:grid !important;grid-template-columns:minmax(0,3fr) minmax(210px,1fr);gap:16px;align-items:stretch}
+  #secUpload #svcMenu .svc-card{padding:9px 10px;gap:0 10px}
+  #secUpload #svcMenu .svc-card > div:first-child{width:38px;height:38px;border-radius:11px;font-size:19px}
+  #secUpload #svcMenu .svc-card > div:nth-child(2){font-size:13px;line-height:1.25}
+  #secUpload #svcMenu .svc-card > div:nth-child(3){font-size:11px;line-height:1.35}
+  #secUpload #uploadZone{order:0;grid-column:1;grid-row:1/3}
+  #secUpload #svcMenu{grid-column:2;grid-row:1/3;margin-bottom:0;grid-auto-rows:1fr;height:100%}
+  #secUpload #uploadZone{margin-bottom:0}
+  #secUpload .trust-row{grid-column:1/-1;order:3}
+}
+/* phone par bhi list SIDE me (right, ~28%) — neeche nahi; sirf icon + chhota naam */
+@media (max-width:719px){
+  #secUpload:not(.hidden):has(#svcMenu){display:grid !important;grid-template-columns:minmax(0,1fr) 104px;gap:9px;align-items:start}
+  #secUpload{align-items:stretch !important}
+  #secUpload #uploadZone{order:0;grid-column:1;grid-row:1/3;padding:14px 10px;margin-bottom:0}
+  #secUpload #svcMenu{grid-column:2;grid-row:1/3;margin-bottom:0;gap:8px;grid-auto-rows:1fr;height:100%}
+  #secUpload .trust-row{grid-column:1/-1;order:3}
+  #secUpload #svcMenu .svc-card,#secUpload #svcMenu .svc-card.svc-wide{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:9px 4px}
+  #secUpload #svcMenu .svc-card > div:first-child{width:38px;height:38px;margin:0 auto 5px;border-radius:12px;font-size:19px}
+  #secUpload #svcMenu .svc-card > div:nth-child(2){font-size:10.5px;line-height:1.2;letter-spacing:-.1px;word-break:break-word}
+  #secUpload #svcMenu .svc-card > div:nth-child(3){display:none}
+  #secUpload .upload-zone h3{font-size:17px}
+  #secUpload .upload-zone > p{font-size:11.5px}
+}
+/* header: logo (left) | naam CENTER | Shop Info (right) — dono side barabar chaudai, isliye naam asli center me */
+/* poore ho chuke step: ✓ green (dot + jodne wali line + naam) */
+.step.done .dot{background:#16a34a !important;border-color:#16a34a !important;color:#fff !important;box-shadow:0 0 0 4px rgba(22,163,74,.14)}
+.step.done:not(:last-child)::after{background:#16a34a !important}
+.step.done .step-lbl{color:#15803d !important}
+.shop-header:not([style*="display: none"]){display:grid !important;grid-template-columns:62px minmax(0,1fr) 62px;grid-template-rows:auto auto auto;align-items:center;gap:2px 10px;padding:12px}
+.shop-header .shop-info{display:contents}
+.shop-header .shop-icon{grid-column:1;grid-row:1/3}
+.shop-header .shop-infobtn{grid-column:3;grid-row:1/3;align-self:center;width:62px;height:62px;padding:4px;white-space:normal;line-height:1.25;font-size:10px;display:grid;place-items:center;text-align:center}
+.shop-header .shop-info h2{grid-column:2;grid-row:1;align-self:end;justify-content:center;text-align:center;font-size:18px;margin:0}
+.shop-header .shop-info p{grid-column:2;grid-row:2;align-self:start;text-align:center;font-size:11px;margin:2px 0 0;line-height:1.35;color:#a8a8bd}
+.shop-header .price-badges{grid-column:1/-1;grid-row:3;justify-content:center;flex-wrap:nowrap;gap:8px;margin-top:8px}
+.shop-header .price-badge{font-size:11px;padding:5px 11px;white-space:nowrap;flex:0 0 auto;max-width:none;overflow:visible;text-overflow:clip}
+.shop-infobtn{flex:none;align-self:flex-start;position:relative;z-index:2;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff;
+  border-radius:12px;padding:7px 11px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap}
+.shop-infobtn:active{transform:scale(.97)}
+#shopInfoModal{position:fixed;inset:0;z-index:600;background:rgba(15,15,25,.55);display:none;align-items:center;justify-content:center;padding:16px}
+#shopInfoModal.show{display:flex}
+#shopInfoModal .si-box{width:min(420px,100%);max-height:86vh;overflow:auto;background:#fff;border-radius:22px;padding:20px 18px 16px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+#shopInfoModal h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:19px;font-weight:800;margin:0 0 4px;color:#1a1030}
+#shopInfoModal .si-addr{font-size:12.5px;color:#6b6870;line-height:1.5;margin-bottom:12px}
+#shopInfoModal .si-sec{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#7c3aed;margin:12px 0 6px}
+#shopInfoModal .si-row{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:6px 0;border-bottom:1px solid #f1eff7}
+#shopInfoModal .si-row b{font-weight:800;color:#1a1030}
+#shopInfoModal .si-close{margin-top:14px;width:100%;border:none;border-radius:13px;padding:13px;background:linear-gradient(135deg,#7c3aed,#c026d3);color:#fff;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit}

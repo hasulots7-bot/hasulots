@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickPrint — Print Agent | Hasulots technologies</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    /* 100% Application Viewport Lock — ZERO window scrollbar */
+    html, body {
+      height: 100vh !important;
+      max-height: 100vh !important;
+      width: 100vw !important;
+      max-width: 100vw !important;
+      overflow: hidden !important;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+    }
+
+    .app-header {
+      flex-shrink: 0;
+      height: 58px;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 30;
+    }
+
+    .app-main {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: clamp(430px, 33vw, 490px) 1fr;
+      gap: 14px;
+      padding: 12px 18px;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .left-col {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .app-footer {
+      flex-shrink: 0;
+      height: 30px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      padding: 0 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .card-panel {
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03), 0 4px 14px rgba(0,0,0,0.02);
+      border: 1px solid #e2e8f0;
+    }
+
+    .printer-sel-active {
+      border: 2px solid #f59e0b !important;
+      background-color: #fffdfa !important;
+      color: #78350f !important;
+      font-weight: 800;
+      border-radius: 12px;
+      padding: 6px 12px;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+    }
+    .printer-sel-active:focus {
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+    }
+    .printer-disabled-slot {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      color: #94a3b8;
+      border-radius: 10px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .btn-action-round {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #475569;
+      cursor: pointer;
+      font-size: 15px;
+      transition: all 0.15s ease;
+    }
+    .btn-action-round:hover {
+      background: #f1f5f9;
+      color: #1e293b;
+      border-color: #94a3b8;
+      transform: scale(1.05);
+    }
+    .ios-toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+    }
+    .ios-toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .ios-toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #cbd5e1;
+      transition: .25s;
+      border-radius: 99px;
+    }
+    .ios-toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .25s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
+    input:checked + .ios-toggle-slider {
+      background-color: #10b981;
+    }
+    input:checked + .ios-toggle-slider:before {
+      transform: translateX(18px);
+    }
+
+    .stat-number {
+      font-size: 26px;
+      font-weight: 900;
+      line-height: 1;
+      color: #0f172a;
+    }
+    .stat-number.blue {
+      color: #2563eb;
+    }
+
+    /* Keypad Styles */
+    .key-btn {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .key-btn:active {
+      transform: scale(0.92);
+      background: #ede9fe;
+      border-color: #a78bfa;
+    }
+    .pin-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+      background: transparent;
+      transition: all 0.2s ease;
+    }
+    .pin-dot.filled {
+      background: #7c3aed;
+      border-color: #7c3aed;
+      transform: scale(1.15);
+      box-shadow: 0 0 8px rgba(124, 58, 237, 0.4);
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .shake-anim {
+      animation: shake 0.4s ease;
+    }
+
+    /* Orders scrollbar */
+    .orders-stream-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .orders-stream-list::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 6px;
+    }
+  </style>
+  <script>
+    function openShopConfigModal() {
+      const m = document.getElementById('modal-shop-config');
+      if (m) {
+        m.style.setProperty('display', 'flex', 'important');
+        m.style.setProperty('z-index', '999999', 'important');
+        m.classList.remove('hidden');
+      }
+      if (window.populateShopConfigModal) {
+        try { window.populateShopConfigModal(); } catch (e) {}
+      }
+    }
+    function closeShopConfigModal() {
+      const m = document.getElementById('modal-shop-config');
+      if (m) {
+        m.style.setProperty('display', 'none', 'important');
+        m.classList.add('hidden');
+      }
+    }
+  </script>
+</head>
+<body class="selection:bg-indigo-600 selection:text-white">
+
+  <!-- ============================================================ -->
+  <!-- 🔒 ADMIN LOGIN LOCK SCREEN (Required for Admin, Not Customer) -->
+  <!-- ============================================================ -->
+    <!-- ============================================================ -->
+  <!-- 🔒 ADMIN & SHOP LOGIN / REGISTRATION OVERLAY                   -->
+  <!-- ============================================================ -->
+  <style>
+    #admin-login-overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;
+      background:radial-gradient(900px 500px at 90% -10%,#a78bfa66,transparent),radial-gradient(700px 500px at -10% 110%,#6366f166,transparent),linear-gradient(135deg,#1e1b4b,#3730a3 55%,#6d28d9);
+      transition:opacity .3s ease;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+    #admin-login-overlay .lg-wrap{display:grid;grid-template-columns:1.05fr .95fr;width:100%;max-width:900px;background:#fff;border-radius:26px;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,.45)}
+    #admin-login-overlay .lg-side{background:linear-gradient(160deg,#4f46e5,#7c3aed);color:#fff;padding:40px 34px;display:flex;flex-direction:column;justify-content:space-between;gap:24px}
+    #admin-login-overlay .lg-brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:20px}
+    #admin-login-overlay .lg-brand i{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-style:normal;font-size:22px}
+    #admin-login-overlay .lg-side small{display:block;font-size:11px;font-weight:600;opacity:.75;letter-spacing:.5px}
+    #admin-login-overlay .lg-side h2{font-size:26px;line-height:1.25;font-weight:800;margin:0 0 14px}
+    #admin-login-overlay .lg-side ul{list-style:none;padding:0;margin:0;display:grid;gap:11px;font-size:14px;font-weight:600}
+    #admin-login-overlay .lg-side li{display:flex;gap:10px;align-items:center}
+    #admin-login-overlay .lg-side li span{width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:13px;flex-shrink:0}
+    #admin-login-overlay .lg-side p{font-size:12px;opacity:.8;margin:0}
+    #admin-login-overlay .lg-form{padding:40px 34px;display:flex;flex-direction:column;justify-content:center;text-align:left}
+    #admin-login-overlay .lg-form h1{font-size:24px;font-weight:800;color:#15151f;margin:0}
+    #admin-login-overlay .lg-form .sub{color:#6b6b7e;font-size:13.5px;margin:4px 0 22px}
+    #admin-login-overlay label{display:block;font-weight:700;font-size:12.5px;color:#3d3d4e;margin:0 0 6px}
+    #admin-login-overlay .fld{margin-bottom:16px;position:relative}
+    #admin-login-overlay input{width:100%;padding:12px 14px;border:2px solid #e8e6f0;border-radius:12px;font-size:15px;font-weight:600;color:#15151f;outline:none;transition:.15s;background:#fff;font-family:inherit}
+    #admin-login-overlay input:focus{border-color:#6d28d9;box-shadow:0 0 0 4px #ede9fe}
+    #admin-login-overlay .eye{position:absolute;right:10px;top:33px;background:none;border:0;cursor:pointer;font-size:17px;padding:4px;opacity:.6}
+    #admin-login-overlay #login-error-msg{color:#e11d48;font-weight:700;font-size:13px;min-height:20px;margin-bottom:8px;opacity:0;transition:opacity .2s}
+    #admin-login-overlay #btn-submit-pwd{width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 10px 22px rgba(79,70,229,.35);transition:.15s;font-family:inherit}
+    #admin-login-overlay #btn-submit-pwd:hover{transform:translateY(-1px);filter:brightness(1.07)}
+    #admin-login-overlay .lg-help{margin-top:20px;padding-top:16px;border-top:1px solid #e8e6f0;font-size:13px;color:#6b6b7e;display:flex;flex-direction:column;gap:6px;text-align:center}
+    #admin-login-overlay .lg-help a{color:#4f46e5;font-weight:700;text-decoration:none}
+    #admin-login-overlay .lg-help a:hover{text-decoration:underline}
+    @media(max-width:720px){#admin-login-overlay .lg-wrap{grid-template-columns:1fr}#admin-login-overlay .lg-side{display:none}#admin-login-overlay .lg-form{padding:30px 24px}}
+  </style>
+
+  <!-- ============================================================ -->
+  <!-- 🔑 SHOP OWNER LOGIN (accounts are created by the QuickPrint owner) -->
+  <!-- ============================================================ -->
+  <div id="admin-login-overlay">
+    <div class="lg-wrap">
+      <div class="lg-side">
+        <div class="lg-brand"><i>🖨️</i><div>QuickPrint<small>BY HASULOTS TECHNOLOGIES</small></div></div>
+        <div>
+          <h2>Customer scan pannaa,<br>print thaanaave nikkum.</h2>
+          <ul>
+            <li><span>📲</span> QR scan • Upload • Pay • Print</li>
+            <li><span>📊</span> Orders &amp; income ellam oru dashboard-la</li>
+            <li><span>🖨️</span> B&amp;W, Color, A3, Duplex printers</li>
+            <li><span>🔒</span> Print mudinjadhum file delete</li>
+          </ul>
+        </div>
+        <p>© 2026 QuickPrint • Hasulots Technologies</p>
+      </div>
+
+      <div class="lg-form" id="login-view-form">
+        <h1>Shop Owner Login</h1>
+        <div class="sub">Unga shop dashboard-ku sign in pannunga</div>
+
+        <div class="fld">
+          <label for="admin-username-input">Username</label>
+          <input type="text" id="admin-username-input" placeholder="Enter your username" autocomplete="username" autocapitalize="none" spellcheck="false"
+                 onkeydown="if(event.key==='Enter')document.getElementById('admin-password-input').focus()">
+        </div>
+
+        <div class="fld">
+          <label for="admin-password-input">Password</label>
+          <input type="password" id="admin-password-input" placeholder="Enter your password" autocomplete="current-password"
+                 onkeydown="if(event.key==='Enter')verifyLoginSubmit()">
+          <button type="button" class="eye" onclick="togglePasswordVisibility()" title="Show / Hide" aria-label="Show or hide password">👁️</button>
+        </div>
+
+        <div id="login-error-msg"></div>
+
+        <button type="button" id="btn-submit-pwd" onclick="verifyLoginSubmit()">Login to Dashboard →</button>
+
+        <div class="lg-help">
+          <span>Username / password maranthutteengala? Licence renew pannanuma?</span>
+          <a href="/#contact">💬 Contact QuickPrint owner</a>
+          <a href="/">← Back to website</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <header class="app-header">
+    
+    <!-- Left: Logo & Store Info -->
+    <div class="flex items-center gap-3 min-w-0">
+      
+      <!-- Pink Squircle with White Printer Character -->
+      <div class="w-9 h-9 rounded-xl bg-[#ec2a7a] text-white flex items-center justify-center text-xl shadow-xs shrink-0">
+        🖨️
+      </div>
+
+      <!-- Store Name & Code -->
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <h1 id="header-shop-name" onclick="openShopConfigModal()" class="font-black text-base text-slate-900 leading-tight truncate cursor-pointer hover:text-violet-700 transition" title="Click to edit shop settings">Hasulots technologies</h1>
+          <button id="btn-edit-shop-info" onclick="openShopConfigModal()" class="text-slate-400 hover:text-indigo-600 p-0.5" title="Edit Store Details & Rates">
+            <i data-lucide="edit-3" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <span id="header-shop-code" class="text-xs font-mono font-bold text-violet-600">QP_HASULOTS</span>
+          <button id="btn-copy-code" class="text-slate-400 hover:text-slate-700 text-xs font-semibold underline">Copy</button>
+        </div>
+      </div>
+
+      <!-- Live Agent Online Pill -->
+      <div class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-extrabold ml-1">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>Agent Online</span>
+      </div>
+
+    </div>
+
+    <!-- Right: Action Controls -->
+    <div class="flex items-center gap-3 shrink-0">
+      
+      <!-- Zoom Controls (A- / A+) -->
+      <div class="flex items-center bg-slate-100 hover:bg-slate-200/60 border border-slate-200 rounded-xl px-2.5 py-1 gap-1.5 shadow-2xs transition" title="Adjust App Display Size">
+        <span class="text-xs text-slate-500 font-bold select-none mr-0.5">🔍</span>
+        <button id="btn-zoom-out" type="button" class="w-6 h-6 rounded-lg bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-black text-xs flex items-center justify-center transition active:scale-95 shadow-2xs" title="Make Smaller (Ctrl + -)">−</button>
+        <span id="zoom-level-label" class="text-xs font-black text-slate-800 min-w-[38px] text-center select-none font-mono">110%</span>
+        <button id="btn-zoom-in" type="button" class="w-6 h-6 rounded-lg bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-black text-xs flex items-center justify-center transition active:scale-95 shadow-2xs" title="Make Bigger (Ctrl + +)">+</button>
+        <button id="btn-zoom-reset" type="button" class="text-[10px] font-black text-slate-400 hover:text-slate-700 px-1 rounded hover:bg-slate-200 transition select-none" title="Reset Zoom to 110%">Reset</button>
+      </div>
+
+      <!-- Lock Button -->
+      <button id="btn-open-settings" onclick="openShopConfigModal()" class="px-3.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-violet-600/25 transition active:scale-95" title="Configure Shop Name, Rates & Password">
+        <span>⚙️</span>
+        <span>Shop Settings</span>
+      </button>
+      <button id="btn-lock-agent" onclick="lockAdminDashboard()" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-1.5 shadow-2xs transition" title="Lock Dashboard">
+        <i data-lucide="lock" class="w-3.5 h-3.5 text-slate-500"></i>
+        <span>Lock</span>
+      </button>
+
+      <!-- Sync Now Button -->
+      <button id="btn-sync-now" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-1.5 shadow-2xs transition">
+        <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-500"></i>
+        <span>Sync Now</span>
+      </button>
+
+      <!-- Customers can order? Shop Open Toggle -->
+      <div class="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 rounded-xl shadow-2xs">
+        <div class="text-right">
+          <span class="text-[10px] text-slate-500 font-bold block leading-none">Customers can order?</span>
+          <span id="shop-open-status" class="text-xs font-black text-emerald-800">Shop Open</span>
+        </div>
+        <label class="ios-toggle-switch">
+          <input type="checkbox" id="toggle-shop-open" checked>
+          <span class="ios-toggle-slider"></span>
+        </label>
+      </div>
+
+    </div>
+
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- MAIN LAYOUT (Fills remaining height, zero body scroll)        -->
+  <!-- ============================================================ -->
+  <main class="app-main">
+
+    <!-- ============================================================ -->
+    <!-- LEFT COLUMN: PRINTERS & BOTTOM CARDS (Fixed 420px)           -->
+    <!-- ============================================================ -->
+    <div class="left-col">
+      
+      <!-- Card 1: Printers Box -->
+      <div class="card-panel p-4 flex flex-col justify-between flex-1 min-h-0">
+        <div>
+          <!-- Header -->
+          <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-3">
+            <div>
+              <h2 class="text-base font-black text-slate-900 inline mr-2">Printers</h2>
+              <span class="text-xs text-slate-400 font-semibold">Which printer does what</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="printers-status-badge" class="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">0 of 2 ready</span>
+              <button id="btn-refresh-printers" class="text-slate-400 hover:text-slate-800 p-1 rounded-lg hover:bg-slate-100 transition" title="Refresh Windows Printers">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Slots List -->
+          <div class="space-y-3">
+            
+            <!-- 1. Black & White Slot -->
+            <div class="p-3.5 rounded-2xl bg-amber-50/50 border-2 border-amber-300/80 flex items-center justify-between gap-2 shadow-xs transition hover:border-amber-400">
+              <div class="flex items-center gap-3 min-w-[130px]">
+                <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center text-base shrink-0 shadow-xs">🖨️</div>
+                <div>
+                  <h3 class="text-sm font-black text-slate-900 leading-tight">Black & White</h3>
+                  <p class="text-xs text-amber-900/70 font-bold">A4 / Legal (B&amp;W)</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 flex-1 justify-end min-w-0">
+                <select id="select-bw-printer" class="printer-sel-active max-w-[170px] truncate text-xs font-bold py-1.5 px-2.5">
+                  <option value="">Choose a printer...</option>
+                </select>
+                <span class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-black text-slate-700 shrink-0">Normal</span>
+                <button class="btn-action-round btn-test-print" data-mode="bw" title="Test Print">🖨️</button>
+                <button class="btn-action-round" title="Printer Settings">⚙️</button>
+              </div>
+            </div>
+
+            <!-- 2. Color Slot -->
+            <div class="p-3.5 rounded-2xl bg-rose-50/50 border-2 border-rose-300/80 flex items-center justify-between gap-2 shadow-xs transition hover:border-rose-400">
+              <div class="flex items-center gap-3 min-w-[130px]">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-500 text-white flex items-center justify-center text-base shrink-0 shadow-xs">🌈</div>
+                <div>
+                  <h3 class="text-sm font-black text-slate-900 leading-tight">Color</h3>
+                  <p class="text-xs text-rose-900/70 font-bold">A4 / Legal (Color)</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 flex-1 justify-end min-w-0">
+                <select id="select-color-printer" class="printer-sel-active max-w-[170px] truncate text-xs font-bold py-1.5 px-2.5">
+                  <option value="">Choose a printer...</option>
+                </select>
+                <span class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-black text-slate-700 shrink-0">Normal</span>
+                <button class="btn-action-round btn-test-print" data-mode="color" title="Test Print">🖨️</button>
+                <button class="btn-action-round" title="Printer Settings">⚙️</button>
+              </div>
+            </div>
+
+            <!-- Additional Slots Info (Auto Managed) -->
+            <div class="pt-2 flex items-center justify-between px-2 text-xs text-slate-400 font-semibold border-t border-slate-100">
+              <span>Duplex / A3 / 4×6 Photo</span>
+              <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">Auto-managed</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between">
+          <span id="printer-helper-msg" class="text-xs text-slate-500 font-semibold">Black & White needs a printer</span>
+          <button id="btn-save-printer-settings" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-black shadow-sm transition">
+            Save Settings
+          </button>
+        </div>
+      </div>
+
+      <!-- Card 2: Your Shop QR Hub (Large & High Visibility) -->
+      <div class="card-panel p-3.5 flex items-center gap-3.5 border border-slate-200 shrink-0">
+        <!-- Canvas Container - BIG 165px x 165px QR -->
+        <div id="corner-qr-box" 
+             onclick="openFullscreenQrModal()" 
+             class="w-[165px] h-[165px] shrink-0 bg-white rounded-2xl border-2 border-slate-200 flex items-center justify-center overflow-hidden p-2 shadow-sm cursor-pointer group hover:border-violet-500 hover:shadow-md transition relative"
+             title="Click to view Fullscreen QR for customers">
+          <img id="admin-qr-img" class="w-full h-full object-contain" alt="QR" src="/api/qr?format=image" />
+          <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center rounded-2xl text-white text-xs font-black">
+            🔍 Enlarge
+          </div>
+        </div>
+
+        <!-- Info & Actions -->
+        <div class="flex flex-col justify-between h-[165px] min-w-0 flex-1">
+          <div>
+            <div class="flex items-center gap-1.5 mb-1.5">
+              <span id="qr-conn-badge" onclick="toggleQrMode()" class="text-xs font-black uppercase text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md cursor-pointer border border-emerald-200 hover:bg-emerald-100 transition" title="Click to switch between 4G/5G and Shop Wi-Fi">
+                🟢 4G/5G Live
+              </span>
+            </div>
+            <h3 class="text-sm font-black text-slate-900 leading-tight">Customer Scan QR</h3>
+            <p class="text-xs text-slate-500 leading-snug mt-1">கஸ்டமர் மொபைலில் ஸ்கேன் செய்து பைல் அனுப்ப</p>
+            <p class="text-[11px] font-mono font-bold text-violet-600 mt-1 truncate" id="qr-target-url-text">QP_HASULOTS</p>
+          </div>
+
+          <div class="flex flex-col gap-1.5 pt-1">
+            <button type="button" onclick="openFullscreenQrModal()" class="w-full py-1.5 px-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95">
+              <span>🔍 Enlarge QR (Full Screen)</span>
+            </button>
+            <a href="/standee.html" target="_blank" class="w-full py-1.5 px-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-extrabold text-xs flex items-center justify-center gap-1.5 transition">
+              <span>📥 Download Print Poster</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Counter Approval & Ink Status (Compact Strip, Height ~54px) -->
+      <div class="card-panel p-2.5 flex items-center justify-between border border-slate-200 shrink-0 text-xs">
+        <!-- Paper & Ink -->
+        <div class="flex items-center gap-2">
+          <span class="font-black text-slate-800 text-xs shrink-0">Paper &amp; Ink:</span>
+          <div class="flex items-center gap-1">
+            <button class="pill-paper px-2 py-0.5 rounded-md text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300">All good</button>
+            <button class="pill-paper px-2 py-0.5 rounded-md text-xs font-bold text-slate-500 hover:bg-slate-100">Low ink</button>
+            <button class="pill-paper px-2 py-0.5 rounded-md text-xs font-bold text-slate-500 hover:bg-slate-100">No paper</button>
+          </div>
+        </div>
+
+        <div class="h-6 w-px bg-slate-200 mx-1"></div>
+
+        <!-- Counter Approval -->
+        <div class="flex items-center gap-3">
+          <span class="flex items-center gap-1.5 font-bold text-slate-700">Cash <label class="ios-toggle-switch" style="width:30px;height:18px;"><input type="checkbox" id="toggle-cash-orders"><span class="ios-toggle-slider" style="border-radius:99px;"></span></label></span>
+          <span class="flex items-center gap-1.5 font-bold text-slate-700">Auto-Print <label class="ios-toggle-switch" style="width:30px;height:18px;"><input type="checkbox" id="toggle-paid-autoprint" checked><span class="ios-toggle-slider" style="border-radius:99px;"></span></label></span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- RIGHT COLUMN: STATS & TODAY'S ORDERS TABLE (Flex 1)          -->
+    <!-- ============================================================ -->
+    <div class="right-col">
+      
+      <!-- Top Stat Cards (4 Cards + 2 Action Buttons in one row, Height ~76px) -->
+      <div class="grid grid-cols-6 gap-3 shrink-0 h-[76px]">
+        
+        <!-- 1. Orders today -->
+        <div class="card-panel p-3 flex flex-col justify-between">
+          <span class="text-xs font-bold text-slate-500 block leading-none">Orders today</span>
+          <span id="metric-orders-today" class="stat-number block">0</span>
+          <span id="metric-pages-today" class="text-xs text-slate-400 font-semibold block leading-none">0 pages</span>
+        </div>
+
+        <!-- 2. Total earned -->
+        <div class="card-panel p-3 flex flex-col justify-between">
+          <span class="text-xs font-bold text-slate-500 block leading-none">Total earned</span>
+          <span id="metric-total-earned" class="stat-number blue block">₹0</span>
+          <span id="metric-printed-today" class="text-xs text-slate-400 font-semibold block leading-none">0 orders printed</span>
+        </div>
+
+        <!-- 3. Cash -->
+        <div class="card-panel p-3 flex flex-col justify-between">
+          <span class="text-xs font-bold text-slate-500 block leading-none">Cash</span>
+          <span id="metric-cash-earned" class="stat-number block">₹0</span>
+          <span class="text-xs text-slate-400 font-semibold block leading-none">at counter</span>
+        </div>
+
+        <!-- 4. Online -->
+        <div class="card-panel p-3 flex flex-col justify-between">
+          <span class="text-xs font-bold text-slate-500 block leading-none">Online</span>
+          <span id="metric-online-earned" class="stat-number block">₹0</span>
+          <span class="text-xs text-slate-400 font-semibold block leading-none">to UPI account</span>
+        </div>
+
+        <!-- Action Buttons (Right 2 cols) -->
+        <div class="col-span-2 flex flex-col justify-between gap-1.5">
+          <button id="btn-whatsapp-report" class="flex-1 rounded-xl bg-[#16a34a] hover:bg-[#15803d] text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs transition px-3">
+            <span>💬 WhatsApp report</span>
+          </button>
+          <button id="btn-save-pdf" class="flex-1 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs transition px-3">
+            <span>📄 Save as PDF</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Main Panel: Today's Orders Table (Fills all remaining height) -->
+      <div class="card-panel p-4 flex-1 min-h-0 flex flex-col overflow-hidden">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 gap-2 shrink-0">
+          <div class="flex items-center gap-2.5">
+            <h2 class="text-base font-black text-slate-900">Today's Orders</h2>
+            <span id="display-today-date" class="text-xs text-slate-400 font-bold">15 Nov 2026</span>
+            <span class="text-xs text-slate-400 hidden sm:inline">&bull; Click print icon to print directly</span>
+          </div>
+          <!-- Filter Tabs -->
+          <div class="flex items-center gap-1.5">
+            <button class="order-filter-tab px-3 py-1 rounded-full text-xs font-black bg-purple-100 text-purple-800" data-filter="all">All <span id="count-all">0</span></button>
+            <button class="order-filter-tab px-3 py-1 rounded-full text-xs font-bold text-slate-500 hover:bg-slate-100" data-filter="cash">Cash <span id="count-cash">0</span></button>
+            <button class="order-filter-tab px-3 py-1 rounded-full text-xs font-bold text-slate-500 hover:bg-slate-100" data-filter="online">Online <span id="count-online">0</span></button>
+          </div>
+        </div>
+
+        <!-- Table Columns Header -->
+        <div class="grid grid-cols-12 gap-2 py-2.5 border-b border-slate-100 text-xs font-black uppercase text-slate-400 tracking-wider shrink-0">
+          <div class="col-span-2">Order No</div>
+          <div class="col-span-4">Details</div>
+          <div class="col-span-2">Mode</div>
+          <div class="col-span-2">Time</div>
+          <div class="col-span-2 text-right">Status</div>
+        </div>
+
+        <!-- Orders Stream Container (Scrolls internally if overflow) -->
+        <div id="orders-stream-list" class="orders-stream-list flex-1 min-h-0 overflow-y-auto divide-y divide-slate-100">
+          
+          <!-- Empty State (Exact match to screenshot) -->
+          <div id="empty-orders-state" class="text-center py-10">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mb-2">📄</div>
+            <h3 class="text-base font-black text-slate-800">No orders yet today</h3>
+            <p class="text-xs text-slate-400 mt-1 font-medium">New print jobs from customer mobile scans will show up here live.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ============================================================ -->
+  <!-- FOOTER (Fixed height 28px)                                   -->
+  <!-- ============================================================ -->
+  <footer class="app-footer">
+    <div>
+      <span>Files: Server <b class="text-slate-700">0 deleted</b>, 0 other &bull; This PC <b class="text-slate-700">0 locked</b>, delete tonight at 11:59 PM</span>
+      <a href="#" class="text-blue-600 hover:underline font-bold ml-1">Details</a>
+    </div>
+    <div>
+      <span class="text-slate-400 font-medium">Hasulots technologies</span>
+    </div>
+  </footer>
+
+    <!-- ============================================================ -->
+  <!-- 🏪 COMPLETE SHOP CONFIGURATION & REGISTRATION MODAL          -->
+  <!-- ============================================================ -->
+  <div id="modal-shop-config" style="display:none; position:fixed; inset:0; z-index:999999;" class="flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4" onclick="if(event.target===this)closeShopConfigModal()">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-lg w-full p-6 text-slate-800 relative max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center text-lg shadow-xs">⚙️</div>
+          <div>
+            <h3 class="text-base font-black text-slate-900 leading-tight">Shop Settings &amp; Pricing</h3>
+            <p class="text-xs text-slate-500">கடை விபரங்கள், கட்டணம் &amp; பாஸ்வேர்டு</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeShopConfigModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-sm flex items-center justify-center transition">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        
+        <!-- SECTION 1: SHOP IDENTIFICATION -->
+        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3">
+          <h4 class="font-black text-slate-900 text-xs flex items-center gap-1.5">
+            <span>🏪</span> Shop Information &amp; Identification
+          </h4>
+
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Shop Name / கடையின் பெயர் *</label>
+            <input type="text" id="modal-shop-name" class="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold bg-white text-sm" placeholder="e.g. Hasulots technologies">
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-bold text-slate-600">Shop ID / கடை குறியீடு</label>
+              <button type="button" onclick="autoGenerateModalShopId()" class="text-violet-600 font-extrabold hover:underline text-[11px]">🔄 Auto Generate ID</button>
+            </div>
+            <input type="text" id="modal-shop-id" class="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono font-bold bg-white text-violet-700" placeholder="QP_HASULOTS">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Shop Phone / தொலைபேசி</label>
+              <input type="tel" id="modal-shop-phone" class="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold bg-white" placeholder="+91 98765 43210">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Address / முகவரி</label>
+              <input type="text" id="modal-shop-address" class="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold bg-white" placeholder="Main Road, Opp. Bus Stand">
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: ADMIN CREDENTIALS -->
+        <div class="p-3.5 bg-violet-50/60 rounded-2xl border border-violet-200/80 space-y-3">
+          <h4 class="font-black text-violet-900 text-xs flex items-center gap-1.5">
+            <span>🔐</span> Admin Login Credentials / உள்நுழைவு விபரம்
+          </h4>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Admin Username</label>
+              <input type="text" id="modal-admin-username" class="w-full px-3 py-2 border border-violet-200 rounded-xl font-bold bg-white" placeholder="admin">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Admin Password</label>
+              <input type="text" id="modal-admin-password" class="w-full px-3 py-2 border border-violet-200 rounded-xl font-bold bg-white" placeholder="1234">
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: PRICING & PAYMENT -->
+        <div class="p-3.5 bg-emerald-50/60 rounded-2xl border border-emerald-200/80 space-y-3">
+          <h4 class="font-black text-emerald-900 text-xs flex items-center gap-1.5">
+            <span>💳</span> Payment Options &amp; Print Pricing
+          </h4>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Shop UPI ID (GPay / PhonePe) *</label>
+              <input type="text" id="modal-upi-id" class="w-full px-3 py-2 border border-emerald-200 rounded-xl font-mono font-bold bg-white text-emerald-800" placeholder="hasulots@upi">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">UPI Payee Display Name</label>
+              <input type="text" id="modal-upi-name" class="w-full px-3 py-2 border border-emerald-200 rounded-xl font-bold bg-white" placeholder="Hasulots technologies">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2.5">
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">B&amp;W Rate (₹/page)</label>
+              <input type="number" id="modal-bw-rate" class="w-full px-3 py-2 border border-emerald-200 rounded-xl font-bold bg-white" placeholder="3">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Color Rate (₹/page)</label>
+              <input type="number" id="modal-color-rate" class="w-full px-3 py-2 border border-emerald-200 rounded-xl font-bold bg-white" placeholder="10">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Duplex Disc %</label>
+              <input type="number" id="modal-duplex-discount" class="w-full px-3 py-2 border border-emerald-200 rounded-xl font-bold bg-white" placeholder="15">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Footer -->
+      <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+<span></span>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeShopConfigModal()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold text-xs transition">
+            Cancel
+          </button>
+          <button type="button" onclick="saveShopConfig()" class="px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-black text-xs shadow-md shadow-violet-600/25 transition active:scale-95">
+            💾 Save Settings / சேமிக்க
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+      </div>
+      <div class="mt-5 flex items-center justify-end gap-2">
+        <button id="btn-cancel-modal" class="px-4 py-2 rounded-xl text-slate-600 font-bold text-xs hover:bg-slate-100">Cancel</button>
+        <button id="btn-save-modal" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-black text-xs">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 🔍 FULLSCREEN BIG QR MODAL (For Customer Counter Scanning)  -->
+  <!-- ============================================================ -->
+  <div id="modal-fullscreen-qr" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-6" onclick="if(event.target===this)closeFullscreenQrModal()">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-lg w-full p-8 text-center relative">
+      
+      <!-- Close Button -->
+      <button type="button" onclick="closeFullscreenQrModal()" class="absolute right-5 top-5 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-lg flex items-center justify-center transition">✕</button>
+
+      <!-- Shop Branding -->
+      <div class="flex items-center justify-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-[#ec2a7a] text-white flex items-center justify-center text-2xl shadow-sm">🖨️</div>
+        <div class="text-left">
+          <h2 class="text-xl font-black text-slate-900 leading-tight">Hasulots technologies</h2>
+          <span class="text-xs font-mono font-bold text-violet-600">QP_HASULOTS</span>
+        </div>
+      </div>
+
+      <p class="text-sm font-extrabold text-slate-600 mb-4">Scan QR with Mobile Camera to Print Documents</p>
+      
+      <!-- Big QR Code Container (320px x 320px) -->
+      <div id="fullscreen-qr-container" class="w-[320px] h-[320px] mx-auto bg-white rounded-2xl border-4 border-slate-900 flex items-center justify-center overflow-hidden p-3 shadow-lg">
+      </div>
+
+      <div class="mt-4 flex items-center justify-center gap-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-extrabold">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>4G/5G Live &amp; Ready</span>
+        </span>
+      </div>
+
+      <p class="text-xs text-slate-400 mt-2 font-medium">No app download needed • 100% login-free • Instant print</p>
+
+      <button type="button" onclick="closeFullscreenQrModal()" class="mt-5 w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-sm transition">
+        Close / மூடுக
+      </button>
+
+    </div>
+  </div>
+
+  <script src="/agent.js?v=32"></script>
+  <iframe id="silent-print-frame" style="display:none;" title="Silent Print Frame"></iframe>
+</body>
+</html>
