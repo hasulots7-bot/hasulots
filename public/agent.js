@@ -527,6 +527,67 @@ function closeFullscreenQrModal() {
 window.openFullscreenQrModal = openFullscreenQrModal;
 window.closeFullscreenQrModal = closeFullscreenQrModal;
 
+// Download Shop QR Code as a high-resolution PNG image
+async function downloadShopQr() {
+  try {
+    let dataUrl = null;
+
+    // Check canvas from modal or corner box
+    const canvas = document.querySelector('#fullscreen-qr-container canvas') || 
+                   document.querySelector('#corner-qr-box canvas');
+    if (canvas) {
+      dataUrl = canvas.toDataURL('image/png');
+    } else {
+      const img = document.querySelector('#fullscreen-qr-container img') || 
+                  document.querySelector('#corner-qr-box img') ||
+                  document.getElementById('admin-qr-img');
+      if (img && img.src && img.src.startsWith('data:image')) {
+        dataUrl = img.src;
+      }
+    }
+
+    // Fallback: fetch from /api/qr with high resolution (500x500)
+    if (!dataUrl) {
+      const targetUrl = document.getElementById('qr-target-url-text')?.textContent || window.location.origin;
+      const res = await fetch(`/api/qr?text=${encodeURIComponent(targetUrl)}&width=500`);
+      if (res.ok) {
+        const d = await res.json();
+        dataUrl = d.qr;
+      }
+    }
+
+    if (!dataUrl) {
+      alert('QR Code image is still generating. Please try again in a moment.');
+      return;
+    }
+
+    const shopName = agentState?.shop?.shopName || 'Shop';
+    const cleanShop = shopName.replace(/[^a-zA-Z0-9]/g, '_');
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `${cleanShop}-QuickPrint-QR.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (err) {
+    console.error('Download QR failed:', err);
+    alert('QR Download failed: ' + err.message);
+  }
+}
+
+// Print Shop QR Code / Counter Standee
+function printShopQr() {
+  const shopId = agentState?.shop?.shopId || '';
+  const url = '/standee.html' + (shopId ? '?shop=' + encodeURIComponent(shopId) + '&autoPrint=true' : '?autoPrint=true');
+  const printWin = window.open(url, '_blank', 'width=900,height=1000');
+  if (printWin) {
+    printWin.focus();
+  }
+}
+
+window.downloadShopQr = downloadShopQr;
+window.printShopQr = printShopQr;
+
 function toggleQrMode() {
   qrMode = (qrMode === 'public') ? 'wifi' : 'public';
   renderCornerQrCode();

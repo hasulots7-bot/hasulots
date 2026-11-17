@@ -540,13 +540,16 @@
             <p class="text-[11px] font-mono font-bold text-blue-600 mt-1 truncate" id="qr-target-url-text">QP_HASULOTS</p>
           </div>
 
-          <div class="flex flex-col gap-1.5 pt-1">
-            <button type="button" onclick="openFullscreenQrModal()" class="w-full py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95">
+          <div class="grid grid-cols-2 gap-1.5 pt-1">
+            <button type="button" onclick="downloadShopQr()" class="py-1.5 px-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-extrabold text-xs flex items-center justify-center gap-1 transition active:scale-95" title="Download QR PNG Image">
+              <span>📥 Download</span>
+            </button>
+            <button type="button" onclick="printShopQr()" class="py-1.5 px-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-extrabold text-xs flex items-center justify-center gap-1 transition active:scale-95" title="Print QR Code / Standee">
+              <span>🖨️ Print QR</span>
+            </button>
+            <button type="button" onclick="openFullscreenQrModal()" class="col-span-2 py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95">
               <span>🔍 Enlarge QR (Full Screen)</span>
             </button>
-            <a href="/standee.html" target="_blank" class="w-full py-1.5 px-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-extrabold text-xs flex items-center justify-center gap-1.5 transition">
-              <span>📥 Download Print Poster</span>
-            </a>
           </div>
         </div>
       </div>
@@ -843,7 +846,16 @@
 
       <p class="text-xs text-slate-400 mt-2 font-medium">No app download needed • 100% login-free • Instant print</p>
 
-      <button type="button" onclick="closeFullscreenQrModal()" class="mt-5 w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-sm transition">
+      <div class="mt-5 grid grid-cols-2 gap-3">
+        <button type="button" onclick="downloadShopQr()" class="py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-md transition active:scale-95">
+          <span>📥 Download QR (PNG)</span>
+        </button>
+        <button type="button" onclick="printShopQr()" class="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-md transition active:scale-95">
+          <span>🖨️ Print QR Poster</span>
+        </button>
+      </div>
+
+      <button type="button" onclick="closeFullscreenQrModal()" class="mt-2.5 w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-sm transition">
         Close / மூடுக
       </button>
 
