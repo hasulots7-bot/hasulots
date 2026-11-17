@@ -105,6 +105,7 @@ function shopSettingsFor(shop) {
     upiId: shop.upiId || '',
     upiName: shop.shopName,
     pricing: { ...(g.pricing || {}), ...(shop.pricing || {}) },
+    autoPrintEnabled: true,
     ...(shop.settings || {}),
     shopId: shop.shopId
   };
@@ -306,6 +307,32 @@ app.get('/api/printers', requireShop, (req, res) => {
       .filter(Boolean);
     res.json({ printers });
   });
+});
+
+// Test page for the desktop app: a small PDF in /uploads that the .exe downloads and prints silently
+app.post('/api/printers/test-file', requireShop, async (req, res) => {
+  try {
+    const { StandardFonts, rgb } = require('pdf-lib');
+    const pdf = await PDFDocument.create();
+    const page = pdf.addPage([595, 842]);
+    const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+    const font = await pdf.embedFont(StandardFonts.Helvetica);
+    const clean = (t) => String(t || '').replace(/[^\x20-\x7E]/g, '?').slice(0, 60);
+    page.drawText('QuickPrint test page', { x: 60, y: 760, size: 28, font: bold });
+    page.drawText(clean(req.shop.shopName), { x: 60, y: 720, size: 16, font });
+    page.drawText('Printer: ' + (clean(req.body && req.body.printerName) || 'Default printer'), { x: 60, y: 695, size: 12, font });
+    page.drawText('Mode: ' + (req.body && req.body.mode === 'color' ? 'Colour' : 'Black & White'), { x: 60, y: 675, size: 12, font });
+    page.drawText(new Date().toLocaleString('en-IN'), { x: 60, y: 655, size: 12, font });
+    [[0, 0.6, 0.72], [0.83, 0.06, 0.44], [1, 0.83, 0], [0.08, 0.13, 0.24]].forEach((c, i) =>
+      page.drawRectangle({ x: 60 + i * 110, y: 560, width: 100, height: 60, color: rgb(c[0], c[1], c[2]) }));
+    page.drawText('If you can read this, auto print will work.', { x: 60, y: 520, size: 12, font });
+    const name = `qp-test-${Date.now()}.pdf`;
+    fs.writeFileSync(path.join(UPLOADS_DIR, name), await pdf.save());
+    setTimeout(() => fs.unlink(path.join(UPLOADS_DIR, name), () => {}), 10 * 60 * 1000);
+    res.json({ url: `/uploads/${name}` });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Could not create test page' });
+  }
 });
 
 // Test Print Endpoint

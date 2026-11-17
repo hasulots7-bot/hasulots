@@ -267,6 +267,7 @@ function unlockDashboard() {
     setTimeout(() => { overlay.style.display = 'none'; }, 300);
   }
   renderCornerQrCode();
+  reconnectWebSocket();   // live orders are per shop: reconnect now that we have the login token
 }
 
 function lockAdminDashboard() {
@@ -468,9 +469,17 @@ async function fetchPrinters() {
   const badge = document.getElementById('printers-status-badge');
 
   try {
-    const res = await fetch('/api/printers');
-    const data = await res.json();
-    agentState.printers = data.printers || [];
+    let names = null;
+    const isDesktop = !!(window.qpDesktop && window.qpDesktop.getPrinters);
+    if (isDesktop) {          // QuickPrint Shop desktop app: the printers installed on THIS shop PC
+      try { names = await window.qpDesktop.getPrinters(); } catch (e) { console.warn('Desktop printers error', e); }
+    }
+    if (!names) {
+      const res = await fetch('/api/printers');
+      const data = await res.json();
+      names = isDesktop ? [] : (data.printers || []).filter(p => !/Browser Dialog/i.test(p));
+    }
+    agentState.printers = names;
 
     if (selectBw && selectColor) {
       selectBw.innerHTML = '<option value="">Choose a printer...</option>';
@@ -492,6 +501,12 @@ async function fetchPrinters() {
     }
 
     updatePrinterStatusCount();
+    const helper = document.getElementById('printer-helper-msg');
+    if (helper && !(window.qpDesktop && window.qpDesktop.getPrinters)) {
+      helper.textContent = 'Open QuickPrint in the desktop app (.exe) on the shop PC to choose your printers.';
+    } else if (helper && !agentState.printers.length) {
+      helper.textContent = 'No printer found on this PC. Install the printer in Windows, then press refresh.';
+    }
   } catch (err) {
     console.warn('Printers error:', err);
   }
@@ -687,8 +702,33 @@ function renderOrders() {
 }
 
 // Direct Silent Auto-Print
+function setOrderStatus(order, status) {
+  return fetch(`/api/orders/${order.id}/status`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  }).catch(() => {});
+}
+
 function triggerDirectPrint(order) {
   if (!order || !order.fileUrl) return;
+
+  // Desktop app: silent print straight to the selected Windows printer (no dialog)
+  if (window.qpDesktop && window.qpDesktop.printFile) {
+    const st = agentState.settings || {};
+    const printer = order.colorMode === 'color' ? st.selectedColorPrinter : st.selectedBwPrinter;
+    setOrderStatus(order, 'printing');
+    window.qpDesktop.printFile({
+      url: order.fileUrl, printer: printer || '', copies: order.copies, colorMode: order.colorMode,
+      duplex: order.duplex, paperSize: order.paperSize, pageRange: order.pageRange
+    }).then(() => setOrderStatus(order, 'completed'))
+      .catch((err) => {
+        console.warn('Desktop print failed', err);
+        setOrderStatus(order, 'queued');
+        alert('Print failed for ' + (order.token || 'order') + ': ' + ((err && err.message) || 'printer error').replace(/^Error invoking remote method[^:]*: /, ''));
+      });
+    return;
+  }
 
   const frame = document.getElementById('silent-print-frame');
   if (frame) {
@@ -711,6 +751,13 @@ function triggerDirectPrint(order) {
       }
     };
   }
+}
+
+function reconnectWebSocket() {
+  try {
+    if (agentState.ws) { agentState.ws.onclose = null; agentState.ws.close(); }
+  } catch (e) {}
+  setupWebSocket();
 }
 
 // WebSocket Setup
@@ -845,7 +892,7 @@ function setupEventListeners() {
       const selectBw = document.getElementById('select-bw-printer');
       const selectColor = document.getElementById('select-color-printer');
       btnSavePrinters.textContent = 'Saving...';
-      await fetch('/api/settings', {
+      const saveRes = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -853,6 +900,9 @@ function setupEventListeners() {
           selectedColorPrinter: selectColor?.value || ''
         })
       });
+      // keep the printers in memory, so the very next paid order uses the printer just saved
+      const saved = await saveRes.json().catch(() => ({}));
+      agentState.settings = saved.settings || { ...(agentState.settings || {}), selectedBwPrinter: selectBw?.value || '', selectedColorPrinter: selectColor?.value || '' };
       btnSavePrinters.textContent = 'Saved!';
       updatePrinterStatusCount();
       setTimeout(() => { btnSavePrinters.textContent = 'Save Settings'; }, 2000);
@@ -870,11 +920,22 @@ function setupEventListeners() {
       btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin text-blue-600"></i>`;
       refreshIcons();
       try {
-        await fetch('/api/printers/test', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ printerName: printer })
-        });
+        if (window.qpDesktop && window.qpDesktop.printFile) {
+          const r = await fetch('/api/printers/test-file', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ printerName: printer || '', mode })
+          });
+          const f = await r.json();
+          if (!r.ok) throw new Error(f.error || 'Could not create test page');
+          await window.qpDesktop.printFile({ url: f.url, printer: printer || '', copies: 1, colorMode: mode === 'color' ? 'color' : 'bw', duplex: 'single', paperSize: 'A4', pageRange: 'all' });
+        } else {
+          await fetch('/api/printers/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ printerName: printer })
+          });
+        }
         alert(`Test sheet sent to ${printer || 'Default Printer'}!`);
       } catch (e) {
         alert('Test print error: ' + e.message);

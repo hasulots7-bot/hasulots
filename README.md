@@ -58,6 +58,13 @@ Windows "Windows protected your PC" kaatum (unsigned) -> More info > Run anyway.
 - Pazhaiya orders (shop ID illadha) endha shop-kum theriyaadhu.
 - Optional: Render env `PUBLIC_URL` = `https://qrprint.hasulotstechnologies.com` set pannina QR link eppavum ade domain-a irukkum.
 
+## Printer / auto print
+- Printers **.exe app-la mattum** theriyum (browser-la Windows printers kaaddadhu). Shop PC-la .exe open pannunga > login > Settings > B&W printer / Colour printer select pannunga > Save.
+- Printer list varala na: printer Windows-la install aagi irukka nu paarunga, aprom refresh button.
+- "Test print" button oru test page-a antha printer-ku anuppum. Adhu vandha, auto print-um work aagum.
+- Auto print default ON. Paid order vandha udane select panna printer-ku silent-a print aagum (B&W order -> B&W printer, Colour order -> Colour printer).
+- Colour/duplex/page range control PDF, JPG, PNG-ku mattum (SumatraPDF). Word/txt Windows default app vazhiya print aagum, athula adhu control illa.
+
 ## Gnabagam
 - `public/site.js`-la `whatsapp`, `phone`, `email` placeholder (`919999999999`) -> real values.
 - Render free: 15 min idle-na sleep. Shop open-a irukkum bodhu first scan slow irukkum. Uploads Render disk-la thaan irukku, restart-la azhiyum (orders database-la safe).
