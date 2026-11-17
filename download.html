@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download Windows App – QuickPrint | Hasulots Technologies</title>
+<meta name="description" content="Download the QuickPrint Shop app for Windows 10 and above. Login, show customer QR and print automatically.">
+<meta name="theme-color" content="#4f46e5">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/site.css">
+<script src="/site.js"></script>
+</head>
+<body>
+<div id="site-header"></div>
+<main>
+
+<section class="page-hero"><div class="wrap">
+  <span class="pill">⬇ Windows App</span>
+  <h1>QuickPrint <span>Shop App</span></h1>
+  <p>Windows 10 &amp; above · Login · Customer QR · Silent auto print</p>
+  <div style="margin-top:22px;max-width:340px;margin-left:auto;margin-right:auto;text-align:left">
+    <p style="text-align:center;margin-bottom:10px">Register panna <b>Username &amp; Password</b> kudunga. <a href="/#contact" style="color:inherit;text-decoration:underline">Register illaya? Free demo-ku register pannunga</a></p>
+    <input id="dlUser" placeholder="Username" autocomplete="username" style="width:100%;padding:12px;margin-bottom:8px;border-radius:10px;border:1px solid #ddd;font-size:15px">
+    <input id="dlPass" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;padding:12px;margin-bottom:10px;border-radius:10px;border:1px solid #ddd;font-size:15px">
+    <button id="dl" class="btn btn-primary" style="width:100%;font-size:17px;padding:14px">⬇ Download for Windows (.exe)</button>
+  </div>
+  <p id="dlNote" style="margin-top:12px;font-size:13.5px;opacity:.85"></p>
+</div></section>
+
+<section style="padding-top:20px"><div class="wrap">
+  <div class="sec-head"><div class="tag">Install</div><h2>4 steps-la ready</h2></div>
+  <div class="cards">
+    <div class="card"><div class="ic">1️⃣</div><h3>Download &amp; install</h3><p>Setup file-a download pannunga, double-click panni install pannunga. Admin rights vendaam.</p></div>
+    <div class="card"><div class="ic">2️⃣</div><h3>Login</h3><p>Owner kudutha <b>Username &amp; Password</b> vechu login pannunga. Shop ID login-ku apram dashboard-la theriyum.</p></div>
+    <div class="card"><div class="ic">3️⃣</div><h3>Printer select</h3><p>Dashboard-la B&amp;W printer, Color printer select panni Save pannunga. Auto-print ON pannunga.</p></div>
+    <div class="card"><div class="ic">4️⃣</div><h3>QR customer-ku kaattunga</h3><p>Dashboard-la ulla <b>Customer Scan QR</b>-a counter-la kaattunga. Customer scan → upload → pay → print.</p></div>
+  </div>
+</div></section>
+
+<section style="background:#fff"><div class="wrap narrow">
+  <div class="sec-head"><div class="tag">Gnabagam</div><h2>Install pannum pothu</h2></div>
+  <div class="card" style="margin-bottom:16px"><h3>🛡️ "Windows protected your PC" nu vandha</h3>
+    <p>Idhu new app-ku normal. <b>More info</b> click panni <b>Run anyway</b> click pannunga. (App-a official-a sign pannura varaikkum idhu varum.)</p></div>
+  <div class="card" style="margin-bottom:16px"><h3>🔌 App open-a irukkanum</h3>
+    <p>Orders print aaga app PC-la run aagitte irukkanum. Window close pannina system tray-la (kezha right-la) run aagum. Tray icon-la right-click → <b>Start with Windows</b> ON pannina PC start aanadhum open aagum.</p></div>
+  <div class="card"><h3>📄 Supported files</h3>
+    <p>PDF &amp; images (JPG, PNG) direct-a silent print aagum: color, duplex, copies ellam apply aagum. Word / text files default Windows app vazhiya print aagum.</p></div>
+</div></section>
+
+</main>
+<div id="site-footer"></div>
+<script>
+document.getElementById('dl').addEventListener('click', function () {
+  var note = document.getElementById('dlNote');
+  note.textContent = 'Checking...';
+  fetch('/api/desktop/link', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: document.getElementById('dlUser').value, password: document.getElementById('dlPass').value }) })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.success) { note.textContent = 'Download starting...'; location.href = d.url; }
+      else note.textContent = d.error || 'Something went wrong';
+    }).catch(function () { note.textContent = 'Network error. Try again.'; });
+});
+</script>
+</body>
+</html>

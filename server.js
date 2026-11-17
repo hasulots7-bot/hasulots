@@ -175,11 +175,24 @@ app.get(Object.keys(INFO_PAGES), (req, res) => {
   res.sendFile(path.join(__dirname, 'public', INFO_PAGES[req.path]));
 });
 
-// Windows app installer lives on GitHub Releases (too big for this repo). Set DESKTOP_DOWNLOAD_URL in Render > Environment.
-app.get('/download/windows', (req, res) => {
-  const url = (process.env.DESKTOP_DOWNLOAD_URL || '').trim();
-  if (/^https:\/\//.test(url)) return res.redirect(302, url);
-  res.status(404).type('text/plain').send('The Windows app is not published yet. Please contact QuickPrint support.');
+// Windows app installer lives on GitHub Releases. Set DESKTOP_DOWNLOAD_URL in Render > Environment.
+// Download link is given ONLY to a registered + approved shop (username/password check).
+function desktopUrl() { const u = (process.env.DESKTOP_DOWNLOAD_URL || '').trim(); return /^https:\/\//.test(u) ? u : ''; }
+app.get('/download/windows', (req, res) => res.redirect(302, '/download')); // no direct public download
+app.post('/api/desktop/link', (req, res) => {
+  if (A.isLocked(req)) return res.status(429).json({ error: 'Too many attempts. Try again after 15 minutes.' });
+  const { username = '', password = '' } = req.body || {};
+  const shop = getShops().find(s => (s.username || '').toLowerCase() === String(username).trim().toLowerCase());
+  if (!shop || !A.verifyPassword(String(password), shop.passwordHash)) {
+    A.recordFail(req);
+    return res.status(401).json({ error: 'Invalid Username or Password. Please register for the demo first.' });
+  }
+  A.clearFails(req);
+  const info = A.licenseInfo(shop);
+  if (!info.allowed) return res.status(403).json({ error: A.licenseMessage(info) });
+  const url = desktopUrl();
+  if (!url) return res.status(404).json({ error: 'The Windows app is being prepared. Please contact us on WhatsApp.' });
+  res.json({ success: true, url });
 });
 app.get('/api/desktop', (req, res) => res.json({ available: /^https:\/\//.test((process.env.DESKTOP_DOWNLOAD_URL || '').trim()) }));
 
