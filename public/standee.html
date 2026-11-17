@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QR Print - Counter Standee Poster</title>
+  <title>Hasulots Technologies - Counter Standee Poster</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
@@ -114,25 +114,24 @@
     <!-- TOP: LOGO HEADER & RAYS -->
     <div class="pt-6 px-6">
       
-      <!-- Brand Logo: QR Print -->
+      <!-- Brand Logo: Hasulots Technologies -->
       <div class="flex items-center justify-center gap-3">
         <!-- Left Sunburst Rays -->
         <div class="sunburst-ray">
           <span></span><span></span><span></span>
         </div>
 
-        <div class="flex items-baseline font-black leading-none tracking-tight select-none gap-2">
-          <span class="text-[56px] text-[#0a192f] font-black tracking-tighter" style="font-family:'Montserrat',sans-serif;">QR</span>
+        <div class="flex items-center gap-3 font-black leading-none select-none">
+          <!-- Printer Emblem Icon -->
+          <div class="w-12 h-12 rounded-2xl bg-[#0052cc] text-white flex items-center justify-center shadow-md shrink-0">
+            <svg class="w-7 h-7 fill-current" viewBox="0 0 24 24">
+              <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
+            </svg>
+          </div>
           
-          <!-- Print Word with Printer Icon on Top of "i" -->
-          <div class="relative inline-block">
-            <!-- Printer Icon on top -->
-            <div class="absolute -top-7 left-1/2 -translate-x-1/2 text-[#002b66]">
-              <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24">
-                <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
-              </svg>
-            </div>
-            <span class="text-[58px] text-[#0052cc] font-black" style="font-family:'Montserrat',sans-serif; text-shadow: 2px 2px 0px #fff;">Print</span>
+          <div class="text-left">
+            <div class="text-[32px] sm:text-[38px] text-[#0a192f] font-black tracking-tight" style="font-family:'Montserrat',sans-serif;">Hasulots</div>
+            <div class="text-[17px] sm:text-[19px] text-[#0052cc] font-black tracking-wider uppercase -mt-1" style="letter-spacing: 2px;">Technologies</div>
           </div>
         </div>
 
@@ -330,7 +329,7 @@
 
         const a = document.createElement('a');
         a.href = imageUri;
-        a.download = `QR-Print-Poster-${shopTitle}.png`;
+        a.download = `Hasulots-Technologies-QR-Poster-${shopTitle}.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
