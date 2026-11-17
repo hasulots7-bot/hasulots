@@ -120,7 +120,7 @@ function showPasswordError(msg, type = 'AUTH') {
             <span>📡</span> <span>Server Unreachable</span>
           </div>
           <p style="font-size:13px;line-height:1.4;margin:0 0 8px;color:#312e81;">${escapeHtml(msg || 'Cannot connect to QuickPrint. Check your Wi-Fi or internet connection.')}</p>
-          <button type="button" onclick="verifyLoginSubmit()" style="padding:6px 12px;background:#4f46e5;color:#fff;border:0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Retry Connection</button>
+          <button type="button" onclick="verifyLoginSubmit()" style="padding:6px 12px;background:#2563eb;color:#fff;border:0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Retry Connection</button>
         </div>
       `;
     } else {
@@ -158,7 +158,7 @@ function ensureRememberMeCheckbox() {
   wrap.id = 'admin-remember-wrap';
   wrap.style.cssText = 'display:flex;align-items:center;gap:8px;margin:12px 0 16px;cursor:pointer;';
   wrap.innerHTML = `
-    <input type="checkbox" id="admin-remember-me" checked style="width:16px;height:16px;cursor:pointer;accent-color:#4f46e5;">
+    <input type="checkbox" id="admin-remember-me" checked style="width:16px;height:16px;cursor:pointer;accent-color:#2563eb;">
     <label for="admin-remember-me" style="margin:0;font-size:13px;font-weight:600;color:#334155;cursor:pointer;user-select:none;">
       Remember me on this PC (Auto-login)
     </label>
@@ -527,6 +527,67 @@ function closeFullscreenQrModal() {
 window.openFullscreenQrModal = openFullscreenQrModal;
 window.closeFullscreenQrModal = closeFullscreenQrModal;
 
+// Download Shop QR Code as a high-resolution PNG image
+async function downloadShopQr() {
+  try {
+    let dataUrl = null;
+
+    // Check canvas from modal or corner box
+    const canvas = document.querySelector('#fullscreen-qr-container canvas') || 
+                   document.querySelector('#corner-qr-box canvas');
+    if (canvas) {
+      dataUrl = canvas.toDataURL('image/png');
+    } else {
+      const img = document.querySelector('#fullscreen-qr-container img') || 
+                  document.querySelector('#corner-qr-box img') ||
+                  document.getElementById('admin-qr-img');
+      if (img && img.src && img.src.startsWith('data:image')) {
+        dataUrl = img.src;
+      }
+    }
+
+    // Fallback: fetch from /api/qr with high resolution (500x500)
+    if (!dataUrl) {
+      const targetUrl = document.getElementById('qr-target-url-text')?.textContent || window.location.origin;
+      const res = await fetch(`/api/qr?text=${encodeURIComponent(targetUrl)}&width=500`);
+      if (res.ok) {
+        const d = await res.json();
+        dataUrl = d.qr;
+      }
+    }
+
+    if (!dataUrl) {
+      alert('QR Code image is still generating. Please try again in a moment.');
+      return;
+    }
+
+    const shopName = agentState?.shop?.shopName || 'Shop';
+    const cleanShop = shopName.replace(/[^a-zA-Z0-9]/g, '_');
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `${cleanShop}-QuickPrint-QR.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (err) {
+    console.error('Download QR failed:', err);
+    alert('QR Download failed: ' + err.message);
+  }
+}
+
+// Print Shop QR Code / Counter Standee
+function printShopQr() {
+  const shopId = agentState?.shop?.shopId || '';
+  const url = '/standee.html' + (shopId ? '?shop=' + encodeURIComponent(shopId) + '&autoPrint=true' : '?autoPrint=true');
+  const printWin = window.open(url, '_blank', 'width=900,height=1000');
+  if (printWin) {
+    printWin.focus();
+  }
+}
+
+window.downloadShopQr = downloadShopQr;
+window.printShopQr = printShopQr;
+
 function toggleQrMode() {
   qrMode = (qrMode === 'public') ? 'wifi' : 'public';
   renderCornerQrCode();
@@ -573,8 +634,8 @@ function updateHeaderLicenseBadge(license) {
   }
 
   if (plan === 'lifetime' || license.lifetime) {
-    pill.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-300 hover:border-purple-400 text-purple-900 text-xs font-black ml-1 transition shadow-2xs cursor-pointer hover:bg-purple-100';
-    if (dot) dot.className = 'w-2 h-2 rounded-full bg-purple-600';
+    pill.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-300 hover:border-blue-400 text-blue-900 text-xs font-black ml-1 transition shadow-2xs cursor-pointer hover:bg-blue-100';
+    if (dot) dot.className = 'w-2 h-2 rounded-full bg-blue-600';
     text.textContent = '💎 Lifetime Plan • Unlimited';
     return;
   }
@@ -697,7 +758,7 @@ async function openLicensePlansModal(forceExpired = false) {
   if (daysBadge) {
     if (lic.lifetime) {
       daysBadge.textContent = 'Unlimited (Lifetime)';
-      daysBadge.className = 'text-sm font-black text-purple-700';
+      daysBadge.className = 'text-sm font-black text-blue-700';
     } else if (lic.daysLeft !== null && lic.daysLeft !== undefined) {
       daysBadge.textContent = lic.daysLeft > 0 ? `${lic.daysLeft} Days Pending` : `Expired (${Math.abs(lic.daysLeft)} days ago)`;
       daysBadge.className = lic.daysLeft > 0 ? 'text-sm font-black text-slate-800' : 'text-sm font-black text-rose-600';
@@ -1029,7 +1090,7 @@ function renderOrders() {
     if (order.status === 'completed') {
       statusBadge = '<span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-xs font-extrabold text-emerald-700"><span class="h-2 w-2 rounded-full bg-emerald-500"></span>Done</span>';
     } else if (order.status === 'printing') {
-      statusBadge = '<span class="inline-flex animate-pulse items-center gap-1 rounded-full bg-violet-50 border border-violet-200 px-2.5 py-1 text-xs font-extrabold text-violet-700"><span class="h-2 w-2 rounded-full bg-violet-500"></span>Printing</span>';
+      statusBadge = '<span class="inline-flex animate-pulse items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-2.5 py-1 text-xs font-extrabold text-blue-700"><span class="h-2 w-2 rounded-full bg-blue-500"></span>Printing</span>';
     } else if (order.status === 'queued') {
       statusBadge = '<span class="inline-flex items-center gap-1 rounded-full bg-sky-50 border border-sky-200 px-2.5 py-1 text-xs font-extrabold text-sky-700"><span class="h-2 w-2 rounded-full bg-sky-500"></span>Queued</span>';
     } else {
@@ -1044,7 +1105,6 @@ function renderOrders() {
       <div class="col-span-2 min-w-0">
         <span class="inline-block px-2.5 py-1 rounded-lg bg-slate-900 text-white font-mono font-black text-xs shadow-xs tracking-wide">${order.token}</span>
         <p class="mt-1 truncate text-xs font-semibold text-slate-500">${order.customerName || 'Customer'}</p>
-        ${order.customerTxnId ? `<p class="truncate text-[11px] font-bold text-indigo-600">UTR: ${order.customerTxnId}</p>` : ''}
       </div>
 
       <!-- Details -->
@@ -1076,10 +1136,10 @@ function renderOrders() {
         ${statusBadge}
         ${order.paymentStatus !== 'paid' && order.status !== 'completed' ? `
           <button class="btn-print-action flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md shadow-emerald-600/25 transition active:scale-95" title="Customer Paid -> Print Now" data-id="${order.id}">
-            ${order.paymentMethod === 'upi' ? '<span>✅</span> Payment Received &amp; Print' : '<span>💵</span> Cash Received &amp; Print'}
+            <span>💵</span> Pay &amp; Print
           </button>
         ` : `
-          <button class="btn-print-action grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-violet-600 text-white shadow-md shadow-violet-600/30 transition hover:bg-violet-700 active:scale-95" title="Print again" data-id="${order.id}">
+          <button class="btn-print-action grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/30 transition hover:bg-blue-700 active:scale-95" title="Print again" data-id="${order.id}">
             <i data-lucide="printer" class="w-4 h-4"></i>
           </button>
         `}
@@ -1254,10 +1314,8 @@ function setupWebSocket() {
         renderOrders();
         updateMetrics();
 
-        // New unpaid order: only alert the shopkeeper. Printing starts after 'Payment Received' is confirmed.
-        if (data.order.paymentStatus !== 'paid') { try { playDing(); } catch (_) {} }
-        // Already-paid orders can auto-print
-        if (agentState.autoPrintPaid && data.order.paymentStatus === 'paid') {
+        // Once online payment is done, automatically trigger print (Instant Auto-Print)
+        if (agentState.autoPrintPaid && (data.order.paymentMethod === 'upi' || data.order.paymentStatus === 'paid')) {
           (async () => {
             try {
               await fetch(`/api/orders/${data.order.id}/pay`, {
@@ -1473,7 +1531,7 @@ function setupEventListeners() {
       document.querySelectorAll('.filter-tab, .order-filter-tab').forEach(t => {
         t.className = 'order-filter-tab px-3 py-1 rounded-full text-xs font-bold text-slate-500 hover:bg-slate-100 transition';
       });
-      tab.className = 'order-filter-tab px-3 py-1 rounded-full text-xs font-black bg-purple-100 text-purple-800 transition';
+      tab.className = 'order-filter-tab px-3 py-1 rounded-full text-xs font-black bg-blue-100 text-blue-800 transition';
       agentState.filter = tab.getAttribute('data-filter');
       renderOrders();
     });
@@ -1489,16 +1547,11 @@ function setupEventListeners() {
         const order = agentState.orders.find(o => o.id === orderId);
         if (order) {
           if (order.paymentStatus !== 'paid') {
-            const amt = (order.pricing && order.pricing.totalAmount) || 0;
-            const q = order.paymentMethod === 'upi'
-              ? `₹${amt} ungal GPay / PhonePe / bank app-la vandhucha? Vandhirundha mattum OK click pannunga.`
-              : `₹${amt} cash vaangittingala?`;
-            if (!window.confirm(q)) return;
             try {
               await fetch(`/api/orders/${order.id}/pay`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ txnId: order.customerTxnId || (order.paymentMethod === 'upi' ? 'UPI-CONFIRMED-' : 'COUNTER-CASH-') + Date.now() })
+                body: JSON.stringify({ txnId: 'COUNTER-CASH-' + Date.now() })
               });
               order.paymentStatus = 'paid';
               order.status = 'queued';

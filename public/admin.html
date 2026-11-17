@@ -208,8 +208,8 @@
       transition: all 0.2s ease;
     }
     .pin-dot.filled {
-      background: #7c3aed;
-      border-color: #7c3aed;
+      background: #2563eb;
+      border-color: #2563eb;
       transform: scale(1.15);
       box-shadow: 0 0 8px rgba(124, 58, 237, 0.4);
     }
@@ -252,7 +252,7 @@
     }
   </script>
 </head>
-<body class="selection:bg-indigo-600 selection:text-white">
+<body class="selection:bg-blue-600 selection:text-white">
 
   <!-- ============================================================ -->
   <!-- 🔒 ADMIN LOGIN LOCK SCREEN (Required for Admin, Not Customer) -->
@@ -262,10 +262,10 @@
   <!-- ============================================================ -->
   <style>
     #admin-login-overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;
-      background:radial-gradient(900px 500px at 90% -10%,#a78bfa66,transparent),radial-gradient(700px 500px at -10% 110%,#6366f166,transparent),linear-gradient(135deg,#1e1b4b,#3730a3 55%,#6d28d9);
+      background:radial-gradient(900px 500px at 90% -10%,#a78bfa66,transparent),radial-gradient(700px 500px at -10% 110%,#6366f166,transparent),linear-gradient(135deg,#1e1b4b,#3730a3 55%,#1d4ed8);
       transition:opacity .3s ease;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
     #admin-login-overlay .lg-wrap{display:grid;grid-template-columns:1.05fr .95fr;width:100%;max-width:900px;background:#fff;border-radius:26px;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,.45)}
-    #admin-login-overlay .lg-side{background:linear-gradient(160deg,#4f46e5,#7c3aed);color:#fff;padding:40px 34px;display:flex;flex-direction:column;justify-content:space-between;gap:24px}
+    #admin-login-overlay .lg-side{background:linear-gradient(160deg,#2563eb,#2563eb);color:#fff;padding:40px 34px;display:flex;flex-direction:column;justify-content:space-between;gap:24px}
     #admin-login-overlay .lg-brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:20px}
     #admin-login-overlay .lg-brand i{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-style:normal;font-size:22px}
     #admin-login-overlay .lg-side small{display:block;font-size:11px;font-weight:600;opacity:.75;letter-spacing:.5px}
@@ -280,13 +280,13 @@
     #admin-login-overlay label{display:block;font-weight:700;font-size:12.5px;color:#3d3d4e;margin:0 0 6px}
     #admin-login-overlay .fld{margin-bottom:16px;position:relative}
     #admin-login-overlay input{width:100%;padding:12px 14px;border:2px solid #e8e6f0;border-radius:12px;font-size:15px;font-weight:600;color:#15151f;outline:none;transition:.15s;background:#fff;font-family:inherit}
-    #admin-login-overlay input:focus{border-color:#6d28d9;box-shadow:0 0 0 4px #ede9fe}
+    #admin-login-overlay input:focus{border-color:#1d4ed8;box-shadow:0 0 0 4px #ede9fe}
     #admin-login-overlay .eye{position:absolute;right:10px;top:33px;background:none;border:0;cursor:pointer;font-size:17px;padding:4px;opacity:.6}
     #admin-login-overlay #login-error-msg{color:#e11d48;font-weight:700;font-size:13px;min-height:20px;margin-bottom:8px;opacity:0;transition:opacity .2s}
-    #admin-login-overlay #btn-submit-pwd{width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 10px 22px rgba(79,70,229,.35);transition:.15s;font-family:inherit}
+    #admin-login-overlay #btn-submit-pwd{width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#2563eb,#2563eb);color:#fff;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 10px 22px rgba(79,70,229,.35);transition:.15s;font-family:inherit}
     #admin-login-overlay #btn-submit-pwd:hover{transform:translateY(-1px);filter:brightness(1.07)}
     #admin-login-overlay .lg-help{margin-top:20px;padding-top:16px;border-top:1px solid #e8e6f0;font-size:13px;color:#6b6b7e;display:flex;flex-direction:column;gap:6px;text-align:center}
-    #admin-login-overlay .lg-help a{color:#4f46e5;font-weight:700;text-decoration:none}
+    #admin-login-overlay .lg-help a{color:#2563eb;font-weight:700;text-decoration:none}
     #admin-login-overlay .lg-help a:hover{text-decoration:underline}
     @media(max-width:720px){#admin-login-overlay .lg-wrap{grid-template-columns:1fr}#admin-login-overlay .lg-side{display:none}#admin-login-overlay .lg-form{padding:30px 24px}}
   </style>
@@ -353,13 +353,13 @@
       <!-- Store Name & Code -->
       <div class="min-w-0">
         <div class="flex items-center gap-2">
-          <h1 id="header-shop-name" onclick="openShopConfigModal()" class="font-black text-base text-slate-900 leading-tight truncate cursor-pointer hover:text-violet-700 transition" title="Click to edit shop settings">Hasulots technologies</h1>
-          <button id="btn-edit-shop-info" onclick="openShopConfigModal()" class="text-slate-400 hover:text-indigo-600 p-0.5" title="Edit Store Details & Rates">
+          <h1 id="header-shop-name" onclick="openShopConfigModal()" class="font-black text-base text-slate-900 leading-tight truncate cursor-pointer hover:text-blue-700 transition" title="Click to edit shop settings">Hasulots technologies</h1>
+          <button id="btn-edit-shop-info" onclick="openShopConfigModal()" class="text-slate-400 hover:text-blue-600 p-0.5" title="Edit Store Details & Rates">
             <i data-lucide="edit-3" class="w-4 h-4"></i>
           </button>
         </div>
         <div class="flex items-center gap-1.5 mt-0.5">
-          <span id="header-shop-code" class="text-xs font-mono font-bold text-violet-600">QP_HASULOTS</span>
+          <span id="header-shop-code" class="text-xs font-mono font-bold text-blue-600">QP_HASULOTS</span>
           <button id="btn-copy-code" class="text-slate-400 hover:text-slate-700 text-xs font-semibold underline">Copy</button>
         </div>
       </div>
@@ -397,7 +397,7 @@
       </div>
 
       <!-- Lock Button -->
-      <button id="btn-open-settings" onclick="openShopConfigModal()" class="px-3.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-violet-600/25 transition active:scale-95" title="Configure Shop Name, Rates & Password">
+      <button id="btn-open-settings" onclick="openShopConfigModal()" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-blue-600/25 transition active:scale-95" title="Configure Shop Name, Rates & Password">
         <span>⚙️</span>
         <span>Shop Settings</span>
       </button>
@@ -508,7 +508,7 @@
         <!-- Footer -->
         <div class="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between">
           <span id="printer-helper-msg" class="text-xs text-slate-500 font-semibold">Black & White needs a printer</span>
-          <button id="btn-save-printer-settings" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-black shadow-sm transition">
+          <button id="btn-save-printer-settings" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black shadow-sm transition">
             Save Settings
           </button>
         </div>
@@ -519,7 +519,7 @@
         <!-- Canvas Container - BIG 165px x 165px QR -->
         <div id="corner-qr-box" 
              onclick="openFullscreenQrModal()" 
-             class="w-[165px] h-[165px] shrink-0 bg-white rounded-2xl border-2 border-slate-200 flex items-center justify-center overflow-hidden p-2 shadow-sm cursor-pointer group hover:border-violet-500 hover:shadow-md transition relative"
+             class="w-[165px] h-[165px] shrink-0 bg-white rounded-2xl border-2 border-slate-200 flex items-center justify-center overflow-hidden p-2 shadow-sm cursor-pointer group hover:border-blue-500 hover:shadow-md transition relative"
              title="Click to view Fullscreen QR for customers">
           <img id="admin-qr-img" class="w-full h-full object-contain" alt="QR" src="/api/qr?format=image" />
           <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center rounded-2xl text-white text-xs font-black">
@@ -537,16 +537,19 @@
             </div>
             <h3 class="text-sm font-black text-slate-900 leading-tight">Customer Scan QR</h3>
             <p class="text-xs text-slate-500 leading-snug mt-1">கஸ்டமர் மொபைலில் ஸ்கேன் செய்து பைல் அனுப்ப</p>
-            <p class="text-[11px] font-mono font-bold text-violet-600 mt-1 truncate" id="qr-target-url-text">QP_HASULOTS</p>
+            <p class="text-[11px] font-mono font-bold text-blue-600 mt-1 truncate" id="qr-target-url-text">QP_HASULOTS</p>
           </div>
 
-          <div class="flex flex-col gap-1.5 pt-1">
-            <button type="button" onclick="openFullscreenQrModal()" class="w-full py-1.5 px-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95">
+          <div class="grid grid-cols-2 gap-1.5 pt-1">
+            <a href="/standee.html" target="_blank" class="py-1.5 px-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-extrabold text-xs flex items-center justify-center gap-1 transition active:scale-95" title="View & Download QR Standee Poster">
+              <span>🖼️ Poster / Download</span>
+            </a>
+            <button type="button" onclick="printShopQr()" class="py-1.5 px-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-extrabold text-xs flex items-center justify-center gap-1 transition active:scale-95" title="Print QR Standee Poster">
+              <span>🖨️ Print Poster</span>
+            </button>
+            <button type="button" onclick="openFullscreenQrModal()" class="col-span-2 py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95">
               <span>🔍 Enlarge QR (Full Screen)</span>
             </button>
-            <a href="/standee.html" target="_blank" class="w-full py-1.5 px-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-extrabold text-xs flex items-center justify-center gap-1.5 transition">
-              <span>📥 Download Print Poster</span>
-            </a>
           </div>
         </div>
       </div>
@@ -634,7 +637,7 @@
           </div>
           <!-- Filter Tabs -->
           <div class="flex items-center gap-1.5">
-            <button class="order-filter-tab px-3 py-1 rounded-full text-xs font-black bg-purple-100 text-purple-800" data-filter="all">All <span id="count-all">0</span></button>
+            <button class="order-filter-tab px-3 py-1 rounded-full text-xs font-black bg-blue-100 text-blue-800" data-filter="all">All <span id="count-all">0</span></button>
             <button class="order-filter-tab px-3 py-1 rounded-full text-xs font-bold text-slate-500 hover:bg-slate-100" data-filter="cash">Cash <span id="count-cash">0</span></button>
             <button class="order-filter-tab px-3 py-1 rounded-full text-xs font-bold text-slate-500 hover:bg-slate-100" data-filter="online">Online <span id="count-online">0</span></button>
           </div>
@@ -689,7 +692,7 @@
       <!-- Modal Header -->
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
         <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center text-lg shadow-xs">⚙️</div>
+          <div class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center text-lg shadow-xs">⚙️</div>
           <div>
             <h3 class="text-base font-black text-slate-900 leading-tight">Shop Settings &amp; Pricing</h3>
             <p class="text-xs text-slate-500">கடை விபரங்கள், கட்டணம் &amp; பாஸ்வேர்டு</p>
@@ -735,19 +738,19 @@
         </div>
 
         <!-- SECTION 2: ADMIN CREDENTIALS -->
-        <div class="p-3.5 bg-violet-50/60 rounded-2xl border border-violet-200/80 space-y-3">
-          <h4 class="font-black text-violet-900 text-xs flex items-center gap-1.5">
+        <div class="p-3.5 bg-blue-50/60 rounded-2xl border border-blue-200/80 space-y-3">
+          <h4 class="font-black text-blue-900 text-xs flex items-center gap-1.5">
             <span>🔐</span> Admin Login Credentials / உள்நுழைவு விபரம்
           </h4>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block font-bold text-slate-600 mb-1">Admin Username</label>
-              <input type="text" id="modal-admin-username" class="w-full px-3 py-2 border border-violet-200 rounded-xl font-bold bg-white" placeholder="admin">
+              <input type="text" id="modal-admin-username" class="w-full px-3 py-2 border border-blue-200 rounded-xl font-bold bg-white" placeholder="admin">
             </div>
             <div>
               <label class="block font-bold text-slate-600 mb-1">Admin Password</label>
-              <input type="text" id="modal-admin-password" class="w-full px-3 py-2 border border-violet-200 rounded-xl font-bold bg-white" placeholder="1234">
+              <input type="text" id="modal-admin-password" class="w-full px-3 py-2 border border-blue-200 rounded-xl font-bold bg-white" placeholder="1234">
             </div>
           </div>
         </div>
@@ -794,7 +797,7 @@
           <button type="button" onclick="closeShopConfigModal()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold text-xs transition">
             Cancel
           </button>
-          <button type="button" onclick="saveShopConfig()" class="px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-black text-xs shadow-md shadow-violet-600/25 transition active:scale-95">
+          <button type="button" onclick="saveShopConfig()" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-600/25 transition active:scale-95">
             💾 Save Settings / சேமிக்க
           </button>
         </div>
@@ -805,7 +808,7 @@
       </div>
       <div class="mt-5 flex items-center justify-end gap-2">
         <button id="btn-cancel-modal" class="px-4 py-2 rounded-xl text-slate-600 font-bold text-xs hover:bg-slate-100">Cancel</button>
-        <button id="btn-save-modal" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-black text-xs">Save Changes</button>
+        <button id="btn-save-modal" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs">Save Changes</button>
       </div>
     </div>
   </div>
@@ -824,7 +827,7 @@
         <div class="w-10 h-10 rounded-xl bg-[#ec2a7a] text-white flex items-center justify-center text-2xl shadow-sm">🖨️</div>
         <div class="text-left">
           <h2 class="text-xl font-black text-slate-900 leading-tight">Hasulots technologies</h2>
-          <span class="text-xs font-mono font-bold text-violet-600">QP_HASULOTS</span>
+          <span class="text-xs font-mono font-bold text-blue-600">QP_HASULOTS</span>
         </div>
       </div>
 
@@ -843,7 +846,16 @@
 
       <p class="text-xs text-slate-400 mt-2 font-medium">No app download needed • 100% login-free • Instant print</p>
 
-      <button type="button" onclick="closeFullscreenQrModal()" class="mt-5 w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-sm transition">
+      <div class="mt-5 grid grid-cols-2 gap-3">
+        <a href="/standee.html" target="_blank" class="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-md transition active:scale-95">
+          <span>🖼️ Standee Poster (PNG)</span>
+        </a>
+        <button type="button" onclick="printShopQr()" class="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-md transition active:scale-95">
+          <span>🖨️ Print Poster (A4)</span>
+        </button>
+      </div>
+
+      <button type="button" onclick="closeFullscreenQrModal()" class="mt-2.5 w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-sm transition">
         Close / மூடுக
       </button>
 
@@ -871,11 +883,11 @@
       </div>
 
       <!-- What is Trial Version Info Box -->
-      <div class="bg-indigo-50/70 border border-indigo-200/80 rounded-2xl p-4 mb-5">
-        <div class="flex items-center gap-2 mb-1.5 text-indigo-900 font-extrabold text-sm">
+      <div class="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-4 mb-5">
+        <div class="flex items-center gap-2 mb-1.5 text-blue-900 font-extrabold text-sm">
           <span>💡</span> <span>Trial Version என்றால் என்ன?</span>
         </div>
-        <p class="text-xs text-indigo-950 leading-relaxed font-medium">
+        <p class="text-xs text-blue-950 leading-relaxed font-medium">
           <strong>Trial Version (7 Days Free Demo)</strong> என்பது QuickPrint-ன் முழு வசதிகளையும் (Instant Customer QR Scanning, Direct Windows Silent Printing, Auto B&amp;W &amp; Color, Multi-copy, Duplex) உங்கள் கடையில் 7 நாட்கள் இலவசமாக சோதிக்க வழங்கப்படுகிறது. Trial முடிந்ததும், கீழே உள்ள ஏதேனும் ஒரு திட்டத்தைத் தேர்ந்தெடுத்து தொடர்ந்து பயன்படுத்தலாம்!
         </p>
       </div>
@@ -885,7 +897,7 @@
         <div>
           <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">தற்போதைய நிலை (Current Status)</span>
           <div class="flex items-center gap-2 mt-0.5">
-            <span id="lic-badge-plan" class="px-2.5 py-0.5 rounded-lg bg-indigo-600 text-white font-extrabold text-xs">Trial Version</span>
+            <span id="lic-badge-plan" class="px-2.5 py-0.5 rounded-lg bg-blue-600 text-white font-extrabold text-xs">Trial Version</span>
             <span id="lic-badge-days" class="text-sm font-black text-slate-800">7 Days Pending</span>
           </div>
         </div>
@@ -904,7 +916,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="lic-plans-container">
           
           <!-- Plan 1: Trial / Demo -->
-          <div class="plan-card border-2 border-slate-200 hover:border-indigo-500 rounded-2xl p-4 cursor-pointer transition relative bg-white" onclick="selectLicensePlan('demo')">
+          <div class="plan-card border-2 border-slate-200 hover:border-blue-500 rounded-2xl p-4 cursor-pointer transition relative bg-white" onclick="selectLicensePlan('demo')">
             <div class="flex justify-between items-start">
               <div>
                 <span class="text-xs font-black text-amber-600 uppercase">⏳ Free Trial</span>
@@ -919,7 +931,7 @@
           </div>
 
           <!-- Plan 2: 1 Month -->
-          <div class="plan-card border-2 border-slate-200 hover:border-indigo-500 rounded-2xl p-4 cursor-pointer transition relative bg-white" onclick="selectLicensePlan('monthly')">
+          <div class="plan-card border-2 border-slate-200 hover:border-blue-500 rounded-2xl p-4 cursor-pointer transition relative bg-white" onclick="selectLicensePlan('monthly')">
             <div class="flex justify-between items-start">
               <div>
                 <span class="text-xs font-black text-emerald-600 uppercase">📅 Monthly</span>
@@ -934,11 +946,11 @@
           </div>
 
           <!-- Plan 3: Yearly (Popular) -->
-          <div class="plan-card border-2 border-indigo-600 bg-indigo-50/40 rounded-2xl p-4 cursor-pointer transition relative" onclick="selectLicensePlan('yearly')">
-            <span class="absolute -top-2.5 right-4 bg-indigo-600 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-xs">Most Popular</span>
+          <div class="plan-card border-2 border-blue-600 bg-blue-50/40 rounded-2xl p-4 cursor-pointer transition relative" onclick="selectLicensePlan('yearly')">
+            <span class="absolute -top-2.5 right-4 bg-blue-600 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-xs">Most Popular</span>
             <div class="flex justify-between items-start">
               <div>
-                <span class="text-xs font-black text-indigo-600 uppercase">⭐ Yearly</span>
+                <span class="text-xs font-black text-blue-600 uppercase">⭐ Yearly</span>
                 <h3 class="font-black text-base text-slate-900 mt-0.5">1 Year Plan</h3>
                 <p class="text-[11px] text-slate-500 mt-0.5">365 Days • Save 20%</p>
               </div>
@@ -950,10 +962,10 @@
           </div>
 
           <!-- Plan 4: Lifetime -->
-          <div class="plan-card border-2 border-slate-200 hover:border-indigo-500 rounded-2xl p-4 cursor-pointer transition relative bg-white" onclick="selectLicensePlan('lifetime')">
+          <div class="plan-card border-2 border-slate-200 hover:border-blue-500 rounded-2xl p-4 cursor-pointer transition relative bg-white" onclick="selectLicensePlan('lifetime')">
             <div class="flex justify-between items-start">
               <div>
-                <span class="text-xs font-black text-purple-600 uppercase">💎 One-Time</span>
+                <span class="text-xs font-black text-blue-600 uppercase">💎 One-Time</span>
                 <h3 class="font-black text-base text-slate-900 mt-0.5">Lifetime License</h3>
                 <p class="text-[11px] text-slate-500 mt-0.5">Unlimited Days • No Renewal</p>
               </div>
@@ -994,7 +1006,7 @@
           <label for="lic-utr-input" class="block text-xs font-bold text-slate-300 mb-1">
             UPI Transaction ID / Ref No (UTR - விருப்பம்):
           </label>
-          <input type="text" id="lic-utr-input" placeholder="e.g. 504218991234 or leave blank for trial" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-mono placeholder:text-slate-500 focus:outline-none focus:border-indigo-400">
+          <input type="text" id="lic-utr-input" placeholder="e.g. 504218991234 or leave blank for trial" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-mono placeholder:text-slate-500 focus:outline-none focus:border-blue-400">
         </div>
       </div>
 
@@ -1024,7 +1036,7 @@
     </div>
   </div>
 
-  <script src="/agent.js?v=37"></script>
+  <script src="/agent.js?v=36"></script>
   <iframe id="silent-print-frame" style="display:none;" title="Silent Print Frame"></iframe>
 </body>
 </html>

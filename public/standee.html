@@ -3,107 +3,261 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shop Counter QR Standee - QuickPrint</title>
+  <title>QR se Print - Counter Standee Poster</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/style.css">
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
+  <!-- html2canvas for high-res PNG downloads -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #e2e8f0;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    /* Print styles for exact A4 paper fit */
     @media print {
-      .no-print {
-        display: none !important;
-      }
       body {
         background: white !important;
         padding: 0 !important;
+        margin: 0 !important;
       }
-      .standee-poster {
+      .no-print {
+        display: none !important;
+      }
+      .poster-wrap {
         border: none !important;
         box-shadow: none !important;
-        max-width: 100% !important;
         width: 100% !important;
+        max-width: 100% !important;
         height: 100vh !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      @page {
+        size: A4 portrait;
+        margin: 6mm;
       }
     }
+
+    /* Serrated / Brush style edge for yellow Automatic Print badge */
+    .brush-banner {
+      background: #ffcc00;
+      position: relative;
+      clip-path: polygon(
+        3% 0%, 97% 0%, 
+        100% 20%, 98% 35%, 100% 50%, 97% 65%, 100% 80%, 97% 100%, 
+        3% 100%, 
+        0% 80%, 3% 65%, 0% 50%, 2% 35%, 0% 20%
+      );
+    }
+
+    /* Ribbon chevron edge */
+    .ribbon-banner {
+      background: #003399;
+      clip-path: polygon(
+        2.5% 0%, 97.5% 0%, 
+        100% 50%, 
+        97.5% 100%, 2.5% 100%, 
+        0% 50%
+      );
+    }
+
+    .sunburst-ray {
+      display: inline-flex;
+      gap: 3px;
+      align-items: center;
+    }
+    .sunburst-ray span {
+      display: inline-block;
+      width: 4px;
+      height: 14px;
+      background: #0052cc;
+      border-radius: 99px;
+    }
+    .sunburst-ray span:nth-child(1) { transform: rotate(-25deg); height: 11px; }
+    .sunburst-ray span:nth-child(2) { transform: rotate(0deg); height: 16px; }
+    .sunburst-ray span:nth-child(3) { transform: rotate(25deg); height: 11px; }
   </style>
 </head>
-<body class="bg-slate-200 min-h-screen p-6 flex flex-col items-center justify-center font-sans antialiased">
+<body>
 
-  <!-- Floating Control Bar (Hidden when printed) -->
-  <div class="no-print mb-6 flex items-center space-x-3 bg-white p-3 rounded-2xl shadow-lg border border-slate-200">
-    <button onclick="window.print()" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md shadow-brand-500/20 flex items-center gap-2 transition">
-      <i data-lucide="printer" class="w-4 h-4"></i>
-      <span>Print A4 Poster (Ctrl + P)</span>
+  <!-- Floating Action Buttons (Hidden when printing) -->
+  <div class="no-print mb-6 flex flex-wrap items-center justify-center gap-3 bg-white p-3 rounded-2xl shadow-xl border border-slate-300">
+    <button onclick="window.print()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm shadow-md flex items-center gap-2 transition active:scale-95">
+      <span>🖨️ Print Poster (A4)</span>
+    </button>
+    <button onclick="downloadPosterImage()" id="btn-download-poster" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm shadow-md flex items-center gap-2 transition active:scale-95">
+      <span>📥 Download Poster Image (PNG)</span>
+    </button>
+    <button onclick="downloadOnlyQrImage()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm flex items-center gap-2 transition">
+      <span>QR மட்டும் பதிவிறக்குக</span>
     </button>
     <a href="/admin.html" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm flex items-center gap-2 transition">
-      <i data-lucide="arrow-left" class="w-4 h-4"></i>
-      <span>Back to Admin</span>
+      <span>← Back to Admin</span>
     </a>
   </div>
 
-  <!-- A4 Printable Standee Poster -->
-  <div class="standee-poster bg-white max-w-[540px] w-full rounded-3xl p-8 border-4 border-slate-900 shadow-2xl flex flex-col justify-between text-center relative overflow-hidden">
-    
-    <!-- Decorative Corner Badges -->
-    <div class="absolute top-0 left-0 w-24 h-24 bg-brand-600 -translate-x-12 -translate-y-12 rotate-45"></div>
-    <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-500 translate-x-12 -translate-y-12 rotate-45"></div>
+  <!-- ============================================================ -->
+  <!-- 🌟 STAND-EE POSTER (EXACT MATCH TO THE UPLOADED DESIGN)     -->
+  <!-- ============================================================ -->
+  <div id="poster-capture-area" class="poster-wrap bg-white w-full max-w-[560px] rounded-3xl border-4 border-[#002b66] shadow-2xl flex flex-col justify-between text-center overflow-hidden relative">
 
-    <!-- Header Section -->
-    <div class="space-y-1.5 relative z-10 pt-2">
-      <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-black uppercase tracking-wider mb-2">
-        <i data-lucide="zap" class="w-3.5 h-3.5"></i>
-        <span>Instant Self-Service Print Kiosk</span>
-      </div>
-      <h1 id="standee-shop-name" class="font-heading text-3xl font-black text-slate-900 tracking-tight">
-        QuickPrint Store
-      </h1>
-      <p class="text-sm font-bold text-brand-600">
-        SCAN &bull; PAY &bull; COLLECT / ஸ்கேன் &bull; பணம் செலுத்துங்கள் &bull; பிரிண்ட் எடுங்கள்
-      </p>
-    </div>
-
-    <!-- Giant QR Code Box -->
-    <div class="my-6 p-6 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-300 inline-block mx-auto shadow-inner relative">
-      <img id="standee-qr-image" class="w-64 h-64 mx-auto rounded-2xl shadow-sm" alt="Counter QR Code">
-      <div class="mt-3">
-        <p class="text-xs font-black uppercase tracking-widest text-slate-700">Point Camera to Scan</p>
-        <p id="standee-url-label" class="text-[11px] font-mono text-slate-400 mt-0.5">http://192.168.1.x:4000</p>
-      </div>
-    </div>
-
-    <!-- 3 Easy Steps (English & Tamil) -->
-    <div class="grid grid-cols-3 gap-3 my-2 text-left">
+    <!-- TOP: LOGO HEADER & RAYS -->
+    <div class="pt-6 px-6">
       
-      <div class="p-3 bg-brand-50/70 rounded-2xl border border-brand-100">
-        <span class="w-6 h-6 rounded-full bg-brand-600 text-white font-black text-xs flex items-center justify-center mb-1.5">1</span>
-        <p class="text-xs font-black text-slate-900 leading-tight">Scan QR</p>
-        <p class="text-[10px] text-slate-500 mt-0.5">போன் கேமராவில் ஸ்கேன் செய்யுங்கள்</p>
+      <!-- Brand Logo: QR se Print -->
+      <div class="flex items-center justify-center gap-2">
+        <!-- Left Sunburst Rays -->
+        <div class="sunburst-ray">
+          <span></span><span></span><span></span>
+        </div>
+
+        <div class="flex items-baseline font-black leading-none tracking-tight select-none">
+          <span class="text-[52px] text-[#0a192f] font-black tracking-tighter" style="font-family:'Montserrat',sans-serif;">QR</span>
+          <span class="text-[30px] text-[#0a192f] font-black mx-1.5 lowercase">se</span>
+          
+          <!-- Print Word with Printer Icon on Top of "i" -->
+          <div class="relative inline-block">
+            <!-- Printer Icon on top -->
+            <div class="absolute -top-7 left-1/2 -translate-x-1/2 text-[#002b66]">
+              <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24">
+                <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
+              </svg>
+            </div>
+            <span class="text-[56px] text-[#0052cc] font-black" style="font-family:'Montserrat',sans-serif; text-shadow: 2px 2px 0px #fff;">Print</span>
+          </div>
+        </div>
+
+        <!-- Right Sunburst Rays -->
+        <div class="sunburst-ray">
+          <span></span><span></span><span></span>
+        </div>
       </div>
 
-      <div class="p-3 bg-indigo-50/70 rounded-2xl border border-indigo-100">
-        <span class="w-6 h-6 rounded-full bg-indigo-600 text-white font-black text-xs flex items-center justify-center mb-1.5">2</span>
-        <p class="text-xs font-black text-slate-900 leading-tight">Upload File</p>
-        <p class="text-[10px] text-slate-500 mt-0.5">PDF / Photos தேர்வு செய்யவும்</p>
+      <!-- Blue Ribbon Banner: SCAN • UPLOAD • PAY • PRINT -->
+      <div class="ribbon-banner mt-3 py-2 px-6 text-white text-center shadow-md">
+        <span class="text-[17px] sm:text-[18px] font-black tracking-widest uppercase">
+          SCAN <span class="text-yellow-400 font-bold mx-1.5">•</span> 
+          UPLOAD <span class="text-yellow-400 font-bold mx-1.5">•</span> 
+          PAY <span class="text-yellow-400 font-bold mx-1.5">•</span> 
+          PRINT
+        </span>
       </div>
+    </div>
 
-      <div class="p-3 bg-emerald-50/70 rounded-2xl border border-emerald-100">
-        <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center mb-1.5">3</span>
-        <p class="text-xs font-black text-slate-900 leading-tight">UPI & Print</p>
-        <p class="text-[10px] text-slate-500 mt-0.5">GPay/PhonePe மூலம் Pay செய்யுங்கள்</p>
+    <!-- MIDDLE: 3-WAY PROCESS & GIANT QR CODE -->
+    <div class="my-5 px-4 sm:px-6">
+      
+      <!-- Flex container with Left Step, Center QR, Right Step -->
+      <div class="flex items-center justify-center gap-2 sm:gap-3">
+        
+        <!-- STEP 1: SCAN (Left Side) -->
+        <div class="flex flex-col items-center">
+          <div class="w-[105px] sm:w-[115px] bg-white border-2 border-[#0052cc] rounded-2xl p-2.5 sm:p-3 text-center shadow-sm">
+            <div class="w-10 h-10 mx-auto rounded-full bg-[#0052cc] text-white flex items-center justify-center text-lg mb-1 shadow-sm">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M17 1H7c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2zm0 18H7V5h10v14zm-4-12h-2v2h2V7zm-2 4h2v2h-2v-2zm-2-4H7v2h2V7zm0 4H7v2h2v-2zm4 4h-2v2h2v-2zm-4 0H7v2h2v-2z"/>
+              </svg>
+            </div>
+            <div class="text-[13px] font-black text-[#0052cc] uppercase leading-tight">1. SCAN</div>
+            <div class="text-[10px] font-bold text-slate-700 leading-tight mt-0.5">QR Code Scan செய்யவும்</div>
+          </div>
+        </div>
+
+        <!-- Blue Arrow Left to Center -->
+        <div class="text-[#0052cc] text-2xl font-black shrink-0">➔</div>
+
+        <!-- CENTER: GIANT CRISP QR CODE -->
+        <div class="flex flex-col items-center">
+          <div class="w-[200px] h-[200px] sm:w-[220px] sm:h-[220px] bg-white rounded-3xl border-4 border-[#002b66] p-2.5 shadow-xl flex items-center justify-center relative overflow-hidden">
+            <img id="standee-qr-image" class="w-full h-full object-contain" alt="QuickPrint QR Code" src="">
+          </div>
+
+          <!-- Blue Arrow pointing Down to Step 2 -->
+          <div class="text-[#0052cc] text-2xl font-black my-1">⬇</div>
+
+          <!-- STEP 2: UPLOAD & PAY (Bottom of QR) -->
+          <div class="bg-white border-2 border-[#0052cc] rounded-2xl py-2 px-4 shadow-sm flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-[#0052cc] text-white flex items-center justify-center shrink-0 shadow-sm">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+              </svg>
+            </div>
+            <div class="text-left">
+              <div class="text-[13px] font-black text-[#0052cc] uppercase leading-tight">2. UPLOAD &amp; PAY</div>
+              <div class="text-[10px] font-bold text-slate-700 leading-tight">File Upload செய்து Payment செய்யவும்</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Blue Arrow Center to Right -->
+        <div class="text-[#0052cc] text-2xl font-black shrink-0">➔</div>
+
+        <!-- STEP 3: PRINT (Right Side) -->
+        <div class="flex flex-col items-center">
+          <div class="w-[105px] sm:w-[115px] bg-white border-2 border-[#0052cc] rounded-2xl p-2.5 sm:p-3 text-center shadow-sm">
+            <div class="w-10 h-10 mx-auto rounded-full bg-[#0052cc] text-white flex items-center justify-center text-lg mb-1 shadow-sm">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
+              </svg>
+            </div>
+            <div class="text-[13px] font-black text-[#0052cc] uppercase leading-tight">3. PRINT</div>
+            <div class="text-[10px] font-bold text-slate-700 leading-tight mt-0.5">Automatic Print ஆகும்</div>
+          </div>
+        </div>
+
       </div>
 
     </div>
 
-    <!-- Supported UPI Badges & Footer -->
-    <div class="pt-5 border-t-2 border-slate-100 mt-3 flex items-center justify-between text-left">
-      <div>
-        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Supported Payments</p>
-        <p class="text-xs font-extrabold text-slate-800">Google Pay &bull; PhonePe &bull; Paytm &bull; UPI</p>
+    <!-- YELLOW HIGHLIGHT BANNER: AUTOMATIC PRINT -->
+    <div class="px-6 my-2">
+      <div class="brush-banner py-2 px-5 flex items-center justify-center gap-3 text-slate-950 shadow-md">
+        <!-- Accent Rays -->
+        <div class="text-xl font-black">\\\</div>
+        
+        <!-- Printer Icon -->
+        <svg class="w-7 h-7 fill-current shrink-0" viewBox="0 0 24 24">
+          <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
+        </svg>
+
+        <span class="text-[24px] sm:text-[28px] font-black tracking-wide uppercase font-sans">
+          AUTOMATIC PRINT
+        </span>
+
+        <!-- Accent Rays -->
+        <div class="text-xl font-black">///</div>
       </div>
-      <div class="text-right">
-        <p class="text-[10px] text-slate-400">Need Help?</p>
-        <p id="standee-phone" class="text-xs font-bold text-slate-900">+91 98765 43210</p>
+
+      <!-- Payment Sub-title -->
+      <div class="mt-2 text-[15px] sm:text-[16px] font-black text-slate-900 tracking-tight">
+        Pay Online Or Pay Cash Option Available
+      </div>
+    </div>
+
+    <!-- BOTTOM FOOTER: AVAILABLE ONLY AT [SHOP NAME] -->
+    <div class="bg-[#002244] text-white py-4 px-6 mt-4">
+      <div class="text-[11px] font-extrabold tracking-widest uppercase text-slate-300">
+        AVAILABLE ONLY AT
+      </div>
+      <div class="flex items-center justify-center gap-2 mt-1">
+        <!-- Yellow Pin -->
+        <span class="text-2xl text-yellow-400">📍</span>
+        <span id="standee-shop-name" class="text-[24px] sm:text-[28px] font-black text-yellow-400 tracking-tight leading-tight">
+          Hasulots technologies
+        </span>
+      </div>
+      <div id="standee-phone-wrap" class="text-xs text-slate-400 mt-1 font-semibold" style="display:none;">
+        📞 Help: <span id="standee-phone"></span>
       </div>
     </div>
 
@@ -116,22 +270,93 @@
         const res = await fetch('/api/info?shop=' + encodeURIComponent(sid));
         const data = await res.json();
         
-        document.getElementById('standee-shop-name').textContent = data.settings.shopName || 'QuickPrint';
-        document.getElementById('standee-phone').textContent = data.settings.shopPhone || '';
-        if (data.noShop) { document.getElementById('standee-url-label').textContent = 'Open this page from your shop dashboard'; return; }
-        const link = data.orderUrl;
-        document.getElementById('standee-url-label').textContent = link;
+        const settings = data.settings || {};
+        const shopName = settings.shopName || data.shopId || 'QuickPrint Shop';
+        
+        document.getElementById('standee-shop-name').textContent = shopName;
+        
+        if (settings.shopPhone) {
+          const phWrap = document.getElementById('standee-phone-wrap');
+          const ph = document.getElementById('standee-phone');
+          if (phWrap && ph) {
+            ph.textContent = settings.shopPhone;
+            phWrap.style.display = 'block';
+          }
+        }
 
-        // Generate high-res QR for base URL
-        const qrRes = await fetch(`/api/qr?text=${encodeURIComponent(link)}&width=400`);
+        // Target customer order URL
+        let link = data.orderUrl || `${window.location.origin}/order`;
+        if (data.baseUrl && data.baseUrl.startsWith('https://')) {
+          link = `${data.baseUrl}/order`;
+        }
+
+        // Generate Ultra-Crisp High-Res QR (600x600 for sharp printing)
+        const qrRes = await fetch(`/api/qr?text=${encodeURIComponent(link)}&width=600`);
         const qrData = await qrRes.json();
-        document.getElementById('standee-qr-image').src = qrData.qr;
+        const qrImg = document.getElementById('standee-qr-image');
+        if (qrImg) qrImg.src = qrData.qr;
 
-        if (window.lucide) lucide.createIcons();
+        // Auto print trigger if requested
+        if (new URLSearchParams(location.search).get('autoPrint') === 'true') {
+          setTimeout(() => {
+            window.print();
+          }, 800);
+        }
       } catch (err) {
-        console.error('Failed to load standee QR', err);
+        console.error('Failed to load standee details:', err);
       }
     }
+
+    // High-Resolution PNG Poster Download
+    async function downloadPosterImage() {
+      const btn = document.getElementById('btn-download-poster');
+      const origText = btn ? btn.innerHTML : '';
+      if (btn) btn.innerHTML = '⏳ Generating PNG...';
+
+      try {
+        const posterEl = document.getElementById('poster-capture-area');
+        if (!posterEl) return;
+
+        // Use html2canvas with scale 3 for 300DPI crisp print resolution
+        const canvas = await html2canvas(posterEl, {
+          scale: 3,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false
+        });
+
+        const imageUri = canvas.toDataURL('image/png');
+        const shopTitle = (document.getElementById('standee-shop-name')?.textContent || 'Shop')
+          .replace(/[^a-zA-Z0-9]/g, '_');
+
+        const a = document.createElement('a');
+        a.href = imageUri;
+        a.download = `QR-se-Print-Poster-${shopTitle}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch (err) {
+        alert('Poster download failed: ' + err.message);
+      } finally {
+        if (btn) btn.innerHTML = origText;
+      }
+    }
+
+    // Download only the raw QR code image
+    function downloadOnlyQrImage() {
+      const img = document.getElementById('standee-qr-image');
+      if (img && img.src) {
+        const a = document.createElement('a');
+        a.href = img.src;
+        a.download = 'QuickPrint-Shop-QR.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        alert('QR code not ready yet.');
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', loadStandee);
   </script>
 </body>
