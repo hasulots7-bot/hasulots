@@ -120,7 +120,7 @@ function showPasswordError(msg, type = 'AUTH') {
             <span>📡</span> <span>Server Unreachable</span>
           </div>
           <p style="font-size:13px;line-height:1.4;margin:0 0 8px;color:#312e81;">${escapeHtml(msg || 'Cannot connect to QuickPrint. Check your Wi-Fi or internet connection.')}</p>
-          <button type="button" onclick="verifyLoginSubmit()" style="padding:6px 12px;background:#4f46e5;color:#fff;border:0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Retry Connection</button>
+          <button type="button" onclick="verifyLoginSubmit()" style="padding:6px 12px;background:#2563eb;color:#fff;border:0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Retry Connection</button>
         </div>
       `;
     } else {
@@ -158,7 +158,7 @@ function ensureRememberMeCheckbox() {
   wrap.id = 'admin-remember-wrap';
   wrap.style.cssText = 'display:flex;align-items:center;gap:8px;margin:12px 0 16px;cursor:pointer;';
   wrap.innerHTML = `
-    <input type="checkbox" id="admin-remember-me" checked style="width:16px;height:16px;cursor:pointer;accent-color:#4f46e5;">
+    <input type="checkbox" id="admin-remember-me" checked style="width:16px;height:16px;cursor:pointer;accent-color:#2563eb;">
     <label for="admin-remember-me" style="margin:0;font-size:13px;font-weight:600;color:#334155;cursor:pointer;user-select:none;">
       Remember me on this PC (Auto-login)
     </label>
@@ -573,8 +573,8 @@ function updateHeaderLicenseBadge(license) {
   }
 
   if (plan === 'lifetime' || license.lifetime) {
-    pill.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-300 hover:border-purple-400 text-purple-900 text-xs font-black ml-1 transition shadow-2xs cursor-pointer hover:bg-purple-100';
-    if (dot) dot.className = 'w-2 h-2 rounded-full bg-purple-600';
+    pill.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-300 hover:border-blue-400 text-blue-900 text-xs font-black ml-1 transition shadow-2xs cursor-pointer hover:bg-blue-100';
+    if (dot) dot.className = 'w-2 h-2 rounded-full bg-blue-600';
     text.textContent = '💎 Lifetime Plan • Unlimited';
     return;
   }
@@ -697,7 +697,7 @@ async function openLicensePlansModal(forceExpired = false) {
   if (daysBadge) {
     if (lic.lifetime) {
       daysBadge.textContent = 'Unlimited (Lifetime)';
-      daysBadge.className = 'text-sm font-black text-purple-700';
+      daysBadge.className = 'text-sm font-black text-blue-700';
     } else if (lic.daysLeft !== null && lic.daysLeft !== undefined) {
       daysBadge.textContent = lic.daysLeft > 0 ? `${lic.daysLeft} Days Pending` : `Expired (${Math.abs(lic.daysLeft)} days ago)`;
       daysBadge.className = lic.daysLeft > 0 ? 'text-sm font-black text-slate-800' : 'text-sm font-black text-rose-600';
@@ -1029,7 +1029,7 @@ function renderOrders() {
     if (order.status === 'completed') {
       statusBadge = '<span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-xs font-extrabold text-emerald-700"><span class="h-2 w-2 rounded-full bg-emerald-500"></span>Done</span>';
     } else if (order.status === 'printing') {
-      statusBadge = '<span class="inline-flex animate-pulse items-center gap-1 rounded-full bg-violet-50 border border-violet-200 px-2.5 py-1 text-xs font-extrabold text-violet-700"><span class="h-2 w-2 rounded-full bg-violet-500"></span>Printing</span>';
+      statusBadge = '<span class="inline-flex animate-pulse items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-2.5 py-1 text-xs font-extrabold text-blue-700"><span class="h-2 w-2 rounded-full bg-blue-500"></span>Printing</span>';
     } else if (order.status === 'queued') {
       statusBadge = '<span class="inline-flex items-center gap-1 rounded-full bg-sky-50 border border-sky-200 px-2.5 py-1 text-xs font-extrabold text-sky-700"><span class="h-2 w-2 rounded-full bg-sky-500"></span>Queued</span>';
     } else {
@@ -1078,7 +1078,7 @@ function renderOrders() {
             <span>💵</span> Pay &amp; Print
           </button>
         ` : `
-          <button class="btn-print-action grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-violet-600 text-white shadow-md shadow-violet-600/30 transition hover:bg-violet-700 active:scale-95" title="Print again" data-id="${order.id}">
+          <button class="btn-print-action grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/30 transition hover:bg-blue-700 active:scale-95" title="Print again" data-id="${order.id}">
             <i data-lucide="printer" class="w-4 h-4"></i>
           </button>
         `}
@@ -1470,7 +1470,7 @@ function setupEventListeners() {
       document.querySelectorAll('.filter-tab, .order-filter-tab').forEach(t => {
         t.className = 'order-filter-tab px-3 py-1 rounded-full text-xs font-bold text-slate-500 hover:bg-slate-100 transition';
       });
-      tab.className = 'order-filter-tab px-3 py-1 rounded-full text-xs font-black bg-purple-100 text-purple-800 transition';
+      tab.className = 'order-filter-tab px-3 py-1 rounded-full text-xs font-black bg-blue-100 text-blue-800 transition';
       agentState.filter = tab.getAttribute('data-filter');
       renderOrders();
     });
