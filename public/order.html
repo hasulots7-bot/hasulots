@@ -3,8 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>QuickPrint — Scan, Upload & Print</title>
+  <title>QuickPrint — Self-Service Mobile Print & Pay</title>
+  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#7c3aed">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/icon-192.png">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <link rel="stylesheet" href="/customer.css?v=4">
@@ -866,9 +870,10 @@
        Khaali div bacha hai taaki koi purana hide/show('secOptions') na toote. -->
   <div id="secOptions" class="hidden"></div>
 
-  <!-- STEP 4: Payment method + copies + price summary.
-       Online = pay by UPI and the shop verifies before printing.
-       Counter = pay cash and the shop verifies before printing. -->
+  <!-- STEP 4: Make Payment (work-54) — copies + hisaab + payment ka tareeka.
+       "Confirm & Pay" dabate hi: Online = seedha payment page, Counter = print.
+       onlineBtn / counterBtn purane button chhupe hue hain (payOnline /
+       payCounter wahi purane function hain). -->
   <div id="secPayment" class="hidden">
     <div class="card pay-card">
       <h3>💳 Payment & Copies <span style="font-size:14px;color:var(--violet);font-weight:700;">/ கட்டணம்</span></h3>
@@ -905,7 +910,7 @@
       
       <!-- Enhanced UPI Section inside secPayment -->
       <div id="upiQrWrap" class="upi-qr-card hidden">
-        <div style="font-weight:800;font-size:14px;color:var(--ink);">Scan &amp; Pay via Any UPI App</div>
+        <div style="font-weight:800;font-size:14px;color:var(--ink);">Scan QR to Pay via Any UPI App</div>
         <p style="font-size:12px;color:var(--muted);margin:0;">GPay / PhonePe / Paytm / BHIM</p>
         <img id="upiQrImg" alt="UPI QR Code" src="">
         <div style="font-size:13px;font-weight:800;color:var(--violet);" id="upiQrAmount">Amount: ₹0</div>
@@ -915,21 +920,15 @@
           <a id="btnPaytm" class="upi-app-btn btn-paytm" href="#">Paytm</a>
           <a id="btnBhim" class="upi-app-btn btn-bhim" href="#">Any UPI</a>
         </div>
-
-        <div style="width:100%;text-align:left;margin-top:4px;">
-          <label for="upiTxnRef" style="display:block;font-size:11.5px;font-weight:800;color:var(--ink);margin-bottom:5px;">
-            UPI Ref / UTR number <span style="color:var(--muted);font-weight:600;">(optional)</span>
-          </label>
-          <input id="upiTxnRef" type="text" inputmode="numeric" autocomplete="off" spellcheck="false"
-                 placeholder="e.g. 412345678901"
-                 style="width:100%;padding:11px 12px;border:1.5px solid var(--violet-soft);border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;color:var(--ink);outline:none;background:#fff;">
-          <p style="font-size:11px;color:var(--muted);margin:6px 0 0;line-height:1.45;">
-            The shop owner will check the payment received, then print. Keep the UPI success screen open until printing starts.
-          </p>
-        </div>
+        <p class="upi-pay-hint" style="font-size:12px;color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;padding:8px 12px;border-radius:10px;margin-top:10px;font-weight:700;text-align:center;">
+          ✅ UPI மூலம் பணம் செலுத்திய பிறகு கீழே உள்ள "Confirm &amp; Pay" பட்டனை கிளிக் செய்யவும். அச்சு தானாக தொடங்கும்!
+        </p>
       </div>
 
       <div class="pay-note" id="payNote">Loading...</div>
+
+      <button class="pay-btn pay-online-btn pay-legacy" id="onlineBtn" onclick="payOnline()">💳 Pay Online via UPI</button>
+      <button class="pay-btn pay-counter-btn pay-legacy" id="counterBtn" onclick="payCounter()">💵 Pay Cash at Counter</button>
     </div>
     <div class="btn-row">
       <button class="btn btn-grey" onclick="backToOptions()">← Back</button>
@@ -942,9 +941,9 @@
   <!-- SUCCESS -->
   <div class="success-screen" id="secSuccess">
     <div class="thank-you-emoji">🎉</div>
-    <h2 class="thank-you-text">Order Placed!</h2>
+    <h2 class="thank-you-text">Thank You!</h2>
     <div class="sicon" id="successIcon">✓</div>
-    <h2 id="successTitle">Waiting for shop to verify payment</h2>
+    <h2 id="successTitle">Printing in Progress! / அச்சிடப்படுகிறது!</h2>
     <div class="order-id" id="orderId">ORDER #...</div>
     <div class="ordno-box" id="ordNoBox" style="display:none">
       <div class="ordno-lb">Your Token Number / உங்கள் டோக்கன் எண்</div>
@@ -952,16 +951,16 @@
       <div class="ordno-hint">Show this token at the counter to collect your prints</div>
     </div>
     <div class="collect-box" id="collectBox">
-      <h3 id="collectTitle">⏳ Payment Check in Progress</h3>
-      <p id="collectMsg">The shop owner is checking the payment received. Printing starts right after that.</p>
+      <h3 id="collectTitle">🖨️ Printing in Progress!</h3>
+      <p id="collectMsg">Your document is printing silently on the shop printer.</p>
     </div>
-
+    
     <!-- Live Status Tracker -->
     <div class="status-tracker-box">
       <div class="status-step-row done" id="track1"><span class="step-icon">✓</span><span>1. Order Received</span></div>
-      <div class="status-step-row active" id="track2"><span class="step-icon">⏳</span><span id="track2Text">2. Waiting for Payment Check</span></div>
-      <div class="status-step-row" id="track3"><span class="step-icon">🖨️</span><span id="track3Text">3. Sending to Printer</span></div>
-      <div class="status-step-row" id="track4"><span class="step-icon">🎉</span><span id="track4Text">4. Printed &amp; Ready at Counter</span></div>
+      <div class="status-step-row done" id="track2"><span class="step-icon">✓</span><span>2. Payment Verified</span></div>
+      <div class="status-step-row active" id="track3"><span class="step-icon">🖨️</span><span id="track3Text">3. Sending to Physical Printer...</span></div>
+      <div class="status-step-row" id="track4"><span class="step-icon">🎉</span><span id="track4Text">4. Printed & Ready at Counter</span></div>
     </div>
 
     <div class="amount-box">
@@ -969,11 +968,13 @@
       <strong id="finalAmount">₹5</strong>
     </div>
 
-    <div id="paymentHelpBox" style="margin:16px 0;padding:14px;background:#fffbeb;border:1.5px solid #fde68a;border-radius:14px;text-align:center;">
-      <div style="font-size:13px;font-weight:800;color:#92400e;margin-bottom:4px;">💡 Payment not verified yet?</div>
-      <div id="paymentHelpText" style="font-size:11.5px;color:#a16207;line-height:1.5;">Show your UPI success screen at the counter. If the owner rejects the order, this page will show the reason.</div>
+    <!-- Resume yahin bana tha, customer ke paas copy nahi hoti — isliye
+         payment ke baad download ka option dete hain -->
+    <div id="dlBox" style="display:none;margin:16px 0;padding:16px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:14px;text-align:center;">
+      <div style="font-size:13.5px;font-weight:800;color:#166534;margin-bottom:4px;">📄 Apna Resume Save Kar Lo</div>
+      <div style="font-size:11.5px;color:#3f7a52;margin-bottom:12px;">Aage kabhi kaam aayega — abhi download kar lo</div>
+      <button onclick="downloadMyPdf()" style="width:100%;background:#166534;color:#fff;border:none;border-radius:12px;padding:14px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:15px;cursor:pointer;">⬇️ PDF Download Karo</button>
     </div>
-
     <div id="fbBox" style="text-align:center;margin:16px 0;padding:14px;background:#f8f7fc;border-radius:14px;">
       <div style="font-size:13px;font-weight:700;margin-bottom:10px;">How was your print experience?</div>
       <div style="display:flex;gap:12px;justify-content:center;">
@@ -983,11 +984,6 @@
       <div id="fbThanks" style="display:none;font-size:13px;color:#16a34a;font-weight:700;margin-top:8px;">🙏 Shukriya!</div>
     </div>
     <button class="btn-primary" onclick="location.reload()">🖨️ Print Another Document / புதிய அச்சு</button>
-  </div>
-
-  <div class="footer">
-    <p style="font-weight:700;color:#7a7a8c;">⚡ Powered by <b>Hasulots technologies</b></p>
-    <p style="font-size:10px;color:#9a9aab;" id="footerLegal">© QuickPrint Self-Service Printing System</p>
   </div>
 
 </div>
@@ -1043,7 +1039,7 @@
 
   <!-- Audio Chimes -->
   <audio id="audioSuccess" preload="auto" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU"></audio>
-  <script src="/app.js?v=35"></script>
+  <script src="/app.js?v=33"></script>
 
 <!-- ============================================================ -->
 <!-- 1. AUTO CROP MODAL (Screenshots 2 & 6)                        -->

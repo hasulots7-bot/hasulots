@@ -134,9 +134,16 @@ async function fetchSettings() {
 // Fetch Installed Printers
 async function fetchPrinters() {
   try {
-    const res = await fetch('/api/printers');
-    const data = await res.json();
-    agentState.printers = data.printers || [];
+    let names = null;
+    if (window.qpDesktop && window.qpDesktop.getPrinters) {          // QuickPrint Shop desktop app: real Windows printers
+      try { names = await window.qpDesktop.getPrinters(); } catch (e) { console.warn('Desktop printers error', e); }
+    }
+    if (!names) {
+      const res = await fetch('/api/printers');
+      const data = await res.json();
+      names = data.printers || [];
+    }
+    agentState.printers = names;
 
     populatePrinterSelect(printerSelectBw, agentState.settings?.selectedBwPrinter);
     populatePrinterSelect(printerSelectColor, agentState.settings?.selectedColorPrinter);
@@ -314,8 +321,33 @@ function renderOrders() {
 }
 
 // Direct Automated Silent Print Logic
+function setOrderStatus(order, status) {
+  return fetch(`/api/orders/${order.id}/status`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  }).catch(() => {});
+}
+
 function triggerDirectPrint(order) {
   if (!order || !order.fileUrl) return;
+
+  // Desktop app: silent print straight to the selected Windows printer (no dialog)
+  if (window.qpDesktop && window.qpDesktop.printFile) {
+    const st = agentState.settings || {};
+    const printer = order.colorMode === 'color' ? st.selectedColorPrinter : st.selectedBwPrinter;
+    setOrderStatus(order, 'printing');
+    window.qpDesktop.printFile({
+      url: order.fileUrl, printer: printer || '', copies: order.copies, colorMode: order.colorMode,
+      duplex: order.duplex, paperSize: order.paperSize, pageRange: order.pageRange
+    }).then(() => setOrderStatus(order, 'completed'))
+      .catch((err) => {
+        console.warn('Desktop print failed', err);
+        setOrderStatus(order, 'queued');
+        alert('Print failed for ' + (order.token || 'order') + ': ' + ((err && err.message) || 'printer error').replace(/^Error invoking remote method[^:]*: /, ''));
+      });
+    return;
+  }
 
   const frame = document.getElementById('silent-print-frame');
   if (frame) {

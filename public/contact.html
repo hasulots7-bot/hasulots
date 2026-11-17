@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact Us – QuickPrint | Hasulots Technologies</title>
+<meta name="description" content="Contact QuickPrint by Hasulots Technologies via WhatsApp, email or phone for demo, setup help and plans.">
+<meta name="theme-color" content="#4f46e5">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/site.css">
+<script src="/site.js"></script>
+</head>
+<body>
+<div id="site-header"></div>
+<main>
+
+<section class="page-hero"><div class="wrap">
+  <span class="pill">💬 Contact</span>
+  <h1>Pesalaam <span>vaanga</span></h1>
+  <p>Setup-la prechana irundhaalum, ethaavadhu puriyala-na udane message pannunga. Direct-a pathil kedaikkum.</p>
+</div></section>
+
+<section style="padding-top:30px"><div class="wrap">
+  <div class="contact-grid">
+    <a class="cc" data-wa href="#"><div class="ic">💚</div><b>WhatsApp</b><span>Seekkiram pathil inga kedaikkum</span></a>
+    <a class="cc" data-mailto href="#"><div class="ic">✉️</div><b>Email</b><span data-email-text>email</span></a>
+    <a class="cc" data-tel href="#"><div class="ic">📞</div><b>Phone</b><span data-phone-text>phone</span></a>
+  </div>
+
+  <div class="sec-head"><div class="tag">Message</div><h2>Inga-yirundhe message anuppunga</h2></div>
+  <div class="formbox">
+    <div class="frow">
+      <div class="fld"><label for="fName">Unga name</label><input id="fName" autocomplete="name"></div>
+      <div class="fld"><label for="fNum">Phone / WhatsApp</label><input id="fNum" inputmode="numeric" autocomplete="tel"></div>
+    </div>
+    <div class="fld"><label for="fShop">Shop name</label><input id="fShop" autocomplete="organization"></div>
+    <div class="fld"><label for="fMsg">Message</label><textarea id="fMsg" rows="4" placeholder="Enna vendum nu ezhudhunga..."></textarea></div>
+    <div class="fbtns">
+      <button class="btn btn-wa" id="sendWa" type="button">💬 WhatsApp-la anuppu</button>
+      <button class="btn btn-ghost" id="sendMail" type="button">📧 Email-la anuppu</button>
+    </div>
+    <p class="note" style="text-align:left;margin-top:12px">Button click panna unga WhatsApp / email app open aagum. Message ready-a irukkum, neenga Send mattum click pannunga.</p>
+  </div>
+</div></section>
+
+</main>
+<div id="site-footer"></div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var C = window.SITE_CONFIG;
+  function text() {
+    var g = function (id) { return document.getElementById(id).value.trim(); };
+    return 'Hello, QuickPrint enquiry.\nName: ' + (g('fName') || '-') + '\nPhone: ' + (g('fNum') || '-') + '\nShop: ' + (g('fShop') || '-') + '\n\n' + (g('fMsg') || '');
+  }
+  document.getElementById('sendWa').onclick = function () {
+    window.open('https://wa.me/' + C.whatsapp + '?text=' + encodeURIComponent(text()), '_blank', 'noopener');
+  };
+  document.getElementById('sendMail').onclick = function () {
+    location.href = 'mailto:' + C.email + '?subject=' + encodeURIComponent('QuickPrint enquiry') + '&body=' + encodeURIComponent(text());
+  };
+});
+</script>
+</body>
+</html>

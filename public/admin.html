@@ -3,427 +3,1028 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QuickPrint — Platform Admin Console</title>
+  <title>QuickPrint — Print Agent | Hasulots technologies</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icon-192.png">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    /* 100% Application Viewport Lock — ZERO window scrollbar */
     html, body {
-      min-height: 100%;
+      height: 100vh !important;
+      max-height: 100vh !important;
+      width: 100vw !important;
+      max-width: 100vw !important;
+      overflow: hidden !important;
       font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      background:
-        radial-gradient(1200px 500px at 90% -10%, rgba(99, 102, 241, 0.16), transparent 60%),
-        radial-gradient(900px 450px at -10% 110%, rgba(168, 85, 247, 0.12), transparent 60%),
-        #f1f5f9;
+      background: #f1f5f9;
       color: #1e293b;
+      display: flex;
+      flex-direction: column;
       font-size: 14px;
     }
-    .admin-header {
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      height: 62px;
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(12px);
+
+    .app-header {
+      flex-shrink: 0;
+      height: 58px;
+      background: #ffffff;
       border-bottom: 1px solid #e2e8f0;
-      padding: 0 22px;
+      padding: 0 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      z-index: 30;
     }
-    .card {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 18px;
-      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 12px 32px -18px rgba(15, 23, 42, 0.18);
-    }
-    .admin-main {
+
+    .app-main {
+      flex: 1;
+      min-height: 0;
       display: grid;
-      grid-template-columns: minmax(320px, 370px) minmax(0, 1fr);
-      gap: 16px;
-      padding: 16px 20px 26px;
-      max-width: 1600px;
-      margin: 0 auto;
-      align-items: start;
+      grid-template-columns: clamp(430px, 33vw, 490px) 1fr;
+      gap: 14px;
+      padding: 12px 18px;
+      overflow: hidden;
+      width: 100%;
     }
-    .admin-side, .admin-content {
+
+    .left-col {
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      min-width: 0;
+      gap: 12px;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
     }
-    .stat-card { padding: 14px 16px; }
-    .stat-value { font-size: 26px; font-weight: 900; line-height: 1.05; letter-spacing: -0.03em; }
-    .field {
-      width: 100%;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 11px;
-      padding: 9px 11px;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 700;
-      color: #1e293b;
-      background: #fff;
-      outline: none;
-      transition: border-color .15s, box-shadow .15s;
+
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
     }
-    .field:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.16); }
-    .field-label { display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 5px; }
-    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; }
-    .badge-ok { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
-    .badge-off { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
-    .badge-neutral { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
-    .shops-table { width: 100%; border-collapse: collapse; }
-    .shops-table th {
-      text-align: left;
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: #94a3b8;
-      font-weight: 900;
-      padding: 9px 10px;
-      border-bottom: 1px solid #e2e8f0;
-      white-space: nowrap;
-    }
-    .shops-table td {
-      padding: 11px 10px;
-      border-bottom: 1px solid #f1f5f9;
-      font-size: 12.5px;
-      vertical-align: middle;
-    }
-    .shops-table tr:last-child td { border-bottom: 0; }
-    .shops-table tr.is-active { background: #eef2ff; }
-    .order-chip {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      font-weight: 700;
-      background: #0f172a;
-      color: #fff;
-      padding: 2px 8px;
-      border-radius: 7px;
-    }
-    .orders-mini { display: flex; flex-direction: column; gap: 7px; max-height: 330px; overflow-y: auto; }
-    .order-line {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr) auto;
-      gap: 10px;
+
+    .app-footer {
+      flex-shrink: 0;
+      height: 30px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      padding: 0 18px;
+      display: flex;
       align-items: center;
-      padding: 9px 11px;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      background: #f8fafc;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #64748b;
     }
-    .toggle-link { font-size: 11px; font-weight: 800; color: #4f46e5; cursor: pointer; }
-    .toggle-link:hover { text-decoration: underline; }
-    @media (max-width: 1080px) {
-      .admin-main { grid-template-columns: 1fr; }
+
+    .card-panel {
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03), 0 4px 14px rgba(0,0,0,0.02);
+      border: 1px solid #e2e8f0;
+    }
+
+    .printer-sel-active {
+      border: 2px solid #f59e0b !important;
+      background-color: #fffdfa !important;
+      color: #78350f !important;
+      font-weight: 800;
+      border-radius: 12px;
+      padding: 6px 12px;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+    }
+    .printer-sel-active:focus {
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+    }
+    .printer-disabled-slot {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      color: #94a3b8;
+      border-radius: 10px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .btn-action-round {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #475569;
+      cursor: pointer;
+      font-size: 15px;
+      transition: all 0.15s ease;
+    }
+    .btn-action-round:hover {
+      background: #f1f5f9;
+      color: #1e293b;
+      border-color: #94a3b8;
+      transform: scale(1.05);
+    }
+    .ios-toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+    }
+    .ios-toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .ios-toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #cbd5e1;
+      transition: .25s;
+      border-radius: 99px;
+    }
+    .ios-toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .25s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
+    input:checked + .ios-toggle-slider {
+      background-color: #10b981;
+    }
+    input:checked + .ios-toggle-slider:before {
+      transform: translateX(18px);
+    }
+
+    .stat-number {
+      font-size: 26px;
+      font-weight: 900;
+      line-height: 1;
+      color: #0f172a;
+    }
+    .stat-number.blue {
+      color: #2563eb;
+    }
+
+    /* Keypad Styles */
+    .key-btn {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .key-btn:active {
+      transform: scale(0.92);
+      background: #ede9fe;
+      border-color: #a78bfa;
+    }
+    .pin-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+      background: transparent;
+      transition: all 0.2s ease;
+    }
+    .pin-dot.filled {
+      background: #7c3aed;
+      border-color: #7c3aed;
+      transform: scale(1.15);
+      box-shadow: 0 0 8px rgba(124, 58, 237, 0.4);
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .shake-anim {
+      animation: shake 0.4s ease;
+    }
+
+    /* Orders scrollbar */
+    .orders-stream-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .orders-stream-list::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 6px;
     }
   </style>
+  <script>
+    function openShopConfigModal() {
+      const m = document.getElementById('modal-shop-config');
+      if (m) {
+        m.style.setProperty('display', 'flex', 'important');
+        m.style.setProperty('z-index', '999999', 'important');
+        m.classList.remove('hidden');
+      }
+      if (window.populateShopConfigModal) {
+        try { window.populateShopConfigModal(); } catch (e) {}
+      }
+    }
+    function closeShopConfigModal() {
+      const m = document.getElementById('modal-shop-config');
+      if (m) {
+        m.style.setProperty('display', 'none', 'important');
+        m.classList.add('hidden');
+      }
+    }
+  </script>
 </head>
-<body data-role="admin">
+<body class="selection:bg-indigo-600 selection:text-white">
 
   <!-- ============================================================ -->
-  <!-- PLATFORM ADMIN LOGIN                                         -->
+  <!-- 🔒 ADMIN LOGIN LOCK SCREEN (Required for Admin, Not Customer) -->
   <!-- ============================================================ -->
-  <div id="admin-login-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-md p-4">
-    <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-md w-full p-7 text-center relative overflow-hidden">
-      <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center text-2xl shadow-lg shadow-indigo-500/30 mb-3">
-        🛡️
-      </div>
-      <h2 class="text-xl font-black text-slate-900 leading-tight">Platform Admin</h2>
-      <p class="text-xs text-slate-500 mt-1">உங்கள் QuickPrint நிறுவன கட்டுப்பாட்டு பலகை</p>
+    <!-- ============================================================ -->
+  <!-- 🔒 ADMIN & SHOP LOGIN / REGISTRATION OVERLAY                   -->
+  <!-- ============================================================ -->
+  <style>
+    #admin-login-overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;
+      background:radial-gradient(900px 500px at 90% -10%,#a78bfa66,transparent),radial-gradient(700px 500px at -10% 110%,#6366f166,transparent),linear-gradient(135deg,#1e1b4b,#3730a3 55%,#6d28d9);
+      transition:opacity .3s ease;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+    #admin-login-overlay .lg-wrap{display:grid;grid-template-columns:1.05fr .95fr;width:100%;max-width:900px;background:#fff;border-radius:26px;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,.45)}
+    #admin-login-overlay .lg-side{background:linear-gradient(160deg,#4f46e5,#7c3aed);color:#fff;padding:40px 34px;display:flex;flex-direction:column;justify-content:space-between;gap:24px}
+    #admin-login-overlay .lg-brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:20px}
+    #admin-login-overlay .lg-brand i{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-style:normal;font-size:22px}
+    #admin-login-overlay .lg-side small{display:block;font-size:11px;font-weight:600;opacity:.75;letter-spacing:.5px}
+    #admin-login-overlay .lg-side h2{font-size:26px;line-height:1.25;font-weight:800;margin:0 0 14px}
+    #admin-login-overlay .lg-side ul{list-style:none;padding:0;margin:0;display:grid;gap:11px;font-size:14px;font-weight:600}
+    #admin-login-overlay .lg-side li{display:flex;gap:10px;align-items:center}
+    #admin-login-overlay .lg-side li span{width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:13px;flex-shrink:0}
+    #admin-login-overlay .lg-side p{font-size:12px;opacity:.8;margin:0}
+    #admin-login-overlay .lg-form{padding:40px 34px;display:flex;flex-direction:column;justify-content:center;text-align:left}
+    #admin-login-overlay .lg-form h1{font-size:24px;font-weight:800;color:#15151f;margin:0}
+    #admin-login-overlay .lg-form .sub{color:#6b6b7e;font-size:13.5px;margin:4px 0 22px}
+    #admin-login-overlay label{display:block;font-weight:700;font-size:12.5px;color:#3d3d4e;margin:0 0 6px}
+    #admin-login-overlay .fld{margin-bottom:16px;position:relative}
+    #admin-login-overlay input{width:100%;padding:12px 14px;border:2px solid #e8e6f0;border-radius:12px;font-size:15px;font-weight:600;color:#15151f;outline:none;transition:.15s;background:#fff;font-family:inherit}
+    #admin-login-overlay input:focus{border-color:#6d28d9;box-shadow:0 0 0 4px #ede9fe}
+    #admin-login-overlay .eye{position:absolute;right:10px;top:33px;background:none;border:0;cursor:pointer;font-size:17px;padding:4px;opacity:.6}
+    #admin-login-overlay #login-error-msg{color:#e11d48;font-weight:700;font-size:13px;min-height:20px;margin-bottom:8px;opacity:0;transition:opacity .2s}
+    #admin-login-overlay #btn-submit-pwd{width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 10px 22px rgba(79,70,229,.35);transition:.15s;font-family:inherit}
+    #admin-login-overlay #btn-submit-pwd:hover{transform:translateY(-1px);filter:brightness(1.07)}
+    #admin-login-overlay .lg-help{margin-top:20px;padding-top:16px;border-top:1px solid #e8e6f0;font-size:13px;color:#6b6b7e;display:flex;flex-direction:column;gap:6px;text-align:center}
+    #admin-login-overlay .lg-help a{color:#4f46e5;font-weight:700;text-decoration:none}
+    #admin-login-overlay .lg-help a:hover{text-decoration:underline}
+    @media(max-width:720px){#admin-login-overlay .lg-wrap{grid-template-columns:1fr}#admin-login-overlay .lg-side{display:none}#admin-login-overlay .lg-form{padding:30px 24px}}
+  </style>
 
-      <div class="space-y-3.5 my-5 text-left">
+  <!-- ============================================================ -->
+  <!-- 🔑 SHOP OWNER LOGIN (accounts are created by the QuickPrint owner) -->
+  <!-- ============================================================ -->
+  <div id="admin-login-overlay">
+    <div class="lg-wrap">
+      <div class="lg-side">
+        <div class="lg-brand"><i>🖨️</i><div>QuickPrint<small>BY HASULOTS TECHNOLOGIES</small></div></div>
         <div>
-          <label class="field-label">Admin Username / அட்மின் பயனர் பெயர்</label>
-          <input type="text" id="admin-username-input" class="field" placeholder="admin" value="admin" autocomplete="username">
+          <h2>Customer scan pannaa,<br>print thaanaave nikkum.</h2>
+          <ul>
+            <li><span>📲</span> QR scan • Upload • Pay • Print</li>
+            <li><span>📊</span> Orders &amp; income ellam oru dashboard-la</li>
+            <li><span>🖨️</span> B&amp;W, Color, A3, Duplex printers</li>
+            <li><span>🔒</span> Print mudinjadhum file delete</li>
+          </ul>
         </div>
-        <div>
-          <label class="field-label">Password / கடவுச்சொல்</label>
-          <input type="password" id="admin-password-input" class="field" placeholder="Enter admin password" autocomplete="current-password"
-                 onkeydown="if(event.key==='Enter')platformLogin()">
+        <p>© 2026 QuickPrint • Hasulots Technologies</p>
+      </div>
+
+      <div class="lg-form" id="login-view-form">
+        <h1>Shop Owner Login</h1>
+        <div class="sub">Unga shop dashboard-ku sign in pannunga</div>
+
+        <div class="fld">
+          <label for="admin-username-input">Username</label>
+          <input type="text" id="admin-username-input" placeholder="Enter your username" autocomplete="username" autocapitalize="none" spellcheck="false"
+                 onkeydown="if(event.key==='Enter')document.getElementById('admin-password-input').focus()">
+        </div>
+
+        <div class="fld">
+          <label for="admin-password-input">Password</label>
+          <input type="password" id="admin-password-input" placeholder="Enter your password" autocomplete="current-password"
+                 onkeydown="if(event.key==='Enter')verifyLoginSubmit()">
+          <button type="button" class="eye" onclick="togglePasswordVisibility()" title="Show / Hide" aria-label="Show or hide password">👁️</button>
+        </div>
+
+        <div id="login-error-msg"></div>
+
+        <button type="button" id="btn-submit-pwd" onclick="verifyLoginSubmit()">Login to Dashboard →</button>
+
+        <div class="lg-help">
+          <span>Username / password maranthutteengala? Licence renew pannanuma?</span>
+          <a href="/#contact">💬 Contact QuickPrint owner</a>
+          <a href="/">← Back to website</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <header class="app-header">
+    
+    <!-- Left: Logo & Store Info -->
+    <div class="flex items-center gap-3 min-w-0">
+      
+      <!-- Pink Squircle with White Printer Character -->
+      <div class="w-9 h-9 rounded-xl bg-[#ec2a7a] text-white flex items-center justify-center text-xl shadow-xs shrink-0">
+        🖨️
+      </div>
+
+      <!-- Store Name & Code -->
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <h1 id="header-shop-name" onclick="openShopConfigModal()" class="font-black text-base text-slate-900 leading-tight truncate cursor-pointer hover:text-violet-700 transition" title="Click to edit shop settings">Hasulots technologies</h1>
+          <button id="btn-edit-shop-info" onclick="openShopConfigModal()" class="text-slate-400 hover:text-indigo-600 p-0.5" title="Edit Store Details & Rates">
+            <i data-lucide="edit-3" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <span id="header-shop-code" class="text-xs font-mono font-bold text-violet-600">QP_HASULOTS</span>
+          <button id="btn-copy-code" class="text-slate-400 hover:text-slate-700 text-xs font-semibold underline">Copy</button>
         </div>
       </div>
 
-      <div id="login-error-msg" class="text-xs font-bold text-rose-600 min-h-[18px] mb-2 text-center opacity-0 transition-opacity">
-        Incorrect admin username or password.
+      <!-- Live Agent Online Pill -->
+      <div class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-extrabold ml-1">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>Agent Online</span>
       </div>
 
-      <button type="button" id="btn-submit-pwd" onclick="platformLogin()" class="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-black text-sm shadow-lg shadow-indigo-500/25 transition active:scale-98">
-        Unlock Admin Console →
+      <!-- Shop License & Plan Status Pill -->
+      <button id="header-license-pill" type="button" onclick="openLicensePlansModal()" class="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-300 hover:border-amber-400 text-amber-900 text-xs font-black ml-1 transition shadow-2xs cursor-pointer hover:bg-amber-100" title="Click to view plans & renew license">
+        <span id="header-license-dot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+        <span id="header-license-text">⏳ Trial Version • Checking...</span>
       </button>
 
-      <div class="mt-4 pt-3 border-t border-slate-100 text-center text-[11px] text-slate-500">
-        Default: <b>admin / 1234</b> · change it inside after first login
+    </div>
+
+    <!-- Right: Action Controls -->
+    <div class="flex items-center gap-3 shrink-0">
+      
+      <!-- Plans & Renewal Button -->
+      <button id="btn-renew-license" type="button" onclick="openLicensePlansModal()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs flex items-center gap-1.5 shadow-md shadow-orange-500/20 transition active:scale-95" title="View Plans, Renew or Upgrade">
+        <span>⭐</span>
+        <span>Plans &amp; Renewal</span>
+      </button>
+      
+      <!-- Zoom Controls (A- / A+) -->
+      <div class="flex items-center bg-slate-100 hover:bg-slate-200/60 border border-slate-200 rounded-xl px-2.5 py-1 gap-1.5 shadow-2xs transition" title="Adjust App Display Size">
+        <span class="text-xs text-slate-500 font-bold select-none mr-0.5">🔍</span>
+        <button id="btn-zoom-out" type="button" class="w-6 h-6 rounded-lg bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-black text-xs flex items-center justify-center transition active:scale-95 shadow-2xs" title="Make Smaller (Ctrl + -)">−</button>
+        <span id="zoom-level-label" class="text-xs font-black text-slate-800 min-w-[38px] text-center select-none font-mono">110%</span>
+        <button id="btn-zoom-in" type="button" class="w-6 h-6 rounded-lg bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-black text-xs flex items-center justify-center transition active:scale-95 shadow-2xs" title="Make Bigger (Ctrl + +)">+</button>
+        <button id="btn-zoom-reset" type="button" class="text-[10px] font-black text-slate-400 hover:text-slate-700 px-1 rounded hover:bg-slate-200 transition select-none" title="Reset Zoom to 110%">Reset</button>
       </div>
-      <div class="mt-2 text-center text-[11px] text-slate-400">
-        Shop owner? <a href="/owner" class="text-violet-600 font-extrabold hover:underline">Open Shop Console</a>
+
+      <!-- Lock Button -->
+      <button id="btn-open-settings" onclick="openShopConfigModal()" class="px-3.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-violet-600/25 transition active:scale-95" title="Configure Shop Name, Rates & Password">
+        <span>⚙️</span>
+        <span>Shop Settings</span>
+      </button>
+      <button id="btn-lock-agent" onclick="lockAdminDashboard()" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-1.5 shadow-2xs transition" title="Lock Dashboard">
+        <i data-lucide="lock" class="w-3.5 h-3.5 text-slate-500"></i>
+        <span>Lock</span>
+      </button>
+
+      <!-- Sync Now Button -->
+      <button id="btn-sync-now" class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-1.5 shadow-2xs transition">
+        <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-500"></i>
+        <span>Sync Now</span>
+      </button>
+
+      <!-- Customers can order? Shop Open Toggle -->
+      <div class="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 rounded-xl shadow-2xs">
+        <div class="text-right">
+          <span class="text-[10px] text-slate-500 font-bold block leading-none">Customers can order?</span>
+          <span id="shop-open-status" class="text-xs font-black text-emerald-800">Shop Open</span>
+        </div>
+        <label class="ios-toggle-switch">
+          <input type="checkbox" id="toggle-shop-open" checked>
+          <span class="ios-toggle-slider"></span>
+        </label>
+      </div>
+
+    </div>
+
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- MAIN LAYOUT (Fills remaining height, zero body scroll)        -->
+  <!-- ============================================================ -->
+  <main class="app-main">
+
+    <!-- ============================================================ -->
+    <!-- LEFT COLUMN: PRINTERS & BOTTOM CARDS (Fixed 420px)           -->
+    <!-- ============================================================ -->
+    <div class="left-col">
+      
+      <!-- Card 1: Printers Box -->
+      <div class="card-panel p-4 flex flex-col justify-between flex-1 min-h-0">
+        <div>
+          <!-- Header -->
+          <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-3">
+            <div>
+              <h2 class="text-base font-black text-slate-900 inline mr-2">Printers</h2>
+              <span class="text-xs text-slate-400 font-semibold">Which printer does what</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="printers-status-badge" class="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">0 of 2 ready</span>
+              <button id="btn-refresh-printers" class="text-slate-400 hover:text-slate-800 p-1 rounded-lg hover:bg-slate-100 transition" title="Refresh Windows Printers">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Slots List -->
+          <div class="space-y-3">
+            
+            <!-- 1. Black & White Slot -->
+            <div class="p-3.5 rounded-2xl bg-amber-50/50 border-2 border-amber-300/80 flex items-center justify-between gap-2 shadow-xs transition hover:border-amber-400">
+              <div class="flex items-center gap-3 min-w-[130px]">
+                <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center text-base shrink-0 shadow-xs">🖨️</div>
+                <div>
+                  <h3 class="text-sm font-black text-slate-900 leading-tight">Black & White</h3>
+                  <p class="text-xs text-amber-900/70 font-bold">A4 / Legal (B&amp;W)</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 flex-1 justify-end min-w-0">
+                <select id="select-bw-printer" class="printer-sel-active max-w-[170px] truncate text-xs font-bold py-1.5 px-2.5">
+                  <option value="">Choose a printer...</option>
+                </select>
+                <span class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-black text-slate-700 shrink-0">Normal</span>
+                <button class="btn-action-round btn-test-print" data-mode="bw" title="Test Print">🖨️</button>
+                <button class="btn-action-round" title="Printer Settings">⚙️</button>
+              </div>
+            </div>
+
+            <!-- 2. Color Slot -->
+            <div class="p-3.5 rounded-2xl bg-rose-50/50 border-2 border-rose-300/80 flex items-center justify-between gap-2 shadow-xs transition hover:border-rose-400">
+              <div class="flex items-center gap-3 min-w-[130px]">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-500 text-white flex items-center justify-center text-base shrink-0 shadow-xs">🌈</div>
+                <div>
+                  <h3 class="text-sm font-black text-slate-900 leading-tight">Color</h3>
+                  <p class="text-xs text-rose-900/70 font-bold">A4 / Legal (Color)</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 flex-1 justify-end min-w-0">
+                <select id="select-color-printer" class="printer-sel-active max-w-[170px] truncate text-xs font-bold py-1.5 px-2.5">
+                  <option value="">Choose a printer...</option>
+                </select>
+                <span class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-black text-slate-700 shrink-0">Normal</span>
+                <button class="btn-action-round btn-test-print" data-mode="color" title="Test Print">🖨️</button>
+                <button class="btn-action-round" title="Printer Settings">⚙️</button>
+              </div>
+            </div>
+
+            <!-- Additional Slots Info (Auto Managed) -->
+            <div class="pt-2 flex items-center justify-between px-2 text-xs text-slate-400 font-semibold border-t border-slate-100">
+              <span>Duplex / A3 / 4×6 Photo</span>
+              <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">Auto-managed</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between">
+          <span id="printer-helper-msg" class="text-xs text-slate-500 font-semibold">Black & White needs a printer</span>
+          <button id="btn-save-printer-settings" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-black shadow-sm transition">
+            Save Settings
+          </button>
+        </div>
+      </div>
+
+      <!-- Card 2: Your Shop QR Hub (Large & High Visibility) -->
+      <div class="card-panel p-3.5 flex items-center gap-3.5 border border-slate-200 shrink-0">
+        <!-- Canvas Container - BIG 165px x 165px QR -->
+        <div id="corner-qr-box" 
+             onclick="openFullscreenQrModal()" 
+             class="w-[165px] h-[165px] shrink-0 bg-white rounded-2xl border-2 border-slate-200 flex items-center justify-center overflow-hidden p-2 shadow-sm cursor-pointer group hover:border-violet-500 hover:shadow-md transition relative"
+             title="Click to view Fullscreen QR for customers">
+          <img id="admin-qr-img" class="w-full h-full object-contain" alt="QR" src="/api/qr?format=image" />
+          <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center rounded-2xl text-white text-xs font-black">
+            🔍 Enlarge
+          </div>
+        </div>
+
+        <!-- Info & Actions -->
+        <div class="flex flex-col justify-between h-[165px] min-w-0 flex-1">
+          <div>
+            <div class="flex items-center gap-1.5 mb-1.5">
+              <span id="qr-conn-badge" onclick="toggleQrMode()" class="text-xs font-black uppercase text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md cursor-pointer border border-emerald-200 hover:bg-emerald-100 transition" title="Click to switch between 4G/5G and Shop Wi-Fi">
+                🟢 4G/5G Live
+              </span>
+            </div>
+            <h3 class="text-sm font-black text-slate-900 leading-tight">Customer Scan QR</h3>
+            <p class="text-xs text-slate-500 leading-snug mt-1">கஸ்டமர் மொபைலில் ஸ்கேன் செய்து பைல் அனுப்ப</p>
+            <p class="text-[11px] font-mono font-bold text-violet-600 mt-1 truncate" id="qr-target-url-text">QP_HASULOTS</p>
+          </div>
+
+          <div class="flex flex-col gap-1.5 pt-1">
+            <button type="button" onclick="openFullscreenQrModal()" class="w-full py-1.5 px-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95">
+              <span>🔍 Enlarge QR (Full Screen)</span>
+            </button>
+            <a href="/standee.html" target="_blank" class="w-full py-1.5 px-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-extrabold text-xs flex items-center justify-center gap-1.5 transition">
+              <span>📥 Download Print Poster</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Counter Approval & Ink Status (Compact Strip, Height ~54px) -->
+      <div class="card-panel p-2.5 flex items-center justify-between border border-slate-200 shrink-0 text-xs">
+        <!-- Paper & Ink -->
+        <div class="flex items-center gap-2">
+          <span class="font-black text-slate-800 text-xs shrink-0">Paper &amp; Ink:</span>
+          <div class="flex items-center gap-1">
+            <button class="pill-paper px-2 py-0.5 rounded-md text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300">All good</button>
+            <button class="pill-paper px-2 py-0.5 rounded-md text-xs font-bold text-slate-500 hover:bg-slate-100">Low ink</button>
+            <button class="pill-paper px-2 py-0.5 rounded-md text-xs font-bold text-slate-500 hover:bg-slate-100">No paper</button>
+          </div>
+        </div>
+
+        <div class="h-6 w-px bg-slate-200 mx-1"></div>
+
+        <!-- Counter Approval -->
+        <div class="flex items-center gap-3">
+          <span class="flex items-center gap-1.5 font-bold text-slate-700">Cash <label class="ios-toggle-switch" style="width:30px;height:18px;"><input type="checkbox" id="toggle-cash-orders"><span class="ios-toggle-slider" style="border-radius:99px;"></span></label></span>
+          <span class="flex items-center gap-1.5 font-bold text-slate-700">Auto-Print <label class="ios-toggle-switch" style="width:30px;height:18px;"><input type="checkbox" id="toggle-paid-autoprint" checked><span class="ios-toggle-slider" style="border-radius:99px;"></span></label></span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- RIGHT COLUMN: STATS & TODAY'S ORDERS TABLE (Flex 1)          -->
+    <!-- ============================================================ -->
+    <div class="right-col">
+      
+      <!-- Top Stat Cards (4 Cards + 2 Action Buttons in one row, Height ~76px) -->
+      <div class="grid grid-cols-6 gap-3 shrink-0 h-[76px]">
+        
+        <!-- 1. Orders today -->
+        <div class="card-panel p-3 flex flex-col justify-between">
+          <span class="text-xs font-bold text-slate-500 block leading-none">Orders today</span>
+          <span id="metric-orders-today" class="stat-number block">0</span>
+          <span id="metric-pages-today" class="text-xs text-slate-400 font-semibold block leading-none">0 pages</span>
+        </div>
+
+        <!-- 2. Total earned -->
+        <div class="card-panel p-3 flex flex-col justify-between">
+          <span class="text-xs font-bold text-slate-500 block leading-none">Total earned</span>
+          <span id="metric-total-earned" class="stat-number blue block">₹0</span>
+          <span id="metric-printed-today" class="text-xs text-slate-400 font-semibold block leading-none">0 orders printed</span>
+        </div>
+
+        <!-- 3. Cash -->
+        <div class="card-panel p-3 flex flex-col justify-between">
+          <span class="text-xs font-bold text-slate-500 block leading-none">Cash</span>
+          <span id="metric-cash-earned" class="stat-number block">₹0</span>
+          <span class="text-xs text-slate-400 font-semibold block leading-none">at counter</span>
+        </div>
+
+        <!-- 4. Online -->
+        <div class="card-panel p-3 flex flex-col justify-between">
+          <span class="text-xs font-bold text-slate-500 block leading-none">Online</span>
+          <span id="metric-online-earned" class="stat-number block">₹0</span>
+          <span class="text-xs text-slate-400 font-semibold block leading-none">to UPI account</span>
+        </div>
+
+        <!-- Action Buttons (Right 2 cols) -->
+        <div class="col-span-2 flex flex-col justify-between gap-1.5">
+          <button id="btn-whatsapp-report" class="flex-1 rounded-xl bg-[#16a34a] hover:bg-[#15803d] text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs transition px-3">
+            <span>💬 WhatsApp report</span>
+          </button>
+          <button id="btn-save-pdf" class="flex-1 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs transition px-3">
+            <span>📄 Save as PDF</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Main Panel: Today's Orders Table (Fills all remaining height) -->
+      <div class="card-panel p-4 flex-1 min-h-0 flex flex-col overflow-hidden">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 gap-2 shrink-0">
+          <div class="flex items-center gap-2.5">
+            <h2 class="text-base font-black text-slate-900">Today's Orders</h2>
+            <span id="display-today-date" class="text-xs text-slate-400 font-bold">15 Nov 2026</span>
+            <span class="text-xs text-slate-400 hidden sm:inline">&bull; Click print icon to print directly</span>
+          </div>
+          <!-- Filter Tabs -->
+          <div class="flex items-center gap-1.5">
+            <button class="order-filter-tab px-3 py-1 rounded-full text-xs font-black bg-purple-100 text-purple-800" data-filter="all">All <span id="count-all">0</span></button>
+            <button class="order-filter-tab px-3 py-1 rounded-full text-xs font-bold text-slate-500 hover:bg-slate-100" data-filter="cash">Cash <span id="count-cash">0</span></button>
+            <button class="order-filter-tab px-3 py-1 rounded-full text-xs font-bold text-slate-500 hover:bg-slate-100" data-filter="online">Online <span id="count-online">0</span></button>
+          </div>
+        </div>
+
+        <!-- Table Columns Header -->
+        <div class="grid grid-cols-12 gap-2 py-2.5 border-b border-slate-100 text-xs font-black uppercase text-slate-400 tracking-wider shrink-0">
+          <div class="col-span-2">Order No</div>
+          <div class="col-span-4">Details</div>
+          <div class="col-span-2">Mode</div>
+          <div class="col-span-2">Time</div>
+          <div class="col-span-2 text-right">Status</div>
+        </div>
+
+        <!-- Orders Stream Container (Scrolls internally if overflow) -->
+        <div id="orders-stream-list" class="orders-stream-list flex-1 min-h-0 overflow-y-auto divide-y divide-slate-100">
+          
+          <!-- Empty State (Exact match to screenshot) -->
+          <div id="empty-orders-state" class="text-center py-10">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mb-2">📄</div>
+            <h3 class="text-base font-black text-slate-800">No orders yet today</h3>
+            <p class="text-xs text-slate-400 mt-1 font-medium">New print jobs from customer mobile scans will show up here live.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ============================================================ -->
+  <!-- FOOTER (Fixed height 28px)                                   -->
+  <!-- ============================================================ -->
+  <footer class="app-footer">
+    <div>
+      <span>Files: Server <b class="text-slate-700">0 deleted</b>, 0 other &bull; This PC <b class="text-slate-700">0 locked</b>, delete tonight at 11:59 PM</span>
+      <a href="#" class="text-blue-600 hover:underline font-bold ml-1">Details</a>
+    </div>
+    <div>
+      <span class="text-slate-400 font-medium">Hasulots technologies</span>
+    </div>
+  </footer>
+
+    <!-- ============================================================ -->
+  <!-- 🏪 COMPLETE SHOP CONFIGURATION & REGISTRATION MODAL          -->
+  <!-- ============================================================ -->
+  <div id="modal-shop-config" style="display:none; position:fixed; inset:0; z-index:999999;" class="flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4" onclick="if(event.target===this)closeShopConfigModal()">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-lg w-full p-6 text-slate-800 relative max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-violet-600 text-white flex items-center justify-center text-lg shadow-xs">⚙️</div>
+          <div>
+            <h3 class="text-base font-black text-slate-900 leading-tight">Shop Settings &amp; Pricing</h3>
+            <p class="text-xs text-slate-500">கடை விபரங்கள், கட்டணம் &amp; பாஸ்வேர்டு</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeShopConfigModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-sm flex items-center justify-center transition">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        
+        <!-- SECTION 1: SHOP IDENTIFICATION -->
+        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3">
+          <h4 class="font-black text-slate-900 text-xs flex items-center gap-1.5">
+            <span>🏪</span> Shop Information &amp; Identification
+          </h4>
+
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Shop Name / கடையின் பெயர் *</label>
+            <input type="text" id="modal-shop-name" class="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold bg-white text-sm" placeholder="e.g. Hasulots technologies">
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-bold text-slate-600 flex items-center gap-1.5">
+                <span>Shop ID / கடை குறியீடு</span>
+                <span class="text-[10px] font-extrabold text-amber-700 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-md flex items-center gap-1">🔒 Fixed / நிரந்தரமானது</span>
+              </label>
+            </div>
+            <input type="text" id="modal-shop-id" readonly disabled class="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono font-bold bg-slate-100 text-slate-500 cursor-not-allowed select-all" placeholder="QP_HASULOTS">
+            <p class="text-[11px] text-slate-400 mt-1 font-semibold">🔒 Shop ID once created cannot be changed / கடை குறியீட்டை மாற்ற முடியாது.</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Shop Phone / தொலைபேசி</label>
+              <input type="tel" id="modal-shop-phone" class="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold bg-white" placeholder="+91 98765 43210">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Address / முகவரி</label>
+              <input type="text" id="modal-shop-address" class="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold bg-white" placeholder="Main Road, Opp. Bus Stand">
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: ADMIN CREDENTIALS -->
+        <div class="p-3.5 bg-violet-50/60 rounded-2xl border border-violet-200/80 space-y-3">
+          <h4 class="font-black text-violet-900 text-xs flex items-center gap-1.5">
+            <span>🔐</span> Admin Login Credentials / உள்நுழைவு விபரம்
+          </h4>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Admin Username</label>
+              <input type="text" id="modal-admin-username" class="w-full px-3 py-2 border border-violet-200 rounded-xl font-bold bg-white" placeholder="admin">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Admin Password</label>
+              <input type="text" id="modal-admin-password" class="w-full px-3 py-2 border border-violet-200 rounded-xl font-bold bg-white" placeholder="1234">
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: PRICING & PAYMENT -->
+        <div class="p-3.5 bg-emerald-50/60 rounded-2xl border border-emerald-200/80 space-y-3">
+          <h4 class="font-black text-emerald-900 text-xs flex items-center gap-1.5">
+            <span>💳</span> Payment Options &amp; Print Pricing
+          </h4>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Shop UPI ID (GPay / PhonePe) *</label>
+              <input type="text" id="modal-upi-id" class="w-full px-3 py-2 border border-emerald-200 rounded-xl font-mono font-bold bg-white text-emerald-800" placeholder="hasulots@upi">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">UPI Payee Display Name</label>
+              <input type="text" id="modal-upi-name" class="w-full px-3 py-2 border border-emerald-200 rounded-xl font-bold bg-white" placeholder="Hasulots technologies">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2.5">
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">B&amp;W Rate (₹/page)</label>
+              <input type="number" id="modal-bw-rate" class="w-full px-3 py-2 border border-emerald-200 rounded-xl font-bold bg-white" placeholder="3">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Color Rate (₹/page)</label>
+              <input type="number" id="modal-color-rate" class="w-full px-3 py-2 border border-emerald-200 rounded-xl font-bold bg-white" placeholder="10">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Duplex Disc %</label>
+              <input type="number" id="modal-duplex-discount" class="w-full px-3 py-2 border border-emerald-200 rounded-xl font-bold bg-white" placeholder="15">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Footer -->
+      <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+<span></span>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeShopConfigModal()" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-bold text-xs transition">
+            Cancel
+          </button>
+          <button type="button" onclick="saveShopConfig()" class="px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-black text-xs shadow-md shadow-violet-600/25 transition active:scale-95">
+            💾 Save Settings / சேமிக்க
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+      </div>
+      <div class="mt-5 flex items-center justify-end gap-2">
+        <button id="btn-cancel-modal" class="px-4 py-2 rounded-xl text-slate-600 font-bold text-xs hover:bg-slate-100">Cancel</button>
+        <button id="btn-save-modal" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-black text-xs">Save Changes</button>
       </div>
     </div>
   </div>
 
   <!-- ============================================================ -->
-  <!-- HEADER                                                       -->
+  <!-- 🔍 FULLSCREEN BIG QR MODAL (For Customer Counter Scanning)  -->
   <!-- ============================================================ -->
-  <header class="admin-header">
-    <div class="flex items-center gap-3 min-w-0">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center text-xl shadow-md shadow-indigo-500/25 shrink-0">
-        🛡️
-      </div>
-      <div class="min-w-0">
-        <h1 class="font-black text-base text-slate-900 leading-tight truncate">QuickPrint Platform Admin</h1>
-        <div class="flex items-center gap-2 mt-0.5">
-          <span class="text-[11px] font-mono font-bold text-indigo-600">SYSTEM CONSOLE</span>
-          <span class="badge badge-neutral" id="header-role-badge">admin</span>
+  <div id="modal-fullscreen-qr" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-6" onclick="if(event.target===this)closeFullscreenQrModal()">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-lg w-full p-8 text-center relative">
+      
+      <!-- Close Button -->
+      <button type="button" onclick="closeFullscreenQrModal()" class="absolute right-5 top-5 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-lg flex items-center justify-center transition">✕</button>
+
+      <!-- Shop Branding -->
+      <div class="flex items-center justify-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-[#ec2a7a] text-white flex items-center justify-center text-2xl shadow-sm">🖨️</div>
+        <div class="text-left">
+          <h2 class="text-xl font-black text-slate-900 leading-tight">Hasulots technologies</h2>
+          <span class="text-xs font-mono font-bold text-violet-600">QP_HASULOTS</span>
         </div>
       </div>
-    </div>
 
-    <div class="flex items-center gap-2 shrink-0">
-      <span class="hidden sm:inline-flex badge badge-ok" id="header-tunnel-badge">Tunnel checking...</span>
-      <a href="/owner" class="px-3 py-2 rounded-xl bg-violet-50 hover:bg-violet-100 border border-violet-200 text-violet-700 font-extrabold text-xs flex items-center gap-1.5 transition">
-        🏪 <span class="hidden sm:inline">Shop Owner Console</span><span class="sm:hidden">Owner</span>
-      </a>
-      <button type="button" onclick="refreshAll()" class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-extrabold text-xs flex items-center gap-1.5 transition">
-        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> <span class="hidden sm:inline">Refresh</span>
+      <p class="text-sm font-extrabold text-slate-600 mb-4">Scan QR with Mobile Camera to Print Documents</p>
+      
+      <!-- Big QR Code Container (320px x 320px) -->
+      <div id="fullscreen-qr-container" class="w-[320px] h-[320px] mx-auto bg-white rounded-2xl border-4 border-slate-900 flex items-center justify-center overflow-hidden p-3 shadow-lg">
+      </div>
+
+      <div class="mt-4 flex items-center justify-center gap-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-extrabold">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>4G/5G Live &amp; Ready</span>
+        </span>
+      </div>
+
+      <p class="text-xs text-slate-400 mt-2 font-medium">No app download needed • 100% login-free • Instant print</p>
+
+      <button type="button" onclick="closeFullscreenQrModal()" class="mt-5 w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-sm transition">
+        Close / மூடுக
       </button>
-      <button type="button" onclick="lockAdmin()" class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-extrabold text-xs flex items-center gap-1.5 transition">
-        <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock
-      </button>
+
     </div>
-  </header>
+  </div>
 
   <!-- ============================================================ -->
-  <!-- MAIN                                                         -->
+  <!-- 💎 QUICKPRINT LICENSE & RENEWAL PLANS MODAL                   -->
   <!-- ============================================================ -->
-  <main class="admin-main">
+  <div id="modal-license-plans" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-2xl w-full p-6 sm:p-8 text-left relative my-8 max-h-[90vh] overflow-y-auto">
+      
+      <!-- Close Button -->
+      <button type="button" onclick="closeLicensePlansModal()" id="btn-close-license-modal" class="absolute right-5 top-5 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-lg flex items-center justify-center transition">✕</button>
 
-    <!-- LEFT: SYSTEM / QR / CREDENTIALS -->
-    <aside class="admin-side">
-
-      <!-- System status -->
-      <section class="card p-4">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div>
-            <h2 class="text-sm font-black text-slate-900">Server &amp; Tunnel</h2>
-            <p class="text-[11px] text-slate-400 font-semibold">This print station</p>
-          </div>
-          <span class="badge badge-ok" id="sys-tunnel-badge">checking</span>
+      <!-- Modal Header -->
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center text-2xl shadow-sm shrink-0">
+          💎
         </div>
+        <div>
+          <h2 class="text-xl font-black text-slate-900 leading-tight">QuickPrint License &amp; Plans</h2>
+          <p class="text-xs text-slate-500 font-medium">உரிமத் திட்டங்கள் • கட்டணம் • நேரடி WhatsApp ஒப்புதல்</p>
+        </div>
+      </div>
 
-        <div class="mt-3 space-y-2.5 text-xs">
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-slate-500 font-bold">Installed role</span>
-            <span class="font-black text-indigo-700" id="sys-role">—</span>
+      <!-- What is Trial Version Info Box -->
+      <div class="bg-indigo-50/70 border border-indigo-200/80 rounded-2xl p-4 mb-5">
+        <div class="flex items-center gap-2 mb-1.5 text-indigo-900 font-extrabold text-sm">
+          <span>💡</span> <span>Trial Version என்றால் என்ன?</span>
+        </div>
+        <p class="text-xs text-indigo-950 leading-relaxed font-medium">
+          <strong>Trial Version (7 Days Free Demo)</strong> என்பது QuickPrint-ன் முழு வசதிகளையும் (Instant Customer QR Scanning, Direct Windows Silent Printing, Auto B&amp;W &amp; Color, Multi-copy, Duplex) உங்கள் கடையில் 7 நாட்கள் இலவசமாக சோதிக்க வழங்கப்படுகிறது. Trial முடிந்ததும், கீழே உள்ள ஏதேனும் ஒரு திட்டத்தைத் தேர்ந்தெடுத்து தொடர்ந்து பயன்படுத்தலாம்!
+        </p>
+      </div>
+
+      <!-- Current Status Banner -->
+      <div id="lic-status-banner" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">தற்போதைய நிலை (Current Status)</span>
+          <div class="flex items-center gap-2 mt-0.5">
+            <span id="lic-badge-plan" class="px-2.5 py-0.5 rounded-lg bg-indigo-600 text-white font-extrabold text-xs">Trial Version</span>
+            <span id="lic-badge-days" class="text-sm font-black text-slate-800">7 Days Pending</span>
           </div>
-          <div>
-            <span class="block text-slate-500 font-bold mb-0.5">Local server</span>
-            <code class="block bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono text-[11px] font-bold text-slate-700 truncate" id="sys-server-url">—</code>
-          </div>
-          <div>
-            <span class="block text-slate-500 font-bold mb-0.5">Shop Wi-Fi URL</span>
-            <code class="block bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-mono text-[11px] font-bold text-slate-700 truncate" id="sys-lan-url">—</code>
-          </div>
-          <div>
-            <span class="block text-slate-500 font-bold mb-0.5">Public customer URL</span>
-            <div class="flex items-center gap-1.5">
-              <code class="flex-1 bg-indigo-50 border border-indigo-200 rounded-lg px-2.5 py-1.5 font-mono text-[11px] font-bold text-indigo-700 truncate" id="sys-public-url">—</code>
-              <button type="button" onclick="copyPublicUrl()" class="px-2 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 text-[11px] font-extrabold" title="Copy public URL">Copy</button>
+        </div>
+        <div class="text-right">
+          <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Expiry Date</span>
+          <span id="lic-expiry-text" class="text-xs font-mono font-bold text-slate-700">-</span>
+        </div>
+      </div>
+
+      <!-- Plan Selection Cards (4 Plans) -->
+      <div class="mb-6">
+        <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2.5">
+          திட்டத்தைத் தேர்ந்தெடுக்கவும் (Choose a Plan):
+        </label>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="lic-plans-container">
+          
+          <!-- Plan 1: Trial / Demo -->
+          <div class="plan-card border-2 border-slate-200 hover:border-indigo-500 rounded-2xl p-4 cursor-pointer transition relative bg-white" onclick="selectLicensePlan('demo')">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-xs font-black text-amber-600 uppercase">⏳ Free Trial</span>
+                <h3 class="font-black text-base text-slate-900 mt-0.5">Trial Version</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">7 Days Demo / Renewal Test</p>
+              </div>
+              <div class="text-right">
+                <span class="text-lg font-black text-slate-900">₹0</span>
+                <span class="text-[10px] text-slate-400 block">7 Days</span>
+              </div>
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-2 pt-1">
-            <div class="rounded-xl bg-slate-50 border border-slate-200 px-2.5 py-2">
-              <span class="block text-[10px] text-slate-400 font-bold uppercase">Uptime</span>
-              <span class="font-black text-slate-800" id="sys-uptime">—</span>
+
+          <!-- Plan 2: 1 Month -->
+          <div class="plan-card border-2 border-slate-200 hover:border-indigo-500 rounded-2xl p-4 cursor-pointer transition relative bg-white" onclick="selectLicensePlan('monthly')">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-xs font-black text-emerald-600 uppercase">📅 Monthly</span>
+                <h3 class="font-black text-base text-slate-900 mt-0.5">1 Month Plan</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">30 Days Full Access</p>
+              </div>
+              <div class="text-right">
+                <span class="text-lg font-black text-slate-900">₹299</span>
+                <span class="text-[10px] text-slate-400 block">/ Month</span>
+              </div>
             </div>
-            <div class="rounded-xl bg-slate-50 border border-slate-200 px-2.5 py-2">
-              <span class="block text-[10px] text-slate-400 font-bold uppercase">Node</span>
-              <span class="font-black text-slate-800" id="sys-node">—</span>
+          </div>
+
+          <!-- Plan 3: Yearly (Popular) -->
+          <div class="plan-card border-2 border-indigo-600 bg-indigo-50/40 rounded-2xl p-4 cursor-pointer transition relative" onclick="selectLicensePlan('yearly')">
+            <span class="absolute -top-2.5 right-4 bg-indigo-600 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-xs">Most Popular</span>
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-xs font-black text-indigo-600 uppercase">⭐ Yearly</span>
+                <h3 class="font-black text-base text-slate-900 mt-0.5">1 Year Plan</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">365 Days • Save 20%</p>
+              </div>
+              <div class="text-right">
+                <span class="text-lg font-black text-slate-900">₹2,999</span>
+                <span class="text-[10px] text-slate-400 block">/ Year</span>
+              </div>
             </div>
           </div>
-          <button type="button" onclick="restartTunnel()" class="w-full mt-1 py-2 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-800 font-extrabold text-xs transition">
-            🔄 Restart public tunnel
-          </button>
-          <p class="text-[10px] text-amber-700/80 font-semibold leading-snug">Restarting changes the public URL. Reprint the QR poster after it changes.</p>
-        </div>
-      </section>
 
-      <!-- Customer QR -->
-      <section class="card p-4">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div>
-            <h2 class="text-sm font-black text-slate-900">Customer QR</h2>
-            <p class="text-[11px] text-slate-400 font-semibold">No app install — scan only</p>
+          <!-- Plan 4: Lifetime -->
+          <div class="plan-card border-2 border-slate-200 hover:border-indigo-500 rounded-2xl p-4 cursor-pointer transition relative bg-white" onclick="selectLicensePlan('lifetime')">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-xs font-black text-purple-600 uppercase">💎 One-Time</span>
+                <h3 class="font-black text-base text-slate-900 mt-0.5">Lifetime License</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">Unlimited Days • No Renewal</p>
+              </div>
+              <div class="text-right">
+                <span class="text-lg font-black text-slate-900">₹9,999</span>
+                <span class="text-[10px] text-slate-400 block">One-time</span>
+              </div>
+            </div>
           </div>
-          <a href="/standee.html" target="_blank" class="toggle-link">Print poster ↗</a>
-        </div>
-        <div class="mt-3 flex items-center gap-4">
-          <div class="w-[132px] h-[132px] shrink-0 rounded-2xl border-2 border-slate-200 bg-white p-2 flex items-center justify-center overflow-hidden">
-            <img id="qr-admin-img" src="/api/qr?format=image&width=240" alt="Customer QR" class="w-full h-full object-contain">
-          </div>
-          <div class="min-w-0 text-xs">
-            <p class="font-black text-slate-800">Customers scan → upload → pay → collect</p>
-            <p class="text-slate-500 font-semibold mt-1 leading-snug">They use only the web page on their phone. Nothing is installed or downloaded.</p>
-            <code class="block mt-2 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 font-mono text-[10px] font-bold text-slate-600 truncate" id="qr-target-url">/order</code>
-          </div>
-        </div>
-      </section>
 
-      <!-- Platform credentials -->
-      <section class="card p-4">
-        <div class="pb-3 border-b border-slate-100">
-          <h2 class="text-sm font-black text-slate-900">Platform Admin Login</h2>
-          <p class="text-[11px] text-slate-400 font-semibold">Only this console uses these credentials</p>
-        </div>
-        <div class="mt-3 space-y-2.5">
-          <div>
-            <label class="field-label">Admin username</label>
-            <input type="text" id="plat-username" class="field" placeholder="admin" autocomplete="username">
-          </div>
-          <div>
-            <label class="field-label">New password</label>
-            <input type="password" id="plat-password" class="field" placeholder="Leave blank to keep current" autocomplete="new-password">
-          </div>
-          <button type="button" onclick="savePlatformCredentials()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-md shadow-indigo-500/25 transition">
-            💾 Save admin credentials
-          </button>
-          <p id="platform-msg" class="text-[11px] font-bold text-center opacity-0 transition-opacity">Saved</p>
-        </div>
-      </section>
-
-    </aside>
-
-    <!-- RIGHT: STATS / SHOPS / ORDERS -->
-    <section class="admin-content">
-
-      <!-- Stats -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="card stat-card">
-          <span class="text-[11px] font-bold text-slate-500 block">Registered shops</span>
-          <span class="stat-value text-slate-900" id="stat-shops">0</span>
-          <span class="text-[11px] text-slate-400 font-semibold">in registry</span>
-        </div>
-        <div class="card stat-card">
-          <span class="text-[11px] font-bold text-slate-500 block">Active shop</span>
-          <span class="stat-value text-indigo-700 text-lg leading-tight block truncate" id="stat-active-shop">—</span>
-          <span class="text-[11px] text-slate-400 font-semibold" id="stat-active-id">—</span>
-        </div>
-        <div class="card stat-card">
-          <span class="text-[11px] font-bold text-slate-500 block">Total orders</span>
-          <span class="stat-value text-slate-900" id="stat-orders">0</span>
-          <span class="text-[11px] text-slate-400 font-semibold">all time</span>
-        </div>
-        <div class="card stat-card">
-          <span class="text-[11px] font-bold text-slate-500 block">Installed role</span>
-          <span class="stat-value text-violet-700 text-lg leading-tight block" id="stat-role">—</span>
-          <span class="text-[11px] text-slate-400 font-semibold">this PC</span>
         </div>
       </div>
 
-      <!-- Shops registry -->
-      <div class="card overflow-hidden">
-        <div class="flex items-center justify-between gap-2 px-4 py-3.5 border-b border-slate-100">
-          <div>
-            <h2 class="text-base font-black text-slate-900">Shop Registry</h2>
-            <p class="text-[11px] text-slate-400 font-semibold">Activate a shop to make its QR, pricing and owner login live</p>
+      <!-- Payment & WhatsApp Details Container -->
+      <div class="bg-slate-900 text-white rounded-2xl p-5 mb-5">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-16 h-16 bg-white rounded-xl p-1.5 shrink-0 flex items-center justify-center">
+              <img id="lic-owner-upi-qr" src="" alt="UPI QR" class="w-full h-full object-contain">
+            </div>
+            <div>
+              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Owner UPI ID (GPay / PhonePe / Paytm)</span>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span id="lic-owner-upi-id" class="text-sm font-mono font-bold text-amber-400">enquiry.print@hasulotstechnologies.com</span>
+                <button type="button" onclick="copyOwnerUpiId()" id="btn-copy-upi" class="text-[11px] text-slate-300 hover:text-white underline font-semibold">Copy</button>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">கட்டணம்: <strong id="lic-pay-amount-display" class="text-white text-xs">₹2,999</strong></p>
+            </div>
           </div>
-          <button type="button" onclick="toggleAddShop(true)" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md shadow-emerald-500/20 transition">
-            ➕ Add shop
-          </button>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="shops-table">
-            <thead>
-              <tr>
-                <th>Shop</th>
-                <th>Login</th>
-                <th>UPI</th>
-                <th>Rates</th>
-                <th>Status</th>
-                <th class="text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody id="shops-table-body">
-              <tr><td colspan="6" class="text-center py-8 text-slate-400 font-semibold">Loading shops…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Add shop -->
-      <div id="add-shop-card" class="card p-4 hidden">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div>
-            <h2 class="text-sm font-black text-slate-900">Register New Shop</h2>
-            <p class="text-[11px] text-slate-400 font-semibold">Creates a shop ID, owner login, UPI and pricing</p>
-          </div>
-          <button type="button" onclick="toggleAddShop(false)" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black">✕</button>
-        </div>
-
-        <div class="grid sm:grid-cols-2 gap-3 mt-4">
-          <div class="sm:col-span-2">
-            <label class="field-label">Shop name *</label>
-            <input type="text" id="new-shop-name" class="field" placeholder="e.g. Suprajaa Textiles" oninput="autoFillNewShop(this.value)">
-          </div>
-          <div>
-            <label class="field-label">Owner username *</label>
-            <input type="text" id="new-shop-username" class="field" placeholder="e.g. Suprajaa_txt">
-          </div>
-          <div>
-            <label class="field-label">Owner password *</label>
-            <input type="text" id="new-shop-password" class="field" placeholder="e.g. 1234">
-          </div>
-          <div>
-            <label class="field-label">Phone</label>
-            <input type="tel" id="new-shop-phone" class="field" placeholder="9876543210">
-          </div>
-          <div>
-            <label class="field-label">UPI ID</label>
-            <input type="text" id="new-shop-upi" class="field" placeholder="shop@upi">
-          </div>
-          <div>
-            <label class="field-label">B&amp;W rate (₹/page)</label>
-            <input type="number" id="new-shop-bw" class="field" value="3">
-          </div>
-          <div>
-            <label class="field-label">Color rate (₹/page)</label>
-            <input type="number" id="new-shop-color" class="field" value="10">
+          <div class="text-center sm:text-right shrink-0">
+            <span class="inline-block px-3 py-1 bg-white/10 rounded-lg text-xs font-bold text-emerald-400">
+              ⚡ Instant WhatsApp Approval
+            </span>
           </div>
         </div>
 
-        <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 gap-2">
-          <p id="add-shop-msg" class="text-[11px] font-bold text-slate-500"></p>
-          <button type="button" onclick="addShop()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md shadow-emerald-500/20 transition">
-            ✨ Register &amp; activate shop
-          </button>
+        <div class="mt-4 pt-4 border-t border-slate-800">
+          <label for="lic-utr-input" class="block text-xs font-bold text-slate-300 mb-1">
+            UPI Transaction ID / Ref No (UTR - விருப்பம்):
+          </label>
+          <input type="text" id="lic-utr-input" placeholder="e.g. 504218991234 or leave blank for trial" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-mono placeholder:text-slate-500 focus:outline-none focus:border-indigo-400">
         </div>
       </div>
 
-      <!-- Orders monitor -->
-      <div class="card p-4">
-        <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
-          <div>
-            <h2 class="text-base font-black text-slate-900">Latest Orders</h2>
-            <p class="text-[11px] text-slate-400 font-semibold">Read-only monitor. Owner verifies payment and prints from the Shop Console.</p>
-          </div>
-          <a href="/owner" class="toggle-link whitespace-nowrap">Open owner console ↗</a>
-        </div>
-        <div id="orders-mini" class="orders-mini mt-3">
-          <p class="text-center py-6 text-slate-400 font-semibold">Loading orders…</p>
-        </div>
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row items-center gap-3">
+        <button type="button" onclick="sendRenewalToOwnerWhatsApp()" id="btn-send-renewal-wa" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition active:scale-95">
+          <span>📲</span>
+          <span>Send Details to Owner on WhatsApp (ஒப்புதலுக்கு அனுப்புக)</span>
+        </button>
+        <button type="button" onclick="checkOwnerApprovalLive()" id="btn-check-approval" class="w-full sm:w-auto py-3.5 px-5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs flex items-center justify-center gap-1.5 transition whitespace-nowrap">
+          <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          <span>Check Approval Now</span>
+        </button>
       </div>
 
-    </section>
+      <!-- Live Polling Notice -->
+      <div id="lic-polling-notice" class="hidden mt-4 bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center">
+        <div class="flex items-center justify-center gap-2 text-emerald-800 font-black text-xs">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+          <span>Waiting for Owner Approval in SuperAdmin...</span>
+        </div>
+        <p class="text-[11px] text-emerald-700 mt-1">
+          Owner உங்கள் கோரிக்கையை சரிபார்த்து Approve செய்தவுடன், இந்த பக்கம் தானாகவே Refresh ஆகி புதிய நாட்கள் காட்டப்படும்!
+        </p>
+      </div>
 
-  </main>
+    </div>
+  </div>
 
-  <footer class="text-center text-[11px] text-slate-400 font-semibold pb-6">
-    QuickPrint Platform Admin · Customers use the QR page only — no software install
-  </footer>
-
-  <script src="/platform.js?v=2"></script>
+  <script src="/agent.js?v=36"></script>
+  <iframe id="silent-print-frame" style="display:none;" title="Silent Print Frame"></iframe>
 </body>
 </html>

@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Owner Panel – QuickPrint</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+:root{--ink:#14142b;--muted:#6e6e86;--line:#e9e8f3;--bg:#f3f3fa;--card:#fff;--indigo:#4f46e5;--violet:#7c3aed;--soft:#eef0ff;
+ --green:#059669;--gsoft:#d9f7e8;--amber:#b45309;--asoft:#fff1cf;--red:#e11d48;--rsoft:#ffe3e8;--blue:#1d4ed8;--bsoft:#dbeafe;--grey:#475569;--gys:#e5e9f0;
+ --grad:linear-gradient(135deg,#4f46e5,#7c3aed 60%,#a855f7);--shadow:0 1px 2px rgba(20,20,60,.05),0 10px 30px rgba(40,30,100,.08);--side:#12112b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14.5px;line-height:1.5}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+a{color:var(--indigo);text-decoration:none}
+.hidden{display:none!important}
+/* ---------- login ---------- */
+#login{min-height:100vh;display:grid;place-items:center;padding:20px;background:var(--side);position:relative;overflow:hidden}
+#login:before,#login:after{content:"";position:absolute;border-radius:50%;filter:blur(70px);opacity:.55}
+#login:before{width:420px;height:420px;background:#6d28d9;top:-120px;left:-100px}
+#login:after{width:380px;height:380px;background:#2563eb;bottom:-140px;right:-100px}
+.box{position:relative;z-index:1;background:rgba(255,255,255,.97);border-radius:26px;box-shadow:0 30px 90px rgba(0,0,0,.45);padding:38px 32px;width:100%;max-width:410px}
+.box .ic{width:64px;height:64px;border-radius:20px;background:var(--grad);display:grid;place-items:center;font-size:30px;margin:0 auto 14px;box-shadow:0 12px 28px rgba(124,58,237,.45)}
+.box h1{font-size:24px;text-align:center;font-weight:800}.box p.s{text-align:center;color:var(--muted);margin-bottom:22px;font-size:13.5px}
+label{display:block;font-weight:700;font-size:12.5px;color:#3a3a52;margin:13px 0 5px}
+input,select,textarea{width:100%;padding:10px 13px;border:1.5px solid var(--line);border-radius:11px;background:#fff;outline:none;transition:.15s}
+input:focus,select:focus,textarea:focus{border-color:var(--indigo);box-shadow:0 0 0 4px #4f46e51a}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 17px;border-radius:11px;border:0;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn-p{background:var(--grad);color:#fff;box-shadow:0 8px 20px rgba(99,70,229,.32)}.btn-p:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.btn-o{background:#fff;border:1.5px solid var(--line)}.btn-o:hover{border-color:var(--indigo);color:var(--indigo)}
+.btn-g{background:var(--gsoft);color:var(--green)}.btn-r{background:var(--rsoft);color:var(--red)}.btn-a{background:var(--asoft);color:var(--amber)}.btn-b{background:var(--soft);color:var(--indigo)}
+.btn-sm{padding:6px 11px;font-size:12.5px;border-radius:9px}
+.err{color:var(--red);font-weight:700;font-size:13px;min-height:18px;margin-top:10px;text-align:center}
+/* ---------- shell ---------- */
+#app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+aside{background:var(--side);color:#c9c8e6;padding:22px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px}
+.brand{display:flex;gap:11px;align-items:center;color:#fff;font-weight:800;font-size:17px;padding:4px 8px 20px}
+.brand .b{width:40px;height:40px;border-radius:13px;background:var(--grad);display:grid;place-items:center;font-size:20px}
+.brand small{display:block;color:#8d8bb8;font-weight:600;font-size:11px;margin-top:-2px}
+.nav{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:12px;border:0;background:none;color:#b9b8dc;font-weight:700;cursor:pointer;width:100%;text-align:left}
+.nav:hover{background:#ffffff12;color:#fff}.nav.on{background:var(--grad);color:#fff;box-shadow:0 8px 22px rgba(99,70,229,.4)}
+.nav .n{margin-left:auto;background:#ef4444;color:#fff;border-radius:99px;font-size:11px;padding:1px 8px}
+.side-foot{margin-top:auto;display:grid;gap:8px}
+.side-foot a,.side-foot button{justify-content:flex-start}
+.main{padding:26px 30px 70px;min-width:0}
+.pagehead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.pagehead h2{font-size:25px;font-weight:800}.pagehead p{color:var(--muted);font-size:13.5px}
+.mtop{display:none}
+/* hero + stats */
+.hero{background:var(--grad);color:#fff;border-radius:22px;padding:24px 28px;display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px;box-shadow:0 18px 40px rgba(99,70,229,.28);position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-60px;top:-80px;width:260px;height:260px;border-radius:50%;background:#ffffff1c}
+.hero h3{font-size:20px;font-weight:800}.hero p{opacity:.85;font-size:13.5px;margin-top:2px}
+.hero .big{font-size:34px;font-weight:800;line-height:1.1}.hero .lbl{opacity:.8;font-size:12.5px;font-weight:600}
+.hero .hs{display:flex;gap:30px;position:relative;z-index:1}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:13px;margin-bottom:18px}
+.sc{background:var(--card);border-radius:18px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--line);cursor:pointer;transition:.15s}
+.sc:hover{transform:translateY(-2px);border-color:#c7c5f5}
+.sc .i{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:17px;margin-bottom:10px}
+.sc b{display:block;font-size:26px;font-weight:800;line-height:1.1}.sc span{color:var(--muted);font-size:12.5px;font-weight:600}
+.panel{background:var(--card);border-radius:20px;box-shadow:var(--shadow);border:1px solid var(--line);padding:20px;margin-bottom:18px}
+.panel h3{font-size:16px;font-weight:800;margin-bottom:4px}.panel .sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1.5fr 1fr;gap:18px}
+.chart{display:flex;align-items:flex-end;gap:12px;height:150px;padding-top:10px}
+.chart .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px}
+.chart .bar{width:100%;max-width:46px;border-radius:9px 9px 4px 4px;background:var(--grad);min-height:4px;position:relative}
+.chart .bar.z{background:var(--gys)}
+.chart small{color:var(--muted);font-weight:700;font-size:11.5px}.chart em{font-style:normal;font-size:11px;font-weight:800;color:var(--indigo)}
+.alist{display:grid;gap:9px}
+.ai{display:flex;gap:11px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:13px;font-size:13px}
+.ai .dot{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none}
+/* toolbar */
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.bar input{max-width:300px}.bar select{max-width:190px}.bar .sp{flex:1}
+.pend{background:linear-gradient(90deg,#eff6ff,#f5f3ff);border:1.5px solid #c7d2fe;color:#3730a3;border-radius:15px;padding:13px 17px;margin-bottom:14px;display:flex;align-items:center;gap:12px;font-weight:700;cursor:pointer}
+/* shop table */
+.tw{background:var(--card);border-radius:20px;box-shadow:var(--shadow);border:1px solid var(--line);overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:900px}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);padding:13px 16px;border-bottom:1px solid var(--line);background:#fafaff}
+td{padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:hover{background:#fafaff}tr:last-child td{border-bottom:0}
+.who{display:flex;gap:12px;align-items:center}
+.av{width:42px;height:42px;border-radius:13px;color:#fff;font-weight:800;display:grid;place-items:center;flex:none;font-size:15px}
+.sn{font-weight:800}.sm{color:var(--muted);font-size:12.5px}
+.badge{display:inline-block;padding:3px 11px;border-radius:99px;font-size:12px;font-weight:800;white-space:nowrap}
+.b-active{background:var(--gsoft);color:var(--green)}.b-expiring{background:var(--asoft);color:var(--amber)}
+.b-expired{background:var(--rsoft);color:var(--red)}.b-suspended{background:var(--gys);color:var(--grey)}
+.b-pending{background:var(--bsoft);color:var(--blue)}.b-rejected{background:var(--rsoft);color:var(--red)}
+.pbar{height:6px;background:var(--gys);border-radius:9px;margin-top:6px;overflow:hidden;width:120px}.pbar i{display:block;height:100%;background:var(--grad);border-radius:9px}
+.acts{display:flex;gap:6px;align-items:center;justify-content:flex-end}
+.more{position:relative}.more summary{list-style:none;cursor:pointer}.more summary::-webkit-details-marker{display:none}
+.menu{position:absolute;right:0;top:36px;background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:0 18px 44px rgba(20,20,60,.22);padding:6px;z-index:30;min-width:170px;display:grid}
+.menu button{background:none;border:0;text-align:left;padding:9px 12px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px}
+.menu button:hover{background:var(--soft)}.menu .dng{color:var(--red)}
+.empty{padding:46px;text-align:center;color:var(--muted)}
+/* settings */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.plantbl{display:grid;gap:10px}
+.pr{display:grid;grid-template-columns:130px 1fr 1fr;gap:10px;align-items:end}.pr b{padding-bottom:11px}
+.hint{color:var(--muted);font-size:12px;margin-top:5px}
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(15,14,40,.55);backdrop-filter:blur(3px);display:grid;place-items:center;padding:16px;z-index:50;overflow-y:auto}
+.md{background:#fff;border-radius:24px;padding:26px;width:100%;max-width:500px;box-shadow:0 30px 90px rgba(0,0,0,.35);max-height:93vh;overflow-y:auto}
+.md h2{font-size:20px;margin-bottom:3px;font-weight:800}.md p.s{color:var(--muted);font-size:13px;margin-bottom:6px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mf{display:flex;justify-content:flex-end;gap:10px;margin-top:22px}
+.hist{margin-top:10px;display:grid;gap:9px}
+.hi{border:1px solid var(--line);border-radius:13px;padding:11px 13px;font-size:13px}
+.sep{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--indigo);margin:18px 0 -4px;display:flex;align-items:center;gap:8px}.sep:after{content:"";flex:1;height:1px;background:var(--line)}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:2px}
+.chip{padding:7px 13px;border-radius:99px;border:1.5px solid var(--line);font-weight:700;font-size:12.5px;cursor:pointer;background:#fff}
+.chip.on{background:var(--soft);border-color:var(--indigo);color:var(--indigo)}
+.qrbox{display:flex;gap:14px;align-items:center;background:var(--soft);border-radius:15px;padding:12px;margin-top:10px}
+.qrbox img{width:110px;height:110px;border-radius:10px;background:#fff}
+.userrow{display:flex;gap:8px}.userrow input{flex:1}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#14142b;color:#fff;padding:12px 22px;border-radius:13px;font-weight:700;z-index:99;box-shadow:var(--shadow)}
+@media(max-width:1100px){.stats{grid-template-columns:repeat(3,1fr)}.grid2,.sg{grid-template-columns:1fr}}
+@media(max-width:860px){
+ #app{grid-template-columns:1fr}
+ aside{position:fixed;left:-270px;top:0;width:260px;z-index:60;transition:.25s}aside.open{left:0;box-shadow:0 0 0 100vmax rgba(0,0,0,.5)}
+ .mtop{display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid var(--line);padding:11px 16px;position:sticky;top:0;z-index:20;font-weight:800}
+ .main{padding:18px 14px 70px}.hero .hs{gap:18px}.pr{grid-template-columns:1fr 1fr}.pr b{grid-column:1/-1;padding:0}}
+@media(max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}.row2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="box">
+    <div class="ic">👑</div>
+    <h1>Owner Panel</h1>
+    <p class="s">QuickPrint · Hasulots Technologies</p>
+    <label>Owner Username</label><input id="lu" autocomplete="username">
+    <label>Password</label><input id="lp" type="password" autocomplete="current-password">
+    <button class="btn btn-p" style="width:100%;margin-top:20px;padding:12px" id="lbtn">Login →</button>
+    <div class="err" id="lerr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <aside id="side">
+    <div class="brand"><span class="b">👑</span><div>Owner Panel<small>QuickPrint licence manager</small></div></div>
+    <button class="nav on" data-v="dash">📊 Dashboard</button>
+    <button class="nav" data-v="shops">🏪 Shops</button>
+    <button class="nav" data-v="reqs">⏳ Requests <span class="n hidden" id="navN">0</span></button>
+    <button class="nav" data-v="pay">💳 Payments</button>
+    <button class="nav" data-v="set">⚙️ Settings</button>
+    <div class="side-foot">
+      <a class="btn btn-sm" style="background:#ffffff14;color:#fff" href="/" target="_blank">🌐 Open Website</a>
+      <button class="btn btn-sm" style="background:#ffffff14;color:#fff" id="logout">🚪 Logout</button>
+    </div>
+  </aside>
+  <div>
+    <div class="mtop"><button class="btn btn-o btn-sm" id="burger">☰</button><span>👑 Owner Panel</span><span></span></div>
+    <div class="main" id="view"></div>
+  </div>
+</div>
+
+<div id="modal" class="ov hidden"><div class="md" id="mbody"></div></div>
+
+<script>
+var TOKEN = sessionStorage.getItem('qp_owner_token') || '';
+var DATA = { shops: [], summary: {}, plans: {}, payMethods: [], owner: {} };
+var VIEW = 'dash', FILTER = 'all', QUERY = '';
+var $ = function (id) { return document.getElementById(id); };
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+function toast(m) { var t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2600); }
+function fmtDate(iso) { if (!iso) return '—'; return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); }
+function inr(n) { return '₹' + (Number(n) || 0).toLocaleString('en-IN'); }
+var COLORS = ['#4f46e5', '#7c3aed', '#0ea5e9', '#059669', '#d97706', '#e11d48', '#0d9488', '#9333ea'];
+function avatar(name) { var h = 0; String(name).split('').forEach(function (c) { h = (h * 31 + c.charCodeAt(0)) >>> 0; }); var ini = String(name).trim().split(/\s+/).slice(0, 2).map(function (w) { return w[0] || ''; }).join('').toUpperCase() || '?'; return '<div class="av" style="background:' + COLORS[h % COLORS.length] + '">' + esc(ini) + '</div>'; }
+
+async function api(path, method, body) {
+  var res = await fetch('/api/super' + path, { method: method || 'GET', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN }, body: body ? JSON.stringify(body) : undefined });
+  var data = await res.json().catch(function () { return {}; });
+  if (res.status === 401 && path !== '/login' && path.indexOf('/settings/login') !== 0) { logout(); throw new Error('Session expired. Login again.'); }
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+/* ---------- login / shell ---------- */
+async function doLogin() {
+  $('lerr').textContent = '';
+  try { var r = await api('/login', 'POST', { username: $('lu').value, password: $('lp').value }); TOKEN = r.token; sessionStorage.setItem('qp_owner_token', TOKEN); showApp(); }
+  catch (e) { $('lerr').textContent = e.message; }
+}
+function logout() { TOKEN = ''; sessionStorage.removeItem('qp_owner_token'); $('app').classList.add('hidden'); $('login').classList.remove('hidden'); $('lp').value = ''; }
+$('lbtn').onclick = doLogin; $('lp').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); }); $('logout').onclick = logout;
+$('burger').onclick = function () { $('side').classList.toggle('open'); };
+document.querySelector('aside').addEventListener('click', function (e) {
+  var b = e.target.closest('.nav'); if (!b) return; go(b.dataset.v); $('side').classList.remove('open');
+});
+function go(v, filter) {
+  VIEW = v; if (filter) FILTER = filter;
+  document.querySelectorAll('.nav').forEach(function (n) { n.classList.toggle('on', n.dataset.v === v); });
+  render();
+}
+async function showApp() { try { await load(); } catch (e) { return; } $('login').classList.add('hidden'); $('app').classList.remove('hidden'); }
+async function load() { DATA = await api('/shops'); render(); }
+
+function render() {
+  var s = DATA.summary || {}, n = s.pending || 0;
+  $('navN').textContent = n; $('navN').classList.toggle('hidden', !n);
+  document.title = (n ? '(' + n + ') ' : '') + 'Owner Panel – QuickPrint';
+  ({ dash: vDash, shops: vShops, reqs: vReqs, pay: vPay, set: vSet })[VIEW]();
+}
+
+/* ---------- dashboard ---------- */
+function monthlyRevenue() {
+  var out = [], now = new Date();
+  for (var i = 5; i >= 0; i--) { var d = new Date(now.getFullYear(), now.getMonth() - i, 1); out.push({ key: d.getFullYear() + '-' + d.getMonth(), label: d.toLocaleDateString('en-IN', { month: 'short' }), v: 0 }); }
+  DATA.shops.forEach(function (sh) { (sh.renewals || []).forEach(function (r) {
+    if (r.payStatus === 'pending') return; var d = new Date(r.date), k = d.getFullYear() + '-' + d.getMonth();
+    out.forEach(function (m) { if (m.key === k) m.v += Number(r.amount) || 0; });
+  }); });
+  return out;
+}
+function vDash() {
+  var s = DATA.summary || {}, mr = monthlyRevenue(), max = Math.max.apply(null, mr.map(function (m) { return m.v; }).concat([1]));
+  var soon = DATA.shops.filter(function (x) { return x.state === 'expiring' || x.state === 'expired'; }).sort(function (a, b) { return (a.daysLeft || 0) - (b.daysLeft || 0); }).slice(0, 6);
+  var hr = new Date().getHours(), greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+  $('view').innerHTML =
+    '<div class="hero"><div style="position:relative;z-index:1"><h3>' + greet + ', ' + esc(DATA.owner.businessName || 'Owner') + ' 👋</h3><p>' + (s.pending ? s.pending + ' shop request' + (s.pending > 1 ? 's' : '') + ' waiting for approval' : 'All caught up — no pending requests') + '</p>' +
+      '<button class="btn btn-sm" style="margin-top:12px;background:#fff;color:#4f46e5" id="hCreate">➕ Create Shop</button></div>' +
+      '<div class="hs"><div><div class="big">' + inr(s.monthRevenue) + '</div><div class="lbl">This month</div></div><div><div class="big">' + inr(s.revenue) + '</div><div class="lbl">Total received</div></div>' + (s.dues ? '<div><div class="big">' + inr(s.dues) + '</div><div class="lbl">Dues pending</div></div>' : '') + '</div></div>' +
+    '<div class="stats">' + [
+      ['🏪', 'Total shops', s.total || 0, 'all', '#eef0ff'], ['⏳', 'Pending', s.pending || 0, 'pending', '#dbeafe'], ['✅', 'Active', s.active || 0, 'active', '#d9f7e8'],
+      ['⚠️', 'Expiring', s.expiring || 0, 'expiring', '#fff1cf'], ['⛔', 'Expired', s.expired || 0, 'expired', '#ffe3e8'], ['⏸', 'Suspended', s.suspended || 0, 'suspended', '#e5e9f0']
+    ].map(function (c) { return '<div class="sc" data-f="' + c[3] + '"><div class="i" style="background:' + c[4] + '">' + c[0] + '</div><b>' + c[2] + '</b><span>' + c[1] + '</span></div>'; }).join('') + '</div>' +
+    '<div class="grid2"><div class="panel"><h3>Revenue — last 6 months</h3><div class="sub">Only payments marked <b>Paid</b> are counted</div><div class="chart">' +
+      mr.map(function (m) { return '<div class="col"><em>' + (m.v ? inr(m.v) : '') + '</em><div class="bar' + (m.v ? '' : ' z') + '" style="height:' + Math.max(4, Math.round(m.v / max * 100)) + '%"></div><small>' + m.label + '</small></div>'; }).join('') + '</div></div>' +
+    '<div class="panel"><h3>Needs attention</h3><div class="sub">Expiring soon or already expired</div><div class="alist">' +
+      (soon.length ? soon.map(function (x) { var bad = x.state === 'expired'; return '<div class="ai"><div class="dot" style="background:' + (bad ? '#ffe3e8' : '#fff1cf') + '">' + (bad ? '⛔' : '⚠️') + '</div><div style="flex:1"><b>' + esc(x.shopName) + '</b><div class="sm">' + (bad ? 'Expired ' + Math.abs(x.daysLeft || 0) + 'd ago' : x.daysLeft + ' day(s) left') + '</div></div><button class="btn btn-g btn-sm" data-renew="' + esc(x.shopId) + '">Renew</button></div>'; }).join('') : '<div class="empty" style="padding:24px">🎉 Nothing to worry about</div>') +
+    '</div></div></div>';
+  $('hCreate').onclick = openCreate;
+  document.querySelectorAll('[data-f]').forEach(function (e) { e.onclick = function () { go('shops', e.dataset.f); }; });
+  document.querySelectorAll('[data-renew]').forEach(function (e) { e.onclick = function () { openRenew(byId(e.dataset.renew)); }; });
+}
+
+/* ---------- shops ---------- */
+function byId(id) { return DATA.shops.find(function (x) { return x.shopId === id; }); }
+function stateBadge(s) {
+  var txt = { pending: 'Pending approval', rejected: 'Rejected', active: 'Active', expiring: 'Expiring', expired: 'Expired', suspended: 'Suspended' }[s.state] || s.state, extra = '';
+  if (s.state === 'active' || s.state === 'expiring') extra = s.daysLeft == null ? ' · Lifetime' : ' · ' + s.daysLeft + 'd left';
+  if (s.state === 'expired' && s.daysLeft != null) extra = ' · ' + Math.abs(s.daysLeft) + 'd ago';
+  return '<span class="badge b-' + s.state + '">' + txt + extra + '</span>';
+}
+function vShops() {
+  $('view').innerHTML =
+    '<div class="pagehead"><div><h2>Shops</h2><p>Manage every shop, licence and login</p></div><button class="btn btn-p" id="addBtn">➕ Create Shop</button></div>' +
+    '<div class="bar"><input id="q" placeholder="🔍 Search shop / username / phone" value="' + esc(QUERY) + '"><select id="f">' +
+    [['all', 'All shops'], ['pending', '⏳ Pending approval'], ['active', 'Active'], ['expiring', 'Expiring'], ['expired', 'Expired'], ['suspended', 'Suspended'], ['rejected', 'Rejected']].map(function (o) { return '<option value="' + o[0] + '"' + (FILTER === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') +
+    '</select></div><div class="tw"><table><thead><tr><th>Shop</th><th>Login</th><th>Plan</th><th>Validity</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tb"></tbody></table></div>';
+  $('addBtn').onclick = openCreate;
+  $('q').oninput = function () { QUERY = $('q').value; fillTable(); }; $('f').onchange = function () { FILTER = $('f').value; fillTable(); };
+  fillTable();
+}
+function validity(s) {
+  if (s.plan === 'lifetime') return '<b>Never expires</b>';
+  if (!s.expiresAt) return '—';
+  var total = ((DATA.plans[s.plan] || {}).days || 30), pct = s.daysLeft == null ? 0 : Math.max(0, Math.min(100, Math.round(s.daysLeft / total * 100)));
+  return fmtDate(s.expiresAt) + '<div class="pbar"><i style="width:' + pct + '%"></i></div>';
+}
+function fillTable() {
+  var q = QUERY.trim().toLowerCase();
+  var list = DATA.shops.filter(function (s) {
+    if (FILTER !== 'all' && s.state !== FILTER) return false;
+    return !q || (s.shopName + ' ' + s.username + ' ' + s.phone + ' ' + s.shopId).toLowerCase().indexOf(q) >= 0;
+  }).sort(function (a, b) { return (b.state === 'pending') - (a.state === 'pending'); });
+  if (!list.length) { $('tb').innerHTML = '<tr><td colspan="6" class="empty">No shops found. Click “Create Shop” to add one.</td></tr>'; return; }
+  $('tb').innerHTML = list.map(rowHtml).join('');
+}
+function rowHtml(s) {
+  var id = esc(s.shopId), live = DATA.activeShopId === s.shopId ? ' <span class="badge b-active" style="font-size:10px">LIVE</span>' : '';
+  var wa = s.phone ? ' · <a href="https://wa.me/91' + esc(s.phone) + '" target="_blank">' + esc(s.phone) + '</a>' : '';
+  if (s.state === 'pending' || s.state === 'rejected') {
+    return '<tr><td><div class="who">' + avatar(s.shopName) + '<div><div class="sn">' + esc(s.shopName) + '</div><div class="sm">' + esc(s.ownerName) + wa + '</div><div class="sm">' + esc(s.address) + '</div></div></div></td>' +
+      '<td><b>' + esc(s.username) + '</b><div class="sm">Requested ' + fmtDate(s.createdAt) + '</div></td><td>' + esc(s.planLabel) + '</td><td>—</td><td>' + stateBadge(s) + '</td>' +
+      '<td><div class="acts"><button class="btn btn-g btn-sm" data-a="approve" data-id="' + id + '">✅ Approve</button>' +
+      (s.state === 'pending' ? '<button class="btn btn-a btn-sm" data-a="reject" data-id="' + id + '">✖ Reject</button>' : '') +
+      '<button class="btn btn-r btn-sm" data-a="del" data-id="' + id + '">🗑</button></div></td></tr>';
+  }
+  return '<tr><td><div class="who">' + avatar(s.shopName) + '<div><div class="sn">' + esc(s.shopName) + live + '</div><div class="sm">' + esc(s.shopId) + (s.phone ? ' · ' + esc(s.phone) : '') + '</div></div></div></td>' +
+    '<td><b>' + esc(s.username) + '</b></td><td>' + esc(s.planLabel) + '</td><td>' + validity(s) + '</td><td>' + stateBadge(s) + '</td>' +
+    '<td><div class="acts"><button class="btn btn-g btn-sm" data-a="renew" data-id="' + id + '">🔁 Renew</button><button class="btn btn-b btn-sm" data-a="edit" data-id="' + id + '">✏️ Edit</button>' +
+    '<details class="more"><summary class="btn btn-o btn-sm">⋯</summary><div class="menu">' +
+      (s.plan !== 'lifetime' ? '<button data-a="extend" data-id="' + id + '">⏱ Extend days</button>' : '') +
+      '<button data-a="pass" data-id="' + id + '">🔑 Reset password</button><button data-a="hist" data-id="' + id + '">📜 Payment history</button>' +
+      (s.licenseStatus === 'suspended' ? '<button data-a="activate" data-id="' + id + '">▶ Activate</button>' : '<button data-a="suspend" data-id="' + id + '">⏸ Suspend</button>') +
+      '<button class="dng" data-a="del" data-id="' + id + '">🗑 Delete shop</button></div></details></div></td></tr>';
+}
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('button[data-a]');
+  document.querySelectorAll('details.more[open]').forEach(function (d) { if (!d.contains(e.target)) d.removeAttribute('open'); });
+  if (!b) return; var s = byId(b.dataset.id); if (!s) return;
+  ({ approve: openApprove, reject: doReject, renew: openRenew, extend: openExtend, edit: openEdit, pass: openPass, hist: openHist,
+     suspend: function (x) { setStatus(x, 'suspended'); }, activate: function (x) { setStatus(x, 'active'); }, del: delShop })[b.dataset.a](s);
+});
+
+/* ---------- requests ---------- */
+function vReqs() {
+  var list = DATA.shops.filter(function (s) { return s.state === 'pending' || s.state === 'rejected'; });
+  $('view').innerHTML = '<div class="pagehead"><div><h2>New shop requests</h2><p>Approve to start the free demo</p></div></div><div class="tw"><table><thead><tr><th>Shop</th><th>Login</th><th>Plan</th><th>Validity</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead><tbody>' +
+    (list.length ? list.map(rowHtml).join('') : '<tr><td colspan="6" class="empty">🎉 No pending requests</td></tr>') + '</tbody></table></div>';
+}
+
+/* ---------- payments ---------- */
+function vPay() {
+  var rows = [];
+  DATA.shops.forEach(function (sh) { (sh.renewals || []).forEach(function (r) { rows.push({ sh: sh, r: r }); }); });
+  rows.sort(function (a, b) { return new Date(b.r.date) - new Date(a.r.date); });
+  var s = DATA.summary || {};
+  $('view').innerHTML = '<div class="pagehead"><div><h2>Payments</h2><p>Every renewal and amount received</p></div></div>' +
+    '<div class="stats" style="grid-template-columns:repeat(3,1fr)"><div class="sc"><div class="i" style="background:#d9f7e8">💰</div><b>' + inr(s.revenue) + '</b><span>Total received</span></div>' +
+    '<div class="sc"><div class="i" style="background:#eef0ff">📅</div><b>' + inr(s.monthRevenue) + '</b><span>This month</span></div>' +
+    '<div class="sc"><div class="i" style="background:#fff1cf">⏳</div><b>' + inr(s.dues) + '</b><span>Dues pending</span></div></div>' +
+    '<div class="tw"><table><thead><tr><th>Date</th><th>Shop</th><th>Plan</th><th>Amount</th><th>Method</th><th>Status</th><th></th></tr></thead><tbody>' +
+    (rows.length ? rows.slice(0, 200).map(function (x) {
+      var pend = x.r.payStatus === 'pending';
+      return '<tr><td>' + fmtDate(x.r.date) + '</td><td><b>' + esc(x.sh.shopName) + '</b></td><td>' + esc((DATA.plans[x.r.plan] || {}).label || x.r.plan) + '<div class="sm">' + esc(x.r.note || '') + '</div></td><td><b>' + inr(x.r.amount) + '</b></td>' +
+        '<td>' + esc(x.r.payMethod || '—') + (x.r.payRef ? '<div class="sm">' + esc(x.r.payRef) + '</div>' : '') + '</td>' +
+        '<td><span class="badge ' + (pend ? 'b-expiring' : 'b-active') + '">' + (pend ? 'Pending' : 'Paid') + '</span></td>' +
+        '<td>' + (pend ? '<button class="btn btn-g btn-sm" data-paid="' + esc(x.sh.shopId) + '" data-idx="' + x.r.idx + '">Mark paid</button>' : '') + '</td></tr>';
+    }).join('') : '<tr><td colspan="7" class="empty">No payments yet</td></tr>') + '</tbody></table></div>';
+  document.querySelectorAll('[data-paid]').forEach(function (b) { b.onclick = async function () {
+    try { await api('/shops/' + encodeURIComponent(b.dataset.paid) + '/payments/' + b.dataset.idx + '/paid', 'POST', {}); toast('Marked as paid ✓'); load(); } catch (e) { alert(e.message); } }; });
+}
+
+/* ---------- settings ---------- */
+function vSet() {
+  var o = DATA.owner || {}, P = DATA.plans || {};
+  function planRow(k, label, noDays) {
+    return '<div class="pr"><b>' + label + '</b><div><label>Price ₹</label><input type="number" min="0" id="pl_' + k + '_p" value="' + (P[k] ? P[k].price : 0) + '"></div>' +
+      '<div><label>Days</label>' + (noDays ? '<input disabled value="Forever">' : '<input type="number" min="1" id="pl_' + k + '_d" value="' + (P[k] ? P[k].days : '') + '">') + '</div></div>';
+  }
+  $('view').innerHTML = '<div class="pagehead"><div><h2>Settings</h2><p>Plans, payment details and your owner login</p></div></div>' +
+    '<div class="sg"><div class="panel"><h3>🎁 Demo &amp; plan pricing</h3><div class="sub">Change demo length and what each plan costs. New renewals use these values.</div><div class="plantbl">' +
+      planRow('demo', '1 Week Demo') + planRow('monthly', 'Monthly') + planRow('yearly', 'Yearly') + planRow('lifetime', 'Lifetime', true) + '</div>' +
+      '<div class="hint">Demo days apply to shops approved from now on. Running demos can be extended from Shops → ⋯ → Extend days.</div>' +
+      '<div class="mf"><button class="btn btn-p" id="savePlans">Save plans</button></div></div>' +
+    '<div class="panel"><h3>💳 Payment details</h3><div class="sub">Shown when you collect renewal money (UPI QR is generated from this).</div>' +
+      '<label>Business name</label><input id="s_biz" value="' + esc(o.businessName) + '">' +
+      '<div class="row2"><div><label>UPI ID</label><input id="s_upi" placeholder="name@okhdfcbank" value="' + esc(o.upiId) + '"></div><div><label>UPI display name</label><input id="s_upin" value="' + esc(o.upiName) + '"></div></div>' +
+      '<label>Your WhatsApp number</label><input id="s_wa" type="tel" maxlength="10" value="' + esc(o.whatsapp) + '">' +
+      '<label>Bank details (optional)</label><textarea id="s_bank" rows="3" placeholder="A/C name, number, IFSC">' + esc(o.bankDetails) + '</textarea>' +
+      '<div class="mf"><button class="btn btn-p" id="savePay">Save payment details</button></div></div>' +
+    '<div class="panel"><h3>🔐 Owner login</h3><div class="sub">Currently: <b>' + esc(o.loginUser) + '</b>' + (o.customLogin ? ' (changed here)' : ' (from Render environment)') + '</div>' +
+      '<label>Current password *</label><input id="l_cur" type="password" autocomplete="current-password">' +
+      '<div class="row2"><div><label>Username</label><input id="l_user" value="' + esc(o.loginUser) + '" autocomplete="off"></div><div><label>New password (min 8)</label><input id="l_new" type="password" autocomplete="new-password" placeholder="Leave empty to keep"></div></div>' +
+      '<div class="mf"><button class="btn btn-p" id="saveLogin">Update login</button></div></div></div>';
+  $('savePlans').onclick = async function () {
+    var plans = {};
+    ['demo', 'monthly', 'yearly', 'lifetime'].forEach(function (k) { plans[k] = { price: $('pl_' + k + '_p').value }; if (k !== 'lifetime') plans[k].days = $('pl_' + k + '_d').value; });
+    try { await api('/settings', 'PUT', { plans: plans }); toast('Plans saved ✓'); load(); } catch (e) { alert(e.message); } };
+  $('savePay').onclick = async function () {
+    try { await api('/settings', 'PUT', { businessName: $('s_biz').value, upiId: $('s_upi').value, upiName: $('s_upin').value, whatsapp: $('s_wa').value, bankDetails: $('s_bank').value }); toast('Payment details saved ✓'); load(); } catch (e) { alert(e.message); } };
+  $('saveLogin').onclick = async function () {
+    try { await api('/settings/login', 'POST', { currentPassword: $('l_cur').value, username: $('l_user').value, newPassword: $('l_new').value }); toast('Login updated ✓'); $('l_cur').value = ''; $('l_new').value = ''; load(); } catch (e) { alert(e.message); } };
+}
+
+/* ---------- modal helpers ---------- */
+function openModal(html) { $('mbody').innerHTML = html; $('modal').classList.remove('hidden'); }
+function closeModal() { $('modal').classList.add('hidden'); }
+$('modal').addEventListener('click', function (e) { if (e.target === $('modal')) closeModal(); });
+function planOptions(sel) { return Object.keys(DATA.plans).map(function (k) { return '<option value="' + k + '"' + (k === sel ? ' selected' : '') + '>' + esc(DATA.plans[k].label) + (DATA.plans[k].price ? ' — ' + inr(DATA.plans[k].price) : '') + '</option>'; }).join(''); }
+function val(id) { return $(id).value; }
+function modalErr(m) { $('merr').textContent = m; }
+async function submit(fn) { modalErr(''); try { await fn(); } catch (e) { modalErr(e.message); } }
+
+/* payment block shared by Create / Renew / Approve (p = id prefix) */
+function payBlock(p, amount) {
+  var methods = DATA.payMethods || ['UPI', 'Cash', 'Bank Transfer', 'Card', 'Cheque', 'Other'];
+  return '<div class="sep">💳 Payment</div>' +
+    '<div class="row2"><div><label>Amount ₹</label><input id="' + p + '_amt" type="number" min="0" value="' + (amount || 0) + '"></div>' +
+    '<div><label>Status</label><select id="' + p + '_ps"><option value="paid">✅ Paid</option><option value="pending">⏳ Pay later (due)</option></select></div></div>' +
+    '<label>Payment method</label><div class="chips" id="' + p + '_chips">' + methods.map(function (m, i) { return '<span class="chip' + (i === 0 ? ' on' : '') + '" data-m="' + esc(m) + '">' + esc(m) + '</span>'; }).join('') + '</div>' +
+    '<label>Reference / note</label><input id="' + p + '_ref" placeholder="UPI transaction ID, receipt no…">' +
+    '<div id="' + p + '_qr"></div>';
+}
+function wirePay(p, onPlanPrice) {
+  var method = 'UPI';
+  function qr() {
+    var box = $(p + '_qr'), amt = Number(val(p + '_amt')) || 0, o = DATA.owner || {};
+    if (method !== 'UPI' || !o.upiId || amt <= 0) { box.innerHTML = method === 'UPI' && !o.upiId ? '<div class="hint">Add your UPI ID in Settings to show a payment QR here.</div>' : (method === 'Bank Transfer' && o.bankDetails ? '<div class="qrbox" style="white-space:pre-line;font-size:13px">' + esc(o.bankDetails) + '</div>' : ''); return; }
+    var link = 'upi://pay?pa=' + encodeURIComponent(o.upiId) + '&pn=' + encodeURIComponent(o.upiName || o.businessName) + '&am=' + amt + '&cu=INR&tn=' + encodeURIComponent('QuickPrint licence');
+    box.innerHTML = '<div class="qrbox"><img alt="UPI QR" src="/api/qr?format=image&width=220&text=' + encodeURIComponent(link) + '"><div><b>Scan to pay ' + inr(amt) + '</b><div class="sm">' + esc(o.upiId) + '</div><div class="sm">Ask the shop owner to scan with any UPI app</div></div></div>';
+  }
+  $(p + '_chips').addEventListener('click', function (e) { var c = e.target.closest('.chip'); if (!c) return; method = c.dataset.m; $(p + '_chips').querySelectorAll('.chip').forEach(function (x) { x.classList.toggle('on', x === c); }); qr(); });
+  $(p + '_amt').addEventListener('input', qr);
+  if (onPlanPrice) onPlanPrice(function (price) { $(p + '_amt').value = price; qr(); });
+  qr();
+  return function () { return { amount: val(p + '_amt'), payStatus: val(p + '_ps'), payMethod: method, payRef: val(p + '_ref') }; };
+}
+
+/* ---------- create ---------- */
+function openCreate() {
+  openModal('<h2>➕ Create Shop</h2><p class="s">Username is generated automatically — you can change it.</p>' +
+    '<label>Shop name *</label><input id="c_name" autocomplete="off">' +
+    '<div class="row2"><div><label>Username (auto)</label><div class="userrow"><input id="c_user" autocomplete="off"><button class="btn btn-o btn-sm" id="c_regen" title="Generate another">🔄</button></div></div><div><label>Password (auto)</label><div class="userrow"><input id="c_pass" autocomplete="off"><button class="btn btn-o btn-sm" id="c_pgen" title="Generate another">🔄</button></div></div></div>' +
+    '<div class="row2"><div><label>Phone</label><input id="c_phone" type="tel"></div><div><label>UPI ID</label><input id="c_upi" placeholder="shop@upi"></div></div>' +
+    '<div class="row2"><div><label>B&amp;W rate ₹/page</label><input id="c_bw" type="number" value="3"></div><div><label>Color rate ₹/page</label><input id="c_col" type="number" value="10"></div></div>' +
+    '<label>Plan</label><select id="c_plan">' + planOptions('monthly') + '</select>' +
+    payBlock('c', (DATA.plans.monthly || {}).price) +
+    '<div class="err" id="merr"></div><div class="mf"><button class="btn btn-o" onclick="closeModal()">Cancel</button><button class="btn btn-p" id="mok">Create Shop</button></div>');
+  var edited = false, t = null;
+  function newPass() { $('c_pass').value = Math.random().toString(36).slice(2, 6) + Math.random().toString(36).slice(2, 6); }
+  async function suggest() { try { var r = await api('/username-suggest?name=' + encodeURIComponent(val('c_name') || 'shop')); $('c_user').value = r.username; } catch (e) {} }
+  newPass(); suggest();
+  $('c_user').oninput = function () { edited = true; };
+  $('c_name').oninput = function () { clearTimeout(t); t = setTimeout(function () { if (!edited) suggest(); }, 350); };
+  $('c_regen').onclick = function () { edited = false; suggest(); }; $('c_pgen').onclick = newPass;
+  var getPay = wirePay('c', function (set) { $('c_plan').onchange = function () { set((DATA.plans[val('c_plan')] || {}).price || 0); }; });
+  $('mok').onclick = function () { submit(async function () {
+    var pay = getPay();
+    var r = await api('/shops', 'POST', { shopName: val('c_name'), username: val('c_user'), password: val('c_pass'), phone: val('c_phone'), upiId: val('c_upi'), bwRate: val('c_bw'), colorRate: val('c_col'), plan: val('c_plan'), amount: pay.amount, payStatus: pay.payStatus, payMethod: pay.payMethod, payRef: pay.payRef });
+    var u = r.shop.username, p = val('c_pass');
+    var txt = 'QuickPrint login\nShop: ' + r.shop.shopName + '\nDownload Windows app: ' + location.origin + '/download\nLogin page: ' + location.origin + '/admin\nUsername: ' + u + '\nPassword: ' + p + '\nPlan: ' + r.shop.planLabel + (r.shop.expiresAt ? ' (till ' + fmtDate(r.shop.expiresAt) + ')' : '');
+    var wa = r.shop.phone ? 'https://wa.me/91' + encodeURIComponent(r.shop.phone) + '?text=' + encodeURIComponent(txt) : '';
+    openModal('<h2>✅ Shop created</h2><p class="s">Send these login details to the shop owner. The password cannot be viewed again.</p><div class="hi" style="white-space:pre-line">' + esc(txt) + '</div>' +
+      '<div class="mf"><button class="btn btn-o" id="cp">📋 Copy</button>' + (wa ? '<a class="btn btn-g" target="_blank" href="' + wa + '">💬 WhatsApp</a>' : '') + '<button class="btn btn-p" onclick="closeModal()">Done</button></div>');
+    $('cp').onclick = function () { navigator.clipboard.writeText(txt).then(function () { toast('Copied'); }); };
+    load();
+  }); };
+}
+
+/* ---------- edit (shop setup) ---------- */
+function openEdit(s) {
+  var pr = s.pricing || {};
+  openModal('<h2>✏️ Edit Shop Setup</h2><p class="s">' + esc(s.shopId) + '</p>' +
+    '<label>Shop name</label><input id="e_name" value="' + esc(s.shopName) + '">' +
+    '<div class="row2"><div><label>Owner name</label><input id="e_own" value="' + esc(s.ownerName) + '"></div><div><label>Username</label><input id="e_user" value="' + esc(s.username) + '"></div></div>' +
+    '<div class="row2"><div><label>Phone</label><input id="e_phone" value="' + esc(s.phone) + '"></div><div><label>Email</label><input id="e_mail" value="' + esc(s.email) + '"></div></div>' +
+    '<label>UPI ID</label><input id="e_upi" value="' + esc(s.upiId) + '"><label>Address</label><input id="e_addr" value="' + esc(s.address) + '">' +
+    '<div class="sep">🖨 Printing rates</div>' +
+    '<div class="row2"><div><label>B&amp;W ₹/page</label><input id="e_bw" type="number" value="' + esc(pr.bwPerA4Page || 3) + '"></div><div><label>Color ₹/page</label><input id="e_col" type="number" value="' + esc(pr.colorPerA4Page || 10) + '"></div></div>' +
+    '<div class="row2"><div><label>Duplex discount %</label><input id="e_dup" type="number" value="' + esc(pr.duplexDiscountPercent != null ? pr.duplexDiscountPercent : 15) + '"></div><div><label>Legal extra ₹</label><input id="e_leg" type="number" value="' + esc(pr.legalSurcharge != null ? pr.legalSurcharge : 2) + '"></div></div>' +
+    '<label>A3 multiplier (×)</label><input id="e_a3" type="number" step="0.1" value="' + esc(pr.a3Multiplier || 2.5) + '">' +
+    '<div class="err" id="merr"></div><div class="mf"><button class="btn btn-o" onclick="closeModal()">Cancel</button><button class="btn btn-p" id="mok">Save changes</button></div>');
+  $('mok').onclick = function () { submit(async function () {
+    await api('/shops/' + encodeURIComponent(s.shopId), 'PUT', { shopName: val('e_name'), ownerName: val('e_own'), username: val('e_user'), phone: val('e_phone'), email: val('e_mail'), upiId: val('e_upi'), address: val('e_addr'), bwRate: val('e_bw'), colorRate: val('e_col'), duplexDiscount: val('e_dup'), legalSurcharge: val('e_leg'), a3Multiplier: val('e_a3') });
+    closeModal(); toast('Saved ✓'); load();
+  }); };
+}
+
+/* ---------- renew ---------- */
+function openRenew(s) {
+  var start = s.plan === 'demo' || !s.plan ? 'monthly' : s.plan;
+  openModal('<h2>🔁 Renew Licence</h2><p class="s"><b>' + esc(s.shopName) + '</b> · now: ' + esc(s.planLabel) + ' · ' + (s.plan === 'lifetime' ? 'Lifetime' : 'expires ' + fmtDate(s.expiresAt)) + '</p>' +
+    '<label>Plan</label><select id="r_plan">' + planOptions(start) + '</select>' +
+    '<label>Custom days (optional)</label><input id="r_days" type="number" placeholder="Leave empty for plan default">' +
+    '<p class="s" style="margin-top:8px;font-weight:700;color:#4f46e5" id="r_prev"></p>' +
+    payBlock('r', (DATA.plans[start] || {}).price) +
+    '<label>Note</label><input id="r_note" placeholder="Anything to remember">' +
+    '<div class="err" id="merr"></div><div class="mf"><button class="btn btn-o" onclick="closeModal()">Cancel</button><button class="btn btn-p" id="mok">Renew</button></div>');
+  function preview() {
+    var plan = val('r_plan'), p = DATA.plans[plan];
+    if (plan === 'lifetime') { $('r_prev').textContent = 'New expiry: Never (lifetime)'; return; }
+    var days = Number(val('r_days')) > 0 ? Number(val('r_days')) : p.days;
+    var base = (s.plan !== 'lifetime' && s.expiresAt && new Date(s.expiresAt) > new Date()) ? new Date(s.expiresAt) : new Date();
+    $('r_prev').textContent = 'New expiry: ' + fmtDate(new Date(base.getTime() + days * 86400000).toISOString()) + ' (+' + days + ' days' + (base > new Date() ? ', added to current expiry' : ', from today') + ')';
+  }
+  var getPay = wirePay('r', function (set) { $('r_plan').onchange = function () { set((DATA.plans[val('r_plan')] || {}).price || 0); preview(); }; });
+  $('r_days').oninput = preview; preview();
+  $('mok').onclick = function () { submit(async function () {
+    var pay = getPay();
+    await api('/shops/' + encodeURIComponent(s.shopId) + '/renew', 'POST', { plan: val('r_plan'), days: val('r_days'), note: val('r_note'), amount: pay.amount, payStatus: pay.payStatus, payMethod: pay.payMethod, payRef: pay.payRef });
+    closeModal(); toast('Licence renewed ✓'); load();
+  }); };
+}
+
+/* ---------- extend demo / licence ---------- */
+function openExtend(s) {
+  openModal('<h2>⏱ Extend days</h2><p class="s"><b>' + esc(s.shopName) + '</b> · ' + esc(s.planLabel) + ' · ' + (s.expiresAt ? 'expires ' + fmtDate(s.expiresAt) : '') + '</p>' +
+    '<label>Quick add</label><div class="chips" id="x_chips">' + [1, 3, 7, 15, 30].map(function (d) { return '<span class="chip" data-d="' + d + '">+' + d + ' day' + (d > 1 ? 's' : '') + '</span>'; }).join('') + '</div>' +
+    '<label>Days to add</label><input id="x_days" type="number" min="1" value="3"><label>Note</label><input id="x_note" placeholder="e.g. Customer needs more time to test">' +
+    '<div class="hint">Plan stays the same and no payment is recorded. Use Renew to move a demo shop to a paid plan.</div>' +
+    '<div class="err" id="merr"></div><div class="mf"><button class="btn btn-o" onclick="closeModal()">Cancel</button><button class="btn btn-p" id="mok">Extend</button></div>');
+  $('x_chips').addEventListener('click', function (e) { var c = e.target.closest('.chip'); if (c) $('x_days').value = c.dataset.d; });
+  $('mok').onclick = function () { submit(async function () { await api('/shops/' + encodeURIComponent(s.shopId) + '/extend', 'POST', { days: val('x_days'), note: val('x_note') }); closeModal(); toast('Extended ✓'); load(); }); };
+}
+
+/* ---------- password ---------- */
+function openPass(s) {
+  openModal('<h2>🔑 Reset Password</h2><p class="s">' + esc(s.shopName) + ' · login: <b>' + esc(s.username) + '</b></p>' +
+    '<label>New password (min 6)</label><input id="p_pass" autocomplete="off"><div class="err" id="merr"></div>' +
+    '<div class="mf"><button class="btn btn-o" onclick="closeModal()">Cancel</button><button class="btn btn-p" id="mok">Set Password</button></div>');
+  $('p_pass').value = Math.random().toString(36).slice(2, 10);
+  $('mok').onclick = function () { submit(async function () {
+    var p = val('p_pass'); await api('/shops/' + encodeURIComponent(s.shopId) + '/password', 'POST', { password: p });
+    openModal('<h2>✅ Password changed</h2><p class="s">Share with the shop owner:</p><div class="hi"><b>Username:</b> ' + esc(s.username) + '<br><b>New password:</b> ' + esc(p) + '</div><div class="mf"><button class="btn btn-p" onclick="closeModal()">Done</button></div>');
+  }); };
+}
+
+/* ---------- history ---------- */
+function openHist(s) {
+  var rows = (s.renewals || []).map(function (r) {
+    return '<div class="hi"><b>' + fmtDate(r.date) + '</b> · ' + esc((DATA.plans[r.plan] || {}).label || r.plan) + ' · ' + inr(r.amount) +
+      ' <span class="badge ' + (r.payStatus === 'pending' ? 'b-expiring' : 'b-active') + '" style="font-size:11px">' + (r.payStatus === 'pending' ? 'Due' : 'Paid') + '</span>' +
+      '<br><span class="sm">' + (r.payMethod ? esc(r.payMethod) + ' · ' : '') + (r.expiresAt ? 'Valid till ' + fmtDate(r.expiresAt) : 'Lifetime') + (r.payRef ? ' · Ref ' + esc(r.payRef) : '') + (r.note ? ' · ' + esc(r.note) : '') + '</span></div>';
+  }).join('') || '<div class="empty">No renewals yet</div>';
+  openModal('<h2>📜 Payment History</h2><p class="s">' + esc(s.shopName) + '</p><div class="hist">' + rows + '</div><div class="mf"><button class="btn btn-p" onclick="closeModal()">Close</button></div>');
+}
+
+/* ---------- approve / reject ---------- */
+function openApprove(s) {
+  openModal('<h2>✅ Approve Shop</h2><p class="s"><b>' + esc(s.shopName) + '</b> · ' + esc(s.ownerName) + ' · ' + esc(s.phone) + '</p>' +
+    '<label>Plan</label><select id="a_plan">' + planOptions('demo') + '</select>' +
+    '<label>Custom days (optional)</label><input id="a_days" type="number" placeholder="Leave empty for plan default">' +
+    '<p class="s" style="margin-top:8px;font-weight:700;color:#4f46e5" id="a_prev"></p>' + payBlock('a', 0) +
+    '<div class="err" id="merr"></div><div class="mf"><button class="btn btn-o" onclick="closeModal()">Cancel</button><button class="btn btn-p" id="mok">Approve &amp; Activate</button></div>');
+  function preview() {
+    var plan = val('a_plan'), p = DATA.plans[plan];
+    if (plan === 'lifetime') { $('a_prev').textContent = 'Valid: lifetime'; return; }
+    var days = Number(val('a_days')) > 0 ? Number(val('a_days')) : p.days;
+    $('a_prev').textContent = 'Valid for ' + days + ' days from today (till ' + fmtDate(new Date(Date.now() + days * 86400000).toISOString()) + ')';
+  }
+  var getPay = wirePay('a', function (set) { $('a_plan').onchange = function () { set((DATA.plans[val('a_plan')] || {}).price || 0); preview(); }; });
+  $('a_days').oninput = preview; preview();
+  $('mok').onclick = function () { submit(async function () {
+    var pay = getPay();
+    var r = await api('/shops/' + encodeURIComponent(s.shopId) + '/approve', 'POST', { plan: val('a_plan'), days: val('a_days'), amount: pay.amount, payStatus: pay.payStatus, payMethod: pay.payMethod, payRef: pay.payRef });
+    var msg = 'Hello ' + (s.ownerName || '') + ', your QuickPrint shop "' + s.shopName + '" is approved! ✅\nDownload Windows app: ' + location.origin + '/download\nLogin: ' + location.origin + '/admin\nUsername: ' + s.username + '\nPassword: (the one you chose while registering)\nPlan: ' + r.shop.planLabel + (r.shop.expiresAt ? ' (valid till ' + fmtDate(r.shop.expiresAt) + ')' : '');
+    var wa = 'https://wa.me/91' + encodeURIComponent(s.phone) + '?text=' + encodeURIComponent(msg);
+    openModal('<h2>✅ Shop approved</h2><p class="s">' + esc(s.shopName) + ' can login now. Send them a WhatsApp message:</p><div class="hi" style="white-space:pre-line">' + esc(msg) + '</div>' +
+      '<div class="mf"><button class="btn btn-o" onclick="closeModal()">Close</button><a class="btn btn-p" target="_blank" href="' + wa + '" onclick="closeModal()">💬 Send on WhatsApp</a></div>');
+    load();
+  }); };
+}
+async function doReject(s) {
+  if (!confirm('Reject the request from ' + s.shopName + '?')) return;
+  try { await api('/shops/' + encodeURIComponent(s.shopId) + '/reject', 'POST'); toast('Rejected'); load(); } catch (e) { alert(e.message); }
+}
+async function setStatus(s, status) {
+  if (status === 'suspended' && !confirm('Suspend ' + s.shopName + '? They cannot login or take orders.')) return;
+  try { await api('/shops/' + encodeURIComponent(s.shopId) + '/status', 'POST', { status: status }); toast(status === 'suspended' ? 'Suspended' : 'Activated'); load(); } catch (e) { alert(e.message); }
+}
+async function delShop(s) {
+  if (!confirm('DELETE ' + s.shopName + ' permanently? This cannot be undone.')) return;
+  try { await api('/shops/' + encodeURIComponent(s.shopId), 'DELETE'); toast('Deleted'); load(); } catch (e) { alert(e.message); }
+}
+
+// Refresh every minute (new requests) — but not while typing in settings or a modal
+setInterval(function () {
+  if (TOKEN && !$('app').classList.contains('hidden') && $('modal').classList.contains('hidden') && VIEW !== 'set' && !(document.activeElement && document.activeElement.id === 'q')) load().catch(function () {});
+}, 60000);
+
+if (TOKEN) showApp();
+</script>
+</body>
+</html>

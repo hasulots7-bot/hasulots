@@ -1,3 +1,25 @@
+// ===== Shop context: the QR link is /print/<shopId>. Every /api call carries it so the order goes to THAT shop only =====
+(function () {
+  const m = location.pathname.match(/^\/print\/([^/]+)/);
+  const q = new URLSearchParams(location.search).get('shop');
+  window.QP_SHOP = decodeURIComponent((m && m[1]) || q || '');
+  const _fetch = window.fetch.bind(window);
+  window.fetch = function (input, init) {
+    if (typeof input === 'string' && input.startsWith('/api/') && !input.startsWith('/api/qr') && window.QP_SHOP) {
+      input += (input.includes('?') ? '&' : '?') + 'shop=' + encodeURIComponent(window.QP_SHOP);
+    }
+    return _fetch(input, init);
+  };
+})();
+function showShopProblem(title, text) {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#fff;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;font-family:system-ui,sans-serif;color:#0f172a';
+  d.innerHTML = '<div><h2 style="font-size:1.5rem;font-weight:800;margin:0 0 .5rem"></h2><p style="color:#475569;margin:0"></p></div>';
+  d.querySelector('h2').textContent = title;
+  d.querySelector('p').textContent = text;
+  document.body.appendChild(d);
+}
+
 /**
  * QuickPrint Customer Web App (QR Se Print Client Engine)
  * Fully handles:
@@ -21,7 +43,7 @@ const state = {
     name: 'Hasulots technologies',
     address: 'Main Road, Opp. Bus Stand',
     phone: '+91 98765 43210',
-    upiId: 'hasulots@upi',
+    upiId: '',
     upiName: 'Hasulots technologies',
     priceBw: 3,
     priceColor: 10,
@@ -84,17 +106,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   setupDragAndDrop();
   selectPayMethod('online');
   setupCustomerWebSocket();
-  // Poll shop open/closed state so the customer page reflects the owner's
-  // toggle even if the live WebSocket connection drops.
-  setInterval(async () => {
-    try {
-      const r = await fetch('/api/settings', { cache: 'no-store' });
-      if (r.ok) {
-        const s = await r.json();
-        updateCustomerShopOpenStatus(s.shopOpen !== false);
-      }
-    } catch (e) {}
-  }, 5000);
 });
 
 // Load Shop Info & Pricing from /api/info
@@ -103,6 +114,8 @@ async function loadShopInfo() {
     const res = await fetch('/api/info');
     if (!res.ok) throw new Error('Failed to fetch info');
     const data = await res.json();
+    if (data.noShop) { showShopProblem('Invalid QR code', 'Please scan the QR code on the shop counter again.'); return; }
+    if (data.shopBlocked) { showShopProblem('Shop unavailable', 'This shop is temporarily unavailable. Please contact the shop.'); return; }
     
     // Check if URL has a specific shopId
     const pathParts = window.location.pathname.split('/');
@@ -112,7 +125,7 @@ async function loadShopInfo() {
     state.shopInfo.name = settings.shopName || 'Hasulots technologies';
     state.shopInfo.address = settings.shopAddress || 'Main Road, Opp. Bus Stand';
     state.shopInfo.phone = settings.shopPhone || '+91 98765 43210';
-    state.shopInfo.upiId = settings.upiId || 'hasulots@upi';
+    state.shopInfo.upiId = settings.upiId || '';
     state.shopInfo.upiName = settings.upiName || state.shopInfo.name;
     state.shopInfo.priceBw = (settings.pricing && settings.pricing.bwPerA4Page) || 3;
     state.shopInfo.priceColor = (settings.pricing && settings.pricing.colorPerA4Page) || 10;
@@ -257,15 +270,13 @@ async function handleFiles(files) {
       filename: fileInfo.fileId || fileInfo.filename,
       originalName: fileInfo.originalName,
       pageCount: fileInfo.pageCount || 1,
-      url: fileInfo.url,
-      mimeType: fileInfo.mimeType || file.type,
-      convertedFrom: fileInfo.convertedFrom || null
+      url: fileInfo.url
     };
     state.totalPages = fileInfo.pageCount || 1;
     state.selectedPages = Array.from({ length: state.totalPages }, (_, i) => i + 1);
 
     // Render Preview
-    await renderInitialThumbnail(file, fileInfo);
+    await renderInitialThumbnail(file);
 
     setTimeout(() => {
       if (upWrap) upWrap.style.display = 'none';
@@ -279,31 +290,18 @@ async function handleFiles(files) {
 }
 
 // Render Page 1 to #choiceCanvas
-async function renderInitialThumbnail(file, fileInfo) {
+async function renderInitialThumbnail(file) {
   const canvas = document.getElementById('choiceCanvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
 
-  const displayName = (fileInfo && fileInfo.originalName) || file.name;
   const sub = document.getElementById('choiceSub');
   const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-  const convertedNote = fileInfo && fileInfo.convertedFrom ? ' · preview ready' : '';
-  if (sub) sub.textContent = `${displayName} · ${sizeMB} MB · ${state.totalPages} page(s)${convertedNote}`;
+  if (sub) sub.textContent = `${file.name} · ${sizeMB} MB · ${state.totalPages} page(s)`;
 
-  const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-  const previewUrl = fileInfo && fileInfo.mimeType === 'application/pdf' && fileInfo.url ? fileInfo.url : null;
-
-  if (isPdf || previewUrl) {
+  if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
     try {
-      let arrayBuffer;
-      if (isPdf) {
-        arrayBuffer = await file.arrayBuffer();
-      } else {
-        // Word/text files were converted to PDF on the server.
-        const converted = await fetch(previewUrl);
-        if (!converted.ok) throw new Error('Converted preview not available');
-        arrayBuffer = await converted.arrayBuffer();
-      }
+      const arrayBuffer = await file.arrayBuffer();
       const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
       state.pdfDoc = await loadingTask.promise;
       state.totalPages = state.pdfDoc.numPages;
@@ -314,7 +312,6 @@ async function renderInitialThumbnail(file, fileInfo) {
       canvas.width = viewport.width;
       canvas.height = viewport.height;
       await page.render({ canvasContext: ctx, viewport }).promise;
-      if (sub) sub.textContent = `${displayName} · ${sizeMB} MB · ${state.totalPages} page(s)${convertedNote}`;
       return;
     } catch (pdfErr) {
       console.warn('PDF.js render fallback:', pdfErr);
@@ -823,19 +820,19 @@ function selectPayMethod(method) {
     if (pmOnline) pmOnline.classList.add('sel');
     if (pmCounter) pmCounter.classList.remove('sel');
     if (qrWrap) qrWrap.classList.remove('hidden');
-    if (payNote) payNote.textContent = 'Scan the QR and pay, then press the confirm button. The shop will verify your payment and print.';
+    if (payNote) payNote.textContent = 'Instant silent print will start immediately after payment verification.';
     if (payConfirmBtn) {
       const pc = payConfirmBtn.querySelector('.pc-tx');
-      if (pc) pc.textContent = '✅ Payment Done — Send Order to Counter';
+      if (pc) pc.textContent = '💳 Pay via UPI & Print';
     }
   } else {
     if (pmCounter) pmCounter.classList.add('sel');
     if (pmOnline) pmOnline.classList.remove('sel');
     if (qrWrap) qrWrap.classList.add('hidden');
-    if (payNote) payNote.textContent = 'Pay cash at counter. Shopkeeper verifies and prints your document.';
+    if (payNote) payNote.textContent = 'Pay cash at counter. Shopkeeper will confirm and your document will print.';
     if (payConfirmBtn) {
       const pc = payConfirmBtn.querySelector('.pc-tx');
-      if (pc) pc.textContent = '💵 Place Order — Pay Cash at Counter';
+      if (pc) pc.textContent = '💵 Confirm Order (Pay Cash)';
     }
   }
 }
@@ -875,8 +872,7 @@ async function generateUpiLinks() {
   }
 }
 
-// Confirm order — online orders are sent to the owner for payment verification,
-// cash orders wait at the counter. Printing starts only after the owner verifies.
+// Confirm & Pay / Create Order
 async function confirmAndPay() {
   if (!state.uploadedFile) {
     alert('Please upload a file first.');
@@ -884,21 +880,13 @@ async function confirmAndPay() {
   }
 
   const isOnline = state.payMethod === 'online';
-  await submitFinalOrder(isOnline ? 'upi' : 'cash');
+  await submitFinalOrder(isOnline ? 'completed' : 'pending_cash');
 }
 
-async function submitFinalOrder(payloadPaymentMethod) {
-  const payConfirmBtn = document.getElementById('payConfirmBtn');
-  if (payConfirmBtn) {
-    payConfirmBtn.disabled = true;
-    const tx = payConfirmBtn.querySelector('.pc-tx');
-    if (tx && !payConfirmBtn.dataset.originalText) {
-      payConfirmBtn.dataset.originalText = tx.textContent;
-      tx.textContent = '⏳ Sending order to counter…';
-    }
-  }
 
-  const isUpi = payloadPaymentMethod === 'upi';
+async function submitFinalOrder(paymentStatus) {
+  const payConfirmBtn = document.getElementById('payConfirmBtn');
+  if (payConfirmBtn) payConfirmBtn.disabled = true;
 
   try {
     const payload = {
@@ -910,7 +898,7 @@ async function submitFinalOrder(payloadPaymentMethod) {
       colorMode: state.colorMode,
       duplex: state.isDuplex ? 'double' : 'single',
       customerName: 'Mobile Customer',
-      paymentMethod: isUpi ? 'upi' : 'cash'
+      paymentMethod: state.payMethod === 'online' ? 'upi' : 'cash'
     };
 
     const res = await fetch('/api/orders', {
@@ -919,48 +907,22 @@ async function submitFinalOrder(payloadPaymentMethod) {
       body: JSON.stringify(payload)
     });
 
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || 'Order creation failed');
-    }
+    if (!res.ok) throw new Error('Order creation failed');
     const data = await res.json();
-    let order = data.order || data;
-
-    // Online payment: customer says they paid -> owner must verify at the counter.
-    if (isUpi) {
-      const refEl = document.getElementById('upiTxnRef');
-      const txnId = (refEl && refEl.value ? refEl.value : '').trim();
-      try {
-        const claimRes = await fetch(`/api/orders/${order.id}/claim-payment`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ txnId, method: 'upi' })
-        });
-        if (claimRes.ok) {
-          const claimData = await claimRes.json();
-          if (claimData.order) order = claimData.order;
-        }
-      } catch (claimErr) {
-        console.warn('Payment claim warning:', claimErr);
-      }
-    }
+    const order = data.order || data;
 
     state.orderId = order.id;
     state.orderNumber = order.token || order.id.slice(-6);
-    state.orderMethod = isUpi ? 'upi' : 'cash';
+
+    // Order registered in pending payment queue.
+    // Document will process ONLY after shopkeeper confirms payment or UPI webhook fires!
 
     playChime();
     showSuccessScreen(order);
 
   } catch (err) {
     alert(`Order Error: ${err.message}`);
-    if (payConfirmBtn) {
-      payConfirmBtn.disabled = false;
-      const tx = payConfirmBtn.querySelector('.pc-tx');
-      if (tx && payConfirmBtn.dataset.originalText) {
-        tx.textContent = payConfirmBtn.dataset.originalText;
-      }
-    }
+    if (payConfirmBtn) payConfirmBtn.disabled = false;
   }
 }
 
@@ -977,30 +939,6 @@ function showSuccessScreen(order) {
       s.classList.remove('active');
       s.classList.add('done');
     }
-  }
-
-  const isUpi = state.orderMethod === 'upi' || order.paymentMethod === 'upi';
-  const title = document.getElementById('successTitle');
-  if (title) {
-    title.textContent = isUpi
-      ? 'Waiting for shop to verify payment'
-      : 'Pay cash at counter to start printing';
-  }
-
-  const collectTitle = document.getElementById('collectTitle');
-  const collectMsg = document.getElementById('collectMsg');
-  if (collectTitle) collectTitle.textContent = isUpi ? '⏳ Payment Check in Progress' : '💵 Pay at Counter';
-  if (collectMsg) {
-    collectMsg.textContent = isUpi
-      ? 'The shop owner is checking your UPI payment. Printing starts right after verification.'
-      : 'Show your token at the counter and pay cash. The owner verifies and prints immediately.';
-  }
-
-  const helpText = document.getElementById('paymentHelpText');
-  if (helpText) {
-    helpText.textContent = isUpi
-      ? 'Show your UPI success screen at the counter. If the owner rejects the order, this page will show the reason.'
-      : 'Keep this page open. Your status updates automatically after the owner confirms the payment.';
   }
 
   const ordEl = document.getElementById('orderId');
@@ -1025,98 +963,43 @@ function animateTracking(order) {
   const t2 = document.getElementById('track2');
   const t3 = document.getElementById('track3');
   const t4 = document.getElementById('track4');
-  const t2Txt = document.getElementById('track2Text') || (t2 ? t2.querySelector('span:last-child') : null);
-  const t3Txt = document.getElementById('track3Text') || (t3 ? t3.querySelector('span:last-child') : null);
-  const t4Txt = document.getElementById('track4Text') || (t4 ? t4.querySelector('span:last-child') : null);
-
-  const paymentVerified =
-    order.paymentStatus === 'paid' ||
-    order.status === 'queued' ||
-    order.status === 'printing' ||
-    order.status === 'completed';
 
   if (t1) t1.className = 'status-step-row done';
-  if (t2) t2.className = paymentVerified ? 'status-step-row done' : 'status-step-row active';
-  if (t3) t3.className = paymentVerified ? 'status-step-row active' : 'status-step-row';
+  if (t2) t2.className = order.paymentStatus === 'completed' ? 'status-step-row done' : 'status-step-row active';
+  if (t3) t3.className = 'status-step-row active';
 
   // Live poll order status from server until payment is verified and printed
   const pollInterval = setInterval(async () => {
     try {
       const res = await fetch(`/api/orders/${order.id}`);
-      if (!res.ok) return;
-
-      const d = await res.json();
-      const cur = d.order || d;
-
-      // Owner rejected the payment (not received)
-      if (cur.status === 'rejected' || cur.paymentStatus === 'rejected') {
-        clearInterval(pollInterval);
-        const reason = cur.rejectionReason || 'Payment not received at counter';
-
-        if (t2) {
-          t2.className = 'status-step-row active';
-          t2.style.background = '#fef2f2';
-          t2.style.color = '#b91c1c';
-          t2.style.borderColor = '#fecaca';
+      if (res.ok) {
+        const d = await res.json();
+        const cur = d.order || d;
+        if (cur.paymentStatus === 'paid' || cur.status === 'queued' || cur.status === 'printing' || cur.status === 'completed') {
+          if (t2) {
+            t2.className = 'status-step-row done';
+            const t2Txt = t2.querySelector('p');
+            if (t2Txt) t2Txt.textContent = '2. Payment Confirmed ✅';
+          }
+          if (t3) {
+            t3.className = 'status-step-row done';
+            const t3Txt = document.getElementById('track3Text') || t3.querySelector('p');
+            if (t3Txt) t3Txt.textContent = '3. Printing on Physical Printer 🖨️';
+          }
         }
-        if (t2Txt) t2Txt.textContent = '2. Payment Not Received ⛔';
-        if (t3) { t3.className = 'status-step-row'; t3.style.opacity = '0.45'; }
-        if (t4) { t4.className = 'status-step-row'; t4.style.opacity = '0.45'; }
-
-        const title = document.getElementById('successTitle');
-        if (title) title.textContent = 'Order rejected — payment not confirmed';
-
-        const collTitle = document.getElementById('collectTitle');
-        if (collTitle) collTitle.textContent = '⛔ Payment Not Confirmed';
-        const collMsg = document.getElementById('collectMsg');
-        if (collMsg) collMsg.textContent = `${reason}. Nothing was printed. Pay at the counter and ask the owner to verify again, or place a new order.`;
-
-        const helpBox = document.getElementById('paymentHelpBox');
-        if (helpBox) {
-          helpBox.style.background = '#fef2f2';
-          helpBox.style.borderColor = '#fecaca';
+        if (cur.status === 'completed') {
+          clearInterval(pollInterval);
+          if (t4) {
+            t4.className = 'status-step-row done active';
+            const t4Txt = document.getElementById('track4Text') || t4.querySelector('p');
+            if (t4Txt) t4Txt.textContent = '4. Printed Successfully! Collect at Counter';
+          }
+          const collTitle = document.getElementById('collectTitle');
+          if (collTitle) collTitle.textContent = '🎉 Print Ready at Counter!';
+          const collMsg = document.getElementById('collectMsg');
+          if (collMsg) collMsg.textContent = 'Your prints are ready. Please collect them at the shop counter.';
+          playChime();
         }
-        const helpText = document.getElementById('paymentHelpText');
-        if (helpText) {
-          helpText.style.color = '#b91c1c';
-          helpText.textContent = `Reason: ${reason}. Show the payment proof at the counter to get it verified.`;
-        }
-        playChime();
-        return;
-      }
-
-      if (paymentVerified || cur.paymentStatus === 'paid' || cur.status === 'queued' || cur.status === 'printing' || cur.status === 'completed') {
-        if (t2) {
-          t2.className = 'status-step-row done';
-          t2.style.background = '';
-          t2.style.color = '';
-          t2.style.borderColor = '';
-        }
-        if (t2Txt) t2Txt.textContent = '2. Payment Verified ✅';
-
-        if (t3) {
-          t3.className = 'status-step-row active';
-          t3.style.opacity = '';
-        }
-        if (t3Txt) t3Txt.textContent = '3. Sending to Printer 🖨️';
-
-        const collTitle = document.getElementById('collectTitle');
-        if (collTitle) collTitle.textContent = '🖨️ Printing Started';
-        const collMsg = document.getElementById('collectMsg');
-        if (collMsg) collMsg.textContent = 'Payment verified. Your document is being printed now.';
-      }
-
-      if (cur.status === 'completed') {
-        clearInterval(pollInterval);
-        if (t3) { t3.className = 'status-step-row done'; t3.style.opacity = ''; }
-        if (t4) { t4.className = 'status-step-row done active'; t4.style.opacity = ''; }
-        if (t4Txt) t4Txt.textContent = '4. Printed Successfully! Collect at Counter';
-
-        const collTitle = document.getElementById('collectTitle');
-        if (collTitle) collTitle.textContent = '🎉 Print Ready at Counter!';
-        const collMsg = document.getElementById('collectMsg');
-        if (collMsg) collMsg.textContent = 'Your prints are ready. Please collect them at the shop counter with your token number.';
-        playChime();
       }
     } catch (e) {
       console.warn('Status poll warning:', e);
@@ -1999,7 +1882,7 @@ function updateCustomerShopOpenStatus(isOpen) {
 function setupCustomerWebSocket() {
   try {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//${window.location.host}`);
+    const ws = new WebSocket(`${protocol}//${window.location.host}/?shop=${encodeURIComponent(window.QP_SHOP || '')}`);
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);

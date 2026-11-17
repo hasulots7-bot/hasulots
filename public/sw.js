@@ -1,19 +1,16 @@
 // QuickPrint Service Worker for Installable PWA
 // v15: network-first so design/code updates show up immediately on installed apps.
-const CACHE_NAME = 'quickprint-v33';
+const CACHE_NAME = 'quickprint-v32';
 const ASSETS_TO_CACHE = [
   '/',
   '/admin.html',
-  '/admin',
-  '/owner',
-  '/owner.html',
   '/order',
   '/order.html',
   '/customer.css',
+  '/theme.css',
   '/style.css',
   '/app.js',
   '/agent.js',
-  '/platform.js',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png'
