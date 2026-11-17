@@ -91,24 +91,102 @@ function togglePasswordVisibility() {
   if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
 }
 
-function showPasswordError(msg) {
+function escapeHtml(str) {
+  return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+}
+
+function showPasswordError(msg, type = 'AUTH') {
   const errEl = document.getElementById('login-error-msg');
   if (errEl) {
-    errEl.textContent = msg || 'Incorrect Password. Please try again.';
     errEl.style.opacity = '1';
+    errEl.style.display = 'block';
+    if (type === 'LICENSE') {
+      errEl.innerHTML = `
+        <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:12px;padding:12px 14px;text-align:left;color:#92400e;margin:10px 0;">
+          <div style="display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;margin-bottom:4px;color:#b45309;">
+            <span>⚠️</span> <span>License Expired or Suspended</span>
+          </div>
+          <p style="font-size:13px;line-height:1.4;margin:0 0 8px;color:#78350f;">${escapeHtml(msg || 'Your shop subscription or demo has ended. Please renew to continue printing.')}</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a href="/#contact" target="_blank" style="display:inline-block;padding:6px 12px;background:#f59e0b;color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;">Contact Support / WhatsApp</a>
+            <button type="button" onclick="verifyLoginSubmit()" style="padding:6px 12px;background:#fef3c7;border:1px solid #d97706;color:#92400e;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Retry</button>
+          </div>
+        </div>
+      `;
+    } else if (type === 'UNREACHABLE') {
+      errEl.innerHTML = `
+        <div style="background:#eef2ff;border:1.5px solid #6366f1;border-radius:12px;padding:12px 14px;text-align:left;color:#3730a3;margin:10px 0;">
+          <div style="display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;margin-bottom:4px;color:#4338ca;">
+            <span>📡</span> <span>Server Unreachable</span>
+          </div>
+          <p style="font-size:13px;line-height:1.4;margin:0 0 8px;color:#312e81;">${escapeHtml(msg || 'Cannot connect to QuickPrint. Check your Wi-Fi or internet connection.')}</p>
+          <button type="button" onclick="verifyLoginSubmit()" style="padding:6px 12px;background:#4f46e5;color:#fff;border:0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Retry Connection</button>
+        </div>
+      `;
+    } else {
+      errEl.innerHTML = `
+        <div style="background:#fef2f2;border:1.5px solid #ef4444;border-radius:12px;padding:12px 14px;text-align:left;color:#991b1b;margin:10px 0;">
+          <div style="display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;margin-bottom:4px;color:#dc2626;">
+            <span>❌</span> <span>Incorrect Password / தவறான கடவுச்சொல்</span>
+          </div>
+          <p style="font-size:13px;line-height:1.4;margin:0;color:#b91c1c;">${escapeHtml(msg || 'Invalid Username or Password. Please check your credentials created online.')}</p>
+        </div>
+      `;
+    }
   }
   const inp = document.getElementById('admin-password-input');
   if (inp) {
     inp.classList.add('shake-anim');
     setTimeout(() => inp.classList.remove('shake-anim'), 400);
-    inp.value = '';
     inp.focus();
   }
 }
 
 function hidePasswordError() {
   const errEl = document.getElementById('login-error-msg');
-  if (errEl) errEl.style.opacity = '0';
+  if (errEl) {
+    errEl.innerHTML = '';
+    errEl.style.opacity = '0';
+  }
+}
+
+function ensureRememberMeCheckbox() {
+  if (document.getElementById('admin-remember-me')) return;
+  const btn = document.getElementById('btn-submit-pwd');
+  if (!btn || !btn.parentNode) return;
+  const wrap = document.createElement('div');
+  wrap.id = 'admin-remember-wrap';
+  wrap.style.cssText = 'display:flex;align-items:center;gap:8px;margin:12px 0 16px;cursor:pointer;';
+  wrap.innerHTML = `
+    <input type="checkbox" id="admin-remember-me" checked style="width:16px;height:16px;cursor:pointer;accent-color:#4f46e5;">
+    <label for="admin-remember-me" style="margin:0;font-size:13px;font-weight:600;color:#334155;cursor:pointer;user-select:none;">
+      Remember me on this PC (Auto-login)
+    </label>
+  `;
+  btn.parentNode.insertBefore(wrap, btn);
+}
+
+async function loadSavedCredentialsAndAutoLogin() {
+  if (!window.qpDesktop || !window.qpDesktop.getSavedCredentials) return;
+  try {
+    const creds = await window.qpDesktop.getSavedCredentials();
+    if (creds && creds.username && creds.password) {
+      const uInp = document.getElementById('admin-username-input');
+      const pInp = document.getElementById('admin-password-input');
+      const rem = document.getElementById('admin-remember-me');
+      if (uInp) uInp.value = creds.username;
+      if (pInp) pInp.value = creds.password;
+      if (rem) rem.checked = true;
+
+      // If we don't have an active token, perform auto-login!
+      if (!sessionStorage.getItem('qp_shop_token')) {
+        console.log('🔑 Performing auto-login using saved secure credentials...');
+        await verifyLoginSubmit({ auto: true });
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to load saved credentials:', err);
+  }
 }
 
 // Tab Switch between Login & Register
@@ -217,19 +295,21 @@ async function submitShopRegistration() {
   }
 }
 
-async function verifyLoginSubmit() {
+async function verifyLoginSubmit(opts = {}) {
   const userInp = document.getElementById('admin-username-input');
   const passInp = document.getElementById('admin-password-input');
   const username = userInp ? userInp.value.trim() : 'admin';
   const password = passInp ? passInp.value.trim() : '';
+  const remChk = document.getElementById('admin-remember-me');
+  const remember = remChk ? remChk.checked : true;
 
   if (!password) {
-    showPasswordError('Please enter password / கடவுச்சொல்லை உள்ளிடவும்');
+    showPasswordError('Please enter password / கடவுச்சொல்லை உள்ளிடவும்', 'AUTH');
     return;
   }
 
   const btn = document.getElementById('btn-submit-pwd');
-  if (btn) btn.textContent = 'Verifying...';
+  if (btn) btn.textContent = opts.auto ? 'Logging in automatically...' : 'Verifying...';
 
   try {
     const res = await fetch('/api/admin/login', {
@@ -242,16 +322,48 @@ async function verifyLoginSubmit() {
       const loginData = await res.json().catch(() => ({}));
       if (loginData.token) sessionStorage.setItem('qp_shop_token', loginData.token);
       sessionStorage.setItem('qp_admin_auth', 'true');
+
+      // Save credentials via Electron safeStorage (DPAPI encrypted, never plain text)
+      if (window.qpDesktop && window.qpDesktop.saveCredentials) {
+        try {
+          await window.qpDesktop.saveCredentials({ username, password, remember });
+        } catch (e) {
+          console.warn('Failed to save credentials to safeStorage:', e);
+        }
+      }
+
+      hidePasswordError();
       unlockDashboard();
+      if (loginData.license) {
+        agentState.license = loginData.license;
+        updateHeaderLicenseBadge(loginData.license);
+      }
       await fetchSettings();
       await fetchOrders();
       fetchPrinters();
+      // On startup/login: print any missed queued orders!
+      processMissedQueuedOrders();
     } else {
       const errData = await res.json().catch(() => ({}));
-      showPasswordError(errData.error || 'Incorrect Username or Password');
+      const code = errData.code;
+      if (res.status === 401 || code === 'AUTH') {
+        // Wrong password: clear saved credentials if any so bad login doesn't loop
+        if (window.qpDesktop && window.qpDesktop.clearSavedCredentials) {
+          window.qpDesktop.clearSavedCredentials().catch(() => {});
+        }
+        showPasswordError(errData.error || 'Invalid Username or Password / தவறான கடவுச்சொல்', 'AUTH');
+      } else if (res.status === 403 || code === 'LICENSE') {
+        showPasswordError(errData.error || 'QuickPrint shop license expired or suspended. Contact support.', 'LICENSE');
+        setTimeout(() => openLicensePlansModal(true), 600);
+      } else if (res.status === 429) {
+        showPasswordError(errData.error || 'Too many login attempts. Please try again after 15 minutes.', 'AUTH');
+      } else {
+        showPasswordError(errData.error || 'Login failed. Please check credentials and try again.', 'AUTH');
+      }
     }
   } catch (err) {
-    showPasswordError('Cannot reach server. Check internet and try again.');
+    console.error('Login error:', err);
+    showPasswordError('Cannot reach server. Check internet connection and try again.', 'UNREACHABLE');
   } finally {
     if (btn) btn.textContent = 'Unlock Dashboard / உள்நுழைக →';
   }
@@ -268,11 +380,15 @@ function unlockDashboard() {
   }
   renderCornerQrCode();
   reconnectWebSocket();   // live orders are per shop: reconnect now that we have the login token
+  processMissedQueuedOrders();
 }
 
 function lockAdminDashboard() {
   sessionStorage.removeItem('qp_admin_auth');
   sessionStorage.removeItem('qp_shop_token');
+  if (window.qpDesktop && window.qpDesktop.clearSavedCredentials) {
+    window.qpDesktop.clearSavedCredentials().catch(() => {});
+  }
   const inp = document.getElementById('admin-password-input');
   if (inp) inp.value = '';
   hidePasswordError();
@@ -288,6 +404,7 @@ function lockAdminDashboard() {
 }
 
 function checkAdminAuth() {
+  ensureRememberMeCheckbox();
   const overlay = document.getElementById('admin-login-overlay');
   if (!overlay) return;
   if (sessionStorage.getItem('qp_admin_auth') === 'true' && sessionStorage.getItem('qp_shop_token')) {
@@ -415,6 +532,271 @@ function toggleQrMode() {
   renderCornerQrCode();
 }
 
+// ============================================================
+// 💎 LICENSE, PLANS & WHATSAPP RENEWAL CONTROLLERS
+// ============================================================
+const PLANS_INFO = {
+  demo: { label: 'Trial Version', daysText: '7 Days Demo', price: 0, tag: '⏳ Free Trial', desc: 'Full features for 7 days' },
+  monthly: { label: '1 Month Plan', daysText: '30 Days Full Access', price: 299, tag: '📅 Monthly', desc: 'Flexible monthly renewal' },
+  yearly: { label: '1 Year Plan', daysText: '365 Days Access', price: 2999, tag: '⭐ Most Popular', desc: 'Save 20% on annual billing' },
+  lifetime: { label: 'Lifetime License', daysText: 'Unlimited Days', price: 9999, tag: '💎 One-Time', desc: 'Pay once, use forever' }
+};
+
+let selectedLicensePlanKey = 'yearly';
+let ownerApprovalPollTimer = null;
+let ownerContactInfo = {
+  whatsapp: '919999999999',
+  upiId: 'enquiry.print@hasulotstechnologies.com',
+  upiName: 'Hasulots Technologies',
+  businessName: 'Hasulots Technologies'
+};
+
+function updateHeaderLicenseBadge(license) {
+  license = license || (agentState.settings && agentState.settings.license);
+  if (!license) return;
+  agentState.license = license;
+
+  const pill = document.getElementById('header-license-pill');
+  const dot = document.getElementById('header-license-dot');
+  const text = document.getElementById('header-license-text');
+  if (!pill || !text) return;
+
+  const plan = license.plan || 'demo';
+  const state = license.state || (license.allowed ? 'active' : 'expired');
+  const days = license.daysLeft !== null && license.daysLeft !== undefined ? license.daysLeft : null;
+
+  if (state === 'expired' || (days !== null && days <= 0 && plan !== 'lifetime')) {
+    pill.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 border border-rose-300 hover:border-rose-400 text-rose-800 text-xs font-black ml-1 transition shadow-2xs cursor-pointer hover:bg-rose-100 animate-pulse';
+    if (dot) dot.className = 'w-2 h-2 rounded-full bg-rose-500 animate-ping';
+    text.textContent = '❌ Trial Expired • Renew Now';
+    return;
+  }
+
+  if (plan === 'lifetime' || license.lifetime) {
+    pill.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-300 hover:border-purple-400 text-purple-900 text-xs font-black ml-1 transition shadow-2xs cursor-pointer hover:bg-purple-100';
+    if (dot) dot.className = 'w-2 h-2 rounded-full bg-purple-600';
+    text.textContent = '💎 Lifetime Plan • Unlimited';
+    return;
+  }
+
+  if (plan === 'demo') {
+    pill.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-300 hover:border-amber-400 text-amber-900 text-xs font-black ml-1 transition shadow-2xs cursor-pointer hover:bg-amber-100';
+    if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-pulse';
+    text.textContent = `⏳ Trial Version • ${days !== null ? days : 7} days left`;
+    return;
+  }
+
+  if (plan === 'monthly') {
+    pill.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 hover:border-emerald-400 text-emerald-900 text-xs font-black ml-1 transition shadow-2xs cursor-pointer hover:bg-emerald-100';
+    if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+    text.textContent = `📅 1 Month Plan • ${days !== null ? days : 30} days left`;
+    return;
+  }
+
+  if (plan === 'yearly') {
+    pill.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-300 hover:border-indigo-400 text-indigo-900 text-xs font-black ml-1 transition shadow-2xs cursor-pointer hover:bg-indigo-100';
+    if (dot) dot.className = 'w-2 h-2 rounded-full bg-indigo-600';
+    text.textContent = `⭐ Yearly Plan • ${days !== null ? days : 365} days left`;
+    return;
+  }
+}
+
+async function fetchLicenseInfo() {
+  try {
+    const res = await fetch('/api/license');
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.owner) {
+      ownerContactInfo = { ...ownerContactInfo, ...data.owner };
+    }
+    if (data.license) {
+      agentState.license = data.license;
+      updateHeaderLicenseBadge(data.license);
+    }
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+function selectLicensePlan(planKey) {
+  if (!PLANS_INFO[planKey]) planKey = 'yearly';
+  selectedLicensePlanKey = planKey;
+  const p = PLANS_INFO[planKey];
+
+  // Highlight selected card
+  document.querySelectorAll('#lic-plans-container .plan-card').forEach(card => {
+    card.classList.remove('border-indigo-600', 'bg-indigo-50/40', 'ring-2', 'ring-indigo-500');
+    card.classList.add('border-slate-200', 'bg-white');
+  });
+
+  const activeCard = (window.event && window.event.currentTarget) || document.querySelector(`#lic-plans-container .plan-card:nth-child(${planKey==='demo'?1:planKey==='monthly'?2:planKey==='yearly'?3:4})`);
+  if (activeCard) {
+    activeCard.classList.remove('border-slate-200', 'bg-white');
+    activeCard.classList.add('border-indigo-600', 'bg-indigo-50/40', 'ring-2', 'ring-indigo-500');
+  }
+
+  // Update Amount
+  const amtEl = document.getElementById('lic-pay-amount-display');
+  if (amtEl) {
+    amtEl.textContent = p.price === 0 ? '₹0 (Free Trial / Demo)' : `₹${p.price.toLocaleString('en-IN')}`;
+  }
+
+  // Draw UPI QR code
+  renderOwnerUpiQr(p.price);
+}
+
+async function renderOwnerUpiQr(amount) {
+  const qrImg = document.getElementById('lic-owner-upi-qr');
+  if (!qrImg) return;
+  const upiId = ownerContactInfo.upiId || 'enquiry.print@hasulotstechnologies.com';
+  const upiName = ownerContactInfo.upiName || 'Hasulots Technologies';
+  const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${amount || 0}&cu=INR&tn=${encodeURIComponent('QuickPrint Shop License')}`;
+
+  try {
+    const r = await fetch(`/api/qr?text=${encodeURIComponent(upiUrl)}&width=140`);
+    if (r.ok) {
+      const d = await r.json();
+      qrImg.src = d.qr;
+    }
+  } catch (e) {
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(upiUrl)}`;
+  }
+}
+
+function copyOwnerUpiId() {
+  const upiId = ownerContactInfo.upiId || 'enquiry.print@hasulotstechnologies.com';
+  navigator.clipboard.writeText(upiId);
+  const btn = document.getElementById('btn-copy-upi');
+  if (btn) {
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+  }
+}
+
+async function openLicensePlansModal(forceExpired = false) {
+  const m = document.getElementById('modal-license-plans');
+  if (!m) return;
+  m.classList.remove('hidden');
+
+  const closeBtn = document.getElementById('btn-close-license-modal');
+  if (closeBtn) closeBtn.style.display = forceExpired ? 'none' : 'flex';
+
+  await fetchLicenseInfo();
+
+  // Populate current status
+  const lic = agentState.license || (agentState.settings && agentState.settings.license) || {};
+  const planBadge = document.getElementById('lic-badge-plan');
+  const daysBadge = document.getElementById('lic-badge-days');
+  const expEl = document.getElementById('lic-expiry-text');
+
+  const pKey = lic.plan || 'demo';
+  const planInfo = PLANS_INFO[pKey] || PLANS_INFO.demo;
+  if (planBadge) planBadge.textContent = planInfo.label;
+  
+  if (daysBadge) {
+    if (lic.lifetime) {
+      daysBadge.textContent = 'Unlimited (Lifetime)';
+      daysBadge.className = 'text-sm font-black text-purple-700';
+    } else if (lic.daysLeft !== null && lic.daysLeft !== undefined) {
+      daysBadge.textContent = lic.daysLeft > 0 ? `${lic.daysLeft} Days Pending` : `Expired (${Math.abs(lic.daysLeft)} days ago)`;
+      daysBadge.className = lic.daysLeft > 0 ? 'text-sm font-black text-slate-800' : 'text-sm font-black text-rose-600';
+    } else {
+      daysBadge.textContent = '7 Days Demo';
+    }
+  }
+
+  if (expEl) {
+    expEl.textContent = lic.expiresAt ? new Date(lic.expiresAt).toLocaleDateString('en-GB') : (lic.lifetime ? 'Never' : '-');
+  }
+
+  // Update Owner UPI
+  const upiEl = document.getElementById('lic-owner-upi-id');
+  if (upiEl && ownerContactInfo.upiId) upiEl.textContent = ownerContactInfo.upiId;
+
+  // Default select yearly plan
+  selectLicensePlan('yearly');
+}
+
+function closeLicensePlansModal() {
+  const m = document.getElementById('modal-license-plans');
+  if (m) m.classList.add('hidden');
+  stopOwnerApprovalPolling();
+}
+
+function sendRenewalToOwnerWhatsApp() {
+  const shopName = agentState.settings?.shopName || document.getElementById('header-shop-name')?.textContent || 'QuickPrint Shop';
+  const shopId = agentState.settings?.shopId || document.getElementById('header-shop-code')?.textContent || 'QP_SHOP';
+  const user = document.getElementById('admin-username-input')?.value.trim() || 'shop-admin';
+  const phone = agentState.settings?.shopPhone || '';
+  const p = PLANS_INFO[selectedLicensePlanKey] || PLANS_INFO.yearly;
+  const utr = document.getElementById('lic-utr-input')?.value.trim() || '';
+
+  const waNumber = (ownerContactInfo.whatsapp || '919999999999').replace(/\D/g, '');
+
+  const text = `*QuickPrint - Shop Plan Renewal Request*
+━━━━━━━━━━━━━━━━━━━━━━
+🏪 *Shop Name:* ${shopName}
+🆔 *Shop ID:* ${shopId}
+👤 *Username:* ${user}
+📞 *Mobile:* ${phone || 'Not given'}
+
+📦 *Selected Plan:* ${p.label} (₹${p.price})
+⏳ *Validity:* ${p.daysText}
+🔢 *UPI Ref / UTR:* ${utr || (p.price === 0 ? 'Free Trial Request' : 'Sent via UPI')}
+📅 *Time:* ${new Date().toLocaleString('en-IN')}
+━━━━━━━━━━━━━━━━━━━━━━
+_Please approve my shop license renewal in QuickPrint SuperAdmin._`;
+
+  window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+
+  // Show waiting state
+  const pollNotice = document.getElementById('lic-polling-notice');
+  if (pollNotice) pollNotice.classList.remove('hidden');
+
+  startOwnerApprovalPolling();
+}
+
+function startOwnerApprovalPolling() {
+  stopOwnerApprovalPolling();
+  console.log('🔄 Starting live approval polling...');
+  ownerApprovalPollTimer = setInterval(checkOwnerApprovalLive, 4000);
+}
+
+function stopOwnerApprovalPolling() {
+  if (ownerApprovalPollTimer) {
+    clearInterval(ownerApprovalPollTimer);
+    ownerApprovalPollTimer = null;
+  }
+}
+
+async function checkOwnerApprovalLive() {
+  try {
+    const data = await fetchLicenseInfo();
+    const lic = data && data.license;
+    if (lic && (lic.state === 'active' || lic.allowed === true)) {
+      console.log('🎉 Owner Approved License!', lic);
+      stopOwnerApprovalPolling();
+      closeLicensePlansModal();
+      playDing();
+      updateHeaderLicenseBadge(lic);
+      unlockDashboard();
+      await fetchSettings();
+      await fetchOrders();
+      alert(`🎉 வாழ்த்துகள்! உங்கள் திட்டம் "${lic.plan.toUpperCase()}" உரிமையாளரால் Approve செய்யப்பட்டது!\nமீதமுள்ள நாட்கள்: ${lic.daysLeft || 'Unlimited'} days.`);
+    }
+  } catch (e) {
+    console.warn('Poll error:', e);
+  }
+}
+
+window.openLicensePlansModal = openLicensePlansModal;
+window.closeLicensePlansModal = closeLicensePlansModal;
+window.selectLicensePlan = selectLicensePlan;
+window.copyOwnerUpiId = copyOwnerUpiId;
+window.sendRenewalToOwnerWhatsApp = sendRenewalToOwnerWhatsApp;
+window.checkOwnerApprovalLive = checkOwnerApprovalLive;
+
 // Fetch Settings
 async function fetchSettings() {
   try {
@@ -457,6 +839,14 @@ async function fetchSettings() {
     agentState.allowCash = !!s.allowCash;
     const toggleCash = document.getElementById('toggle-cash-orders');
     if (toggleCash) toggleCash.checked = agentState.allowCash;
+
+    if (s.license) {
+      agentState.license = s.license;
+      updateHeaderLicenseBadge(s.license);
+      if (s.license.state === 'expired' || (s.license.daysLeft !== null && s.license.daysLeft <= 0 && s.license.plan !== 'lifetime')) {
+        openLicensePlansModal(true);
+      }
+    }
   } catch (err) {
     console.error('Settings error:', err);
   }
@@ -701,7 +1091,7 @@ function renderOrders() {
   refreshIcons();
 }
 
-// Direct Silent Auto-Print
+// Direct Silent Auto-Print & Queued Order Processing
 function setOrderStatus(order, status) {
   return fetch(`/api/orders/${order.id}/status`, {
     method: 'POST',
@@ -710,46 +1100,130 @@ function setOrderStatus(order, status) {
   }).catch(() => {});
 }
 
-function triggerDirectPrint(order) {
-  if (!order || !order.fileUrl) return;
+// Track printed orders to guarantee: Never print the same order twice
+const printedOrderIds = new Set(
+  (() => {
+    try {
+      return JSON.parse(localStorage.getItem('qp_printed_orders') || '[]');
+    } catch (e) {
+      return [];
+    }
+  })()
+);
+const activePrintingIds = new Set();
 
-  // Desktop app: silent print straight to the selected Windows printer (no dialog)
-  if (window.qpDesktop && window.qpDesktop.printFile) {
-    const st = agentState.settings || {};
-    const printer = order.colorMode === 'color' ? st.selectedColorPrinter : st.selectedBwPrinter;
-    setOrderStatus(order, 'printing');
-    window.qpDesktop.printFile({
-      url: order.fileUrl, printer: printer || '', copies: order.copies, colorMode: order.colorMode,
-      duplex: order.duplex, paperSize: order.paperSize, pageRange: order.pageRange
-    }).then(() => setOrderStatus(order, 'completed'))
-      .catch((err) => {
-        console.warn('Desktop print failed', err);
-        setOrderStatus(order, 'queued');
-        alert('Print failed for ' + (order.token || 'order') + ': ' + ((err && err.message) || 'printer error').replace(/^Error invoking remote method[^:]*: /, ''));
-      });
-    return;
+function markOrderPrinted(orderId) {
+  if (!orderId) return;
+  printedOrderIds.add(orderId);
+  try {
+    const list = Array.from(printedOrderIds).slice(-1000); // keep recent 1000
+    localStorage.setItem('qp_printed_orders', JSON.stringify(list));
+  } catch (e) {}
+}
+
+async function printSingleOrderSafely(order) {
+  if (!order || !order.id || !order.fileUrl) return false;
+  // Guard against duplicate prints
+  if (printedOrderIds.has(order.id) || activePrintingIds.has(order.id)) {
+    console.log(`ℹ️ Skipping duplicate print for order ${order.token || order.id}`);
+    return false;
   }
 
-  const frame = document.getElementById('silent-print-frame');
-  if (frame) {
-    frame.src = order.fileUrl;
-    frame.onload = () => {
-      try {
-        setTimeout(() => {
-          frame.contentWindow.focus();
-          frame.contentWindow.print();
-          // Update status to completed after print
-          fetch(`/api/orders/${order.id}/status`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'completed' })
-          });
-        }, 500);
-      } catch (e) {
-        console.warn('Iframe print failed', e);
-        window.open(order.fileUrl, '_blank');
+  activePrintingIds.add(order.id);
+  try {
+    const st = agentState.settings || {};
+    const printer = (order.colorMode === 'color') ? st.selectedColorPrinter : st.selectedBwPrinter;
+
+    // Advance status to printing on the server
+    await setOrderStatus(order, 'printing');
+
+    // Desktop app: silent print straight to the selected Windows printer (no dialog)
+    if (window.qpDesktop && window.qpDesktop.printFile) {
+      await window.qpDesktop.printFile({
+        url: order.fileUrl,
+        printer: printer || '',
+        copies: order.copies,
+        colorMode: order.colorMode,
+        duplex: order.duplex,
+        paperSize: order.paperSize,
+        pageRange: order.pageRange
+      });
+      // Mark completed and remember as printed
+      await setOrderStatus(order, 'completed');
+      markOrderPrinted(order.id);
+      console.log(`✅ Order ${order.token || order.id} successfully printed silently.`);
+      return true;
+    } else {
+      // Browser fallback (iframe)
+      const frame = document.getElementById('silent-print-frame');
+      if (frame) {
+        frame.src = order.fileUrl;
+        frame.onload = () => {
+          try {
+            setTimeout(() => {
+              frame.contentWindow.focus();
+              frame.contentWindow.print();
+              setOrderStatus(order, 'completed');
+              markOrderPrinted(order.id);
+            }, 500);
+          } catch (e) {
+            console.warn('Iframe print failed', e);
+          }
+        };
       }
-    };
+      return true;
+    }
+  } catch (err) {
+    console.warn('Silent print failed for ' + (order.token || 'order') + ':', err);
+    await setOrderStatus(order, 'queued');
+    return false;
+  } finally {
+    activePrintingIds.delete(order.id);
+  }
+}
+
+function triggerDirectPrint(order) {
+  return printSingleOrderSafely(order);
+}
+
+let isProcessingMissedQueue = false;
+async function processMissedQueuedOrders() {
+  if (isProcessingMissedQueue) return;
+  const isAuto = agentState.autoPrintPaid || (agentState.settings && agentState.settings.autoPrintEnabled);
+  if (!isAuto) return;
+  if (!(window.qpDesktop && window.qpDesktop.printFile)) return;
+  const token = sessionStorage.getItem('qp_shop_token');
+  if (!token) return;
+
+  isProcessingMissedQueue = true;
+  try {
+    const res = await fetch('/api/orders');
+    if (!res.ok) return;
+    const data = await res.json();
+    const orders = data.orders || [];
+
+    // Filter paid orders with status "queued" that have not yet been printed
+    const missed = orders.filter(o =>
+      o &&
+      (o.paymentStatus === 'paid' || o.paymentStatus === 'completed') &&
+      o.status === 'queued' &&
+      !printedOrderIds.has(o.id) &&
+      !activePrintingIds.has(o.id)
+    );
+
+    if (missed.length > 0) {
+      console.log(`🖨️ Found ${missed.length} missed queued order(s) to print silently.`);
+      for (const order of missed) {
+        if (!printedOrderIds.has(order.id) && !activePrintingIds.has(order.id)) {
+          await printSingleOrderSafely(order);
+        }
+      }
+      await fetchOrders();
+    }
+  } catch (err) {
+    console.warn('Error processing missed queued orders:', err);
+  } finally {
+    isProcessingMissedQueue = false;
   }
 }
 
@@ -766,6 +1240,11 @@ function setupWebSocket() {
   const wsUrl = `${protocol}//${window.location.host}/?token=${encodeURIComponent(sessionStorage.getItem('qp_shop_token') || '')}`;
   agentState.ws = new WebSocket(wsUrl);
 
+  agentState.ws.onopen = () => {
+    console.log('⚡ WebSocket connected. Checking missed queued orders...');
+    processMissedQueuedOrders();
+  };
+
   agentState.ws.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data);
@@ -773,6 +1252,24 @@ function setupWebSocket() {
         agentState.orders.unshift(data.order);
         renderOrders();
         updateMetrics();
+
+        // Once online payment is done, automatically trigger print (Instant Auto-Print)
+        if (agentState.autoPrintPaid && (data.order.paymentMethod === 'upi' || data.order.paymentStatus === 'paid')) {
+          (async () => {
+            try {
+              await fetch(`/api/orders/${data.order.id}/pay`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ txnId: 'UPI-AUTO-' + Date.now() })
+              });
+              data.order.paymentStatus = 'paid';
+              data.order.status = 'queued';
+            } catch (e) {
+              console.warn('Auto-pay error:', e);
+            }
+            printSingleOrderSafely(data.order);
+          })();
+        }
       } else if (data.type === 'ORDER_PAID') {
         const idx = agentState.orders.findIndex(o => o.id === data.order.id);
         if (idx !== -1) {
@@ -784,9 +1281,9 @@ function setupWebSocket() {
         renderOrders();
         updateMetrics();
 
-        // Automated silent print if enabled
+        // Automated silent print if enabled (safe duplicate check inside)
         if (agentState.autoPrintPaid) {
-          triggerDirectPrint(data.order);
+          printSingleOrderSafely(data.order);
         }
       } else if (data.type === 'ORDER_STATUS_CHANGED') {
         const idx = agentState.orders.findIndex(o => o.id === data.order.id);
@@ -795,8 +1292,18 @@ function setupWebSocket() {
           renderOrders();
           updateMetrics();
         }
-      } else if (data.type === 'TUNNEL_URL_CHANGED' || data.type === 'SETTINGS_UPDATED') {
+      } else if (data.type === 'TUNNEL_URL_CHANGED' || data.type === 'SETTINGS_UPDATED' || data.type === 'LICENSE_UPDATED') {
         renderCornerQrCode();
+        const lic = (data.settings && data.settings.license) || data.license;
+        if (lic) {
+          agentState.license = lic;
+          updateHeaderLicenseBadge(lic);
+          if (lic.allowed || lic.state === 'active') {
+            closeLicensePlansModal();
+            unlockDashboard();
+          }
+        }
+        fetchSettings();
       }
     } catch (e) {}
   };
@@ -829,6 +1336,7 @@ function setupEventListeners() {
       await fetchPrinters();
       await fetchOrders();
       await renderCornerQrCode();
+      await processMissedQueuedOrders();
       setTimeout(() => {
         btnSync.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-emerald-600"></i><span>Synced</span>`;
         refreshIcons();
@@ -1109,7 +1617,9 @@ function applyZoom(zoomPercent) {
 }
 
 async function initAgent() {
+  ensureRememberMeCheckbox();
   checkAdminAuth();
+  fetchLicenseInfo();
   initZoomControl();
   await fetchSettings();
   await fetchPrinters();
@@ -1120,9 +1630,18 @@ async function initAgent() {
   if (window.lucide) {
     lucide.createIcons();
   }
+  // SafeStorage: auto-fill saved credentials and auto-login if not yet authenticated
+  await loadSavedCredentialsAndAutoLogin();
+  // On startup: check for and print any missed queued orders
+  processMissedQueuedOrders();
 }
 
 window.addEventListener('DOMContentLoaded', initAgent);
+window.addEventListener('online', () => {
+  console.log('🌐 Internet reconnected. Refreshing socket and checking queued orders...');
+  reconnectWebSocket();
+  processMissedQueuedOrders();
+});
 
 // Auto-poll orders every 3 seconds so new customer orders reflect immediately
 setInterval(fetchOrders, 3000);
@@ -1142,6 +1661,11 @@ function openShopConfigModal() {
 
   setVal('modal-shop-name', s.shopName || 'Hasulots technologies');
   setVal('modal-shop-id', s.shopId || 'QP_HASULOTS');
+  const shopIdInp = document.getElementById('modal-shop-id');
+  if (shopIdInp) {
+    shopIdInp.readOnly = true;
+    shopIdInp.disabled = true;
+  }
   setVal('modal-shop-phone', s.shopPhone || '');
   setVal('modal-shop-address', s.shopAddress || '');
   setVal('modal-admin-username', s.adminUsername || 'admin');
@@ -1166,12 +1690,8 @@ function closeShopConfigModal() {
 }
 
 function autoGenerateModalShopId() {
-  const nameEl = document.getElementById('modal-shop-name');
-  const name = nameEl ? nameEl.value.trim() : '';
-  const clean = (name || 'SHOP').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 10) || 'SHOP';
-  const rand = Math.floor(100 + Math.random() * 900);
-  const idEl = document.getElementById('modal-shop-id');
-  if (idEl) idEl.value = `QP_${clean}_${rand}`;
+  // Shop ID once created cannot be changed
+  alert('Shop ID once created cannot be changed / கடை குறியீட்டை மாற்ற முடியாது.');
 }
 
 async function saveShopConfig() {

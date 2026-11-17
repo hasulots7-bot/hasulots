@@ -883,10 +883,6 @@ async function confirmAndPay() {
   await submitFinalOrder(isOnline ? 'completed' : 'pending_cash');
 }
 
-// Simulation button for testing auto-print
-async function simulatePaymentSuccess() {
-  await submitFinalOrder('completed');
-}
 
 async function submitFinalOrder(paymentStatus) {
   const payConfirmBtn = document.getElementById('payConfirmBtn');
@@ -901,7 +897,8 @@ async function submitFinalOrder(paymentStatus) {
       copies: state.copies,
       colorMode: state.colorMode,
       duplex: state.isDuplex ? 'double' : 'single',
-      customerName: 'Mobile Customer'
+      customerName: 'Mobile Customer',
+      paymentMethod: state.payMethod === 'online' ? 'upi' : 'cash'
     };
 
     const res = await fetch('/api/orders', {

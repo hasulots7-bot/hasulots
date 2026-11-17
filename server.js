@@ -97,6 +97,7 @@ function broadcast(message, shopId) {
 function shopSettingsFor(shop) {
   const g = publicSettings(getSettings());
   delete g.shopId; delete g.publicUrl;
+  const info = A.licenseInfo(shop);
   return {
     ...g,
     shopName: shop.shopName,
@@ -107,7 +108,15 @@ function shopSettingsFor(shop) {
     pricing: { ...(g.pricing || {}), ...(shop.pricing || {}) },
     autoPrintEnabled: true,
     ...(shop.settings || {}),
-    shopId: shop.shopId
+    shopId: shop.shopId,
+    license: {
+      state: info.state,
+      daysLeft: info.daysLeft,
+      plan: (shop.license && shop.license.plan) || 'demo',
+      expiresAt: (shop.license && shop.license.expiresAt) || null,
+      allowed: info.allowed,
+      lifetime: !!info.lifetime
+    }
   };
 }
 function shopFromToken(req) {
@@ -116,8 +125,8 @@ function shopFromToken(req) {
   return getShops().find(x => x.shopId === t.id) || null;
 }
 function shopFromParam(req) {
-  const id = String((req.query && req.query.shop) || (req.body && req.body.shopId) || '').trim();
-  return id ? (getShops().find(x => x.shopId === id) || null) : null;
+  const id = String((req.query && (req.query.shop || req.query.shopId || req.query.username)) || (req.body && (req.body.shopId || req.body.username)) || '').trim().toLowerCase();
+  return id ? (getShops().find(x => x.shopId.toLowerCase() === id || (x.username || '').toLowerCase() === id) || null) : null;
 }
 function shopBlockMessage(shop) {
   const info = A.licenseInfo(shop);
@@ -175,24 +184,11 @@ app.get(Object.keys(INFO_PAGES), (req, res) => {
   res.sendFile(path.join(__dirname, 'public', INFO_PAGES[req.path]));
 });
 
-// Windows app installer lives on GitHub Releases. Set DESKTOP_DOWNLOAD_URL in Render > Environment.
-// Download link is given ONLY to a registered + approved shop (username/password check).
-function desktopUrl() { const u = (process.env.DESKTOP_DOWNLOAD_URL || '').trim(); return /^https:\/\//.test(u) ? u : ''; }
-app.get('/download/windows', (req, res) => res.redirect(302, '/download')); // no direct public download
-app.post('/api/desktop/link', (req, res) => {
-  if (A.isLocked(req)) return res.status(429).json({ error: 'Too many attempts. Try again after 15 minutes.' });
-  const { username = '', password = '' } = req.body || {};
-  const shop = getShops().find(s => (s.username || '').toLowerCase() === String(username).trim().toLowerCase());
-  if (!shop || !A.verifyPassword(String(password), shop.passwordHash)) {
-    A.recordFail(req);
-    return res.status(401).json({ error: 'Invalid Username or Password. Please register for the demo first.' });
-  }
-  A.clearFails(req);
-  const info = A.licenseInfo(shop);
-  if (!info.allowed) return res.status(403).json({ error: A.licenseMessage(info) });
-  const url = desktopUrl();
-  if (!url) return res.status(404).json({ error: 'The Windows app is being prepared. Please contact us on WhatsApp.' });
-  res.json({ success: true, url });
+// Windows app installer lives on GitHub Releases (too big for this repo). Set DESKTOP_DOWNLOAD_URL in Render > Environment.
+app.get('/download/windows', (req, res) => {
+  const url = (process.env.DESKTOP_DOWNLOAD_URL || '').trim();
+  if (/^https:\/\//.test(url)) return res.redirect(302, url);
+  res.status(404).type('text/plain').send('The Windows app is not published yet. Please contact QuickPrint support.');
 });
 app.get('/api/desktop', (req, res) => res.json({ available: /^https:\/\//.test((process.env.DESKTOP_DOWNLOAD_URL || '').trim()) }));
 
@@ -382,6 +378,33 @@ app.post('/api/printers/test', requireShop, async (req, res) => {
 app.get('/api/settings', (req, res) => {
   const shop = shopFromToken(req) || shopFromParam(req);
   res.json(shop ? shopSettingsFor(shop) : publicSettings(getSettings()));
+});
+
+// Get Shop License Info & Pricing Plans for Renewal
+app.get('/api/license', (req, res) => {
+  const shop = shopFromToken(req) || shopFromParam(req);
+  const info = shop ? A.licenseInfo(shop) : { state: 'unauthenticated', daysLeft: null, allowed: false };
+  const ownerCfg = (typeof getOwnerConfig === 'function' ? getOwnerConfig() : null) || {};
+  res.json({
+    success: true,
+    shopId: shop ? shop.shopId : null,
+    shopName: shop ? shop.shopName : null,
+    license: shop ? {
+      state: info.state,
+      daysLeft: info.daysLeft,
+      plan: (shop.license && shop.license.plan) || 'demo',
+      expiresAt: (shop.license && shop.license.expiresAt) || null,
+      allowed: info.allowed,
+      lifetime: !!info.lifetime
+    } : null,
+    plans: A.PLANS,
+    owner: {
+      whatsapp: ownerCfg.whatsapp || '919999999999',
+      upiId: ownerCfg.upiId || '',
+      upiName: ownerCfg.upiName || ownerCfg.businessName || 'Hasulots Technologies',
+      businessName: ownerCfg.businessName || 'Hasulots Technologies'
+    }
+  });
 });
 
 // Shop Owner Login (username + password given by the website owner)

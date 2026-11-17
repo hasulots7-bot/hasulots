@@ -311,6 +311,7 @@ function mount(app, { getShops, saveShops, getSettings, saveSettings, broadcast,
     });
     if (shop.renewals.length > 200) shop.renewals = shop.renewals.slice(-200);
     saveShops(shops);
+    syncActive(shop);
     console.log(`🔁 Renewed ${shop.shopName}: ${plan} -> ${shop.license.expiresAt || 'lifetime'}`);
     res.json({ success: true, shop: publicShop(shop) });
   });
@@ -333,6 +334,7 @@ function mount(app, { getShops, saveShops, getSettings, saveSettings, broadcast,
     shop.renewals.push({ date: new Date().toISOString(), plan: lic.plan, days, amount: 0, payMethod: 'Other', payStatus: 'paid', payRef: '',
       note: ('Extended +' + days + ' days. ' + String((req.body || {}).note || '').trim()).trim().slice(0, 200), expiresAt: lic.expiresAt });
     saveShops(shops);
+    syncActive(shop);
     res.json({ success: true, shop: publicShop(shop) });
   });
 
@@ -348,6 +350,7 @@ function mount(app, { getShops, saveShops, getSettings, saveSettings, broadcast,
     if (b.payMethod && PAY_METHODS.includes(b.payMethod)) list[i].payMethod = b.payMethod;
     if (b.payRef) list[i].payRef = String(b.payRef).trim().slice(0, 80);
     saveShops(shops);
+    syncActive(shop);
     res.json({ success: true, shop: publicShop(shop) });
   });
 
@@ -372,6 +375,7 @@ function mount(app, { getShops, saveShops, getSettings, saveSettings, broadcast,
       expiresAt: shop.license.expiresAt
     });
     saveShops(shops);
+    syncActive(shop);
     console.log(`✅ Approved ${shop.shopName} (${shop.shopId}) plan=${plan}`);
     res.json({ success: true, shop: publicShop(shop) });
   });
@@ -382,6 +386,7 @@ function mount(app, { getShops, saveShops, getSettings, saveSettings, broadcast,
     if ((shop.license || {}).status !== 'pending') return res.status(400).json({ error: 'Only pending requests can be rejected' });
     shop.license = { ...(shop.license || {}), status: 'rejected' };
     saveShops(shops);
+    syncActive(shop);
     res.json({ success: true, shop: publicShop(shop) });
   });
 
@@ -393,6 +398,7 @@ function mount(app, { getShops, saveShops, getSettings, saveSettings, broadcast,
     if (['pending', 'rejected'].includes((shop.license || {}).status)) return res.status(400).json({ error: 'Use Approve for new requests' });
     shop.license = { ...(shop.license || {}), status };
     saveShops(shops);
+    syncActive(shop);
     res.json({ success: true, shop: publicShop(shop) });
   });
 

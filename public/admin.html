@@ -370,10 +370,22 @@
         <span>Agent Online</span>
       </div>
 
+      <!-- Shop License & Plan Status Pill -->
+      <button id="header-license-pill" type="button" onclick="openLicensePlansModal()" class="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-300 hover:border-amber-400 text-amber-900 text-xs font-black ml-1 transition shadow-2xs cursor-pointer hover:bg-amber-100" title="Click to view plans & renew license">
+        <span id="header-license-dot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+        <span id="header-license-text">⏳ Trial Version • Checking...</span>
+      </button>
+
     </div>
 
     <!-- Right: Action Controls -->
     <div class="flex items-center gap-3 shrink-0">
+      
+      <!-- Plans & Renewal Button -->
+      <button id="btn-renew-license" type="button" onclick="openLicensePlansModal()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs flex items-center gap-1.5 shadow-md shadow-orange-500/20 transition active:scale-95" title="View Plans, Renew or Upgrade">
+        <span>⭐</span>
+        <span>Plans &amp; Renewal</span>
+      </button>
       
       <!-- Zoom Controls (A- / A+) -->
       <div class="flex items-center bg-slate-100 hover:bg-slate-200/60 border border-slate-200 rounded-xl px-2.5 py-1 gap-1.5 shadow-2xs transition" title="Adjust App Display Size">
@@ -701,10 +713,13 @@
 
           <div>
             <div class="flex items-center justify-between mb-1">
-              <label class="font-bold text-slate-600">Shop ID / கடை குறியீடு</label>
-              <button type="button" onclick="autoGenerateModalShopId()" class="text-violet-600 font-extrabold hover:underline text-[11px]">🔄 Auto Generate ID</button>
+              <label class="font-bold text-slate-600 flex items-center gap-1.5">
+                <span>Shop ID / கடை குறியீடு</span>
+                <span class="text-[10px] font-extrabold text-amber-700 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-md flex items-center gap-1">🔒 Fixed / நிரந்தரமானது</span>
+              </label>
             </div>
-            <input type="text" id="modal-shop-id" class="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono font-bold bg-white text-violet-700" placeholder="QP_HASULOTS">
+            <input type="text" id="modal-shop-id" readonly disabled class="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono font-bold bg-slate-100 text-slate-500 cursor-not-allowed select-all" placeholder="QP_HASULOTS">
+            <p class="text-[11px] text-slate-400 mt-1 font-semibold">🔒 Shop ID once created cannot be changed / கடை குறியீட்டை மாற்ற முடியாது.</p>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -831,6 +846,180 @@
       <button type="button" onclick="closeFullscreenQrModal()" class="mt-5 w-full py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-sm transition">
         Close / மூடுக
       </button>
+
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 💎 QUICKPRINT LICENSE & RENEWAL PLANS MODAL                   -->
+  <!-- ============================================================ -->
+  <div id="modal-license-plans" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-2xl w-full p-6 sm:p-8 text-left relative my-8 max-h-[90vh] overflow-y-auto">
+      
+      <!-- Close Button -->
+      <button type="button" onclick="closeLicensePlansModal()" id="btn-close-license-modal" class="absolute right-5 top-5 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-lg flex items-center justify-center transition">✕</button>
+
+      <!-- Modal Header -->
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center text-2xl shadow-sm shrink-0">
+          💎
+        </div>
+        <div>
+          <h2 class="text-xl font-black text-slate-900 leading-tight">QuickPrint License &amp; Plans</h2>
+          <p class="text-xs text-slate-500 font-medium">உரிமத் திட்டங்கள் • கட்டணம் • நேரடி WhatsApp ஒப்புதல்</p>
+        </div>
+      </div>
+
+      <!-- What is Trial Version Info Box -->
+      <div class="bg-indigo-50/70 border border-indigo-200/80 rounded-2xl p-4 mb-5">
+        <div class="flex items-center gap-2 mb-1.5 text-indigo-900 font-extrabold text-sm">
+          <span>💡</span> <span>Trial Version என்றால் என்ன?</span>
+        </div>
+        <p class="text-xs text-indigo-950 leading-relaxed font-medium">
+          <strong>Trial Version (7 Days Free Demo)</strong> என்பது QuickPrint-ன் முழு வசதிகளையும் (Instant Customer QR Scanning, Direct Windows Silent Printing, Auto B&amp;W &amp; Color, Multi-copy, Duplex) உங்கள் கடையில் 7 நாட்கள் இலவசமாக சோதிக்க வழங்கப்படுகிறது. Trial முடிந்ததும், கீழே உள்ள ஏதேனும் ஒரு திட்டத்தைத் தேர்ந்தெடுத்து தொடர்ந்து பயன்படுத்தலாம்!
+        </p>
+      </div>
+
+      <!-- Current Status Banner -->
+      <div id="lic-status-banner" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">தற்போதைய நிலை (Current Status)</span>
+          <div class="flex items-center gap-2 mt-0.5">
+            <span id="lic-badge-plan" class="px-2.5 py-0.5 rounded-lg bg-indigo-600 text-white font-extrabold text-xs">Trial Version</span>
+            <span id="lic-badge-days" class="text-sm font-black text-slate-800">7 Days Pending</span>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Expiry Date</span>
+          <span id="lic-expiry-text" class="text-xs font-mono font-bold text-slate-700">-</span>
+        </div>
+      </div>
+
+      <!-- Plan Selection Cards (4 Plans) -->
+      <div class="mb-6">
+        <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2.5">
+          திட்டத்தைத் தேர்ந்தெடுக்கவும் (Choose a Plan):
+        </label>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="lic-plans-container">
+          
+          <!-- Plan 1: Trial / Demo -->
+          <div class="plan-card border-2 border-slate-200 hover:border-indigo-500 rounded-2xl p-4 cursor-pointer transition relative bg-white" onclick="selectLicensePlan('demo')">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-xs font-black text-amber-600 uppercase">⏳ Free Trial</span>
+                <h3 class="font-black text-base text-slate-900 mt-0.5">Trial Version</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">7 Days Demo / Renewal Test</p>
+              </div>
+              <div class="text-right">
+                <span class="text-lg font-black text-slate-900">₹0</span>
+                <span class="text-[10px] text-slate-400 block">7 Days</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plan 2: 1 Month -->
+          <div class="plan-card border-2 border-slate-200 hover:border-indigo-500 rounded-2xl p-4 cursor-pointer transition relative bg-white" onclick="selectLicensePlan('monthly')">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-xs font-black text-emerald-600 uppercase">📅 Monthly</span>
+                <h3 class="font-black text-base text-slate-900 mt-0.5">1 Month Plan</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">30 Days Full Access</p>
+              </div>
+              <div class="text-right">
+                <span class="text-lg font-black text-slate-900">₹299</span>
+                <span class="text-[10px] text-slate-400 block">/ Month</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plan 3: Yearly (Popular) -->
+          <div class="plan-card border-2 border-indigo-600 bg-indigo-50/40 rounded-2xl p-4 cursor-pointer transition relative" onclick="selectLicensePlan('yearly')">
+            <span class="absolute -top-2.5 right-4 bg-indigo-600 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-xs">Most Popular</span>
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-xs font-black text-indigo-600 uppercase">⭐ Yearly</span>
+                <h3 class="font-black text-base text-slate-900 mt-0.5">1 Year Plan</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">365 Days • Save 20%</p>
+              </div>
+              <div class="text-right">
+                <span class="text-lg font-black text-slate-900">₹2,999</span>
+                <span class="text-[10px] text-slate-400 block">/ Year</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plan 4: Lifetime -->
+          <div class="plan-card border-2 border-slate-200 hover:border-indigo-500 rounded-2xl p-4 cursor-pointer transition relative bg-white" onclick="selectLicensePlan('lifetime')">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-xs font-black text-purple-600 uppercase">💎 One-Time</span>
+                <h3 class="font-black text-base text-slate-900 mt-0.5">Lifetime License</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">Unlimited Days • No Renewal</p>
+              </div>
+              <div class="text-right">
+                <span class="text-lg font-black text-slate-900">₹9,999</span>
+                <span class="text-[10px] text-slate-400 block">One-time</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Payment & WhatsApp Details Container -->
+      <div class="bg-slate-900 text-white rounded-2xl p-5 mb-5">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-16 h-16 bg-white rounded-xl p-1.5 shrink-0 flex items-center justify-center">
+              <img id="lic-owner-upi-qr" src="" alt="UPI QR" class="w-full h-full object-contain">
+            </div>
+            <div>
+              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Owner UPI ID (GPay / PhonePe / Paytm)</span>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span id="lic-owner-upi-id" class="text-sm font-mono font-bold text-amber-400">enquiry.print@hasulotstechnologies.com</span>
+                <button type="button" onclick="copyOwnerUpiId()" id="btn-copy-upi" class="text-[11px] text-slate-300 hover:text-white underline font-semibold">Copy</button>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">கட்டணம்: <strong id="lic-pay-amount-display" class="text-white text-xs">₹2,999</strong></p>
+            </div>
+          </div>
+          <div class="text-center sm:text-right shrink-0">
+            <span class="inline-block px-3 py-1 bg-white/10 rounded-lg text-xs font-bold text-emerald-400">
+              ⚡ Instant WhatsApp Approval
+            </span>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-slate-800">
+          <label for="lic-utr-input" class="block text-xs font-bold text-slate-300 mb-1">
+            UPI Transaction ID / Ref No (UTR - விருப்பம்):
+          </label>
+          <input type="text" id="lic-utr-input" placeholder="e.g. 504218991234 or leave blank for trial" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-mono placeholder:text-slate-500 focus:outline-none focus:border-indigo-400">
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row items-center gap-3">
+        <button type="button" onclick="sendRenewalToOwnerWhatsApp()" id="btn-send-renewal-wa" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition active:scale-95">
+          <span>📲</span>
+          <span>Send Details to Owner on WhatsApp (ஒப்புதலுக்கு அனுப்புக)</span>
+        </button>
+        <button type="button" onclick="checkOwnerApprovalLive()" id="btn-check-approval" class="w-full sm:w-auto py-3.5 px-5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs flex items-center justify-center gap-1.5 transition whitespace-nowrap">
+          <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          <span>Check Approval Now</span>
+        </button>
+      </div>
+
+      <!-- Live Polling Notice -->
+      <div id="lic-polling-notice" class="hidden mt-4 bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center">
+        <div class="flex items-center justify-center gap-2 text-emerald-800 font-black text-xs">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+          <span>Waiting for Owner Approval in SuperAdmin...</span>
+        </div>
+        <p class="text-[11px] text-emerald-700 mt-1">
+          Owner உங்கள் கோரிக்கையை சரிபார்த்து Approve செய்தவுடன், இந்த பக்கம் தானாகவே Refresh ஆகி புதிய நாட்கள் காட்டப்படும்!
+        </p>
+      </div>
 
     </div>
   </div>
