@@ -112,15 +112,18 @@
   <script>
     async function loadStandee() {
       try {
-        const res = await fetch('/api/info');
+        const sid = new URLSearchParams(location.search).get('shop') || '';
+        const res = await fetch('/api/info?shop=' + encodeURIComponent(sid));
         const data = await res.json();
         
         document.getElementById('standee-shop-name').textContent = data.settings.shopName || 'QuickPrint';
         document.getElementById('standee-phone').textContent = data.settings.shopPhone || '';
-        document.getElementById('standee-url-label').textContent = data.baseUrl;
+        if (data.noShop) { document.getElementById('standee-url-label').textContent = 'Open this page from your shop dashboard'; return; }
+        const link = data.orderUrl;
+        document.getElementById('standee-url-label').textContent = link;
 
         // Generate high-res QR for base URL
-        const qrRes = await fetch(`/api/qr?text=${encodeURIComponent(data.baseUrl)}&width=400`);
+        const qrRes = await fetch(`/api/qr?text=${encodeURIComponent(link)}&width=400`);
         const qrData = await qrRes.json();
         document.getElementById('standee-qr-image').src = qrData.qr;
 

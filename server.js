@@ -78,14 +78,49 @@ function publicSettings(st) {
   return rest;
 }
 
-function broadcast(message) {
+// Live messages are delivered per shop: a shop's dashboard (token) only receives its own
+// orders. Customers who scanned that shop's QR only receive its public settings.
+// A call without shopId (tunnel URL change) goes to everyone and carries no order data.
+function broadcast(message, shopId) {
   if (message && message.settings) message = { ...message, settings: publicSettings(message.settings) };
   const payload = JSON.stringify(message);
   wss.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(payload);
-    }
+    if (client.readyState !== WebSocket.OPEN) return;
+    if (!shopId) { client.send(payload); return; }
+    if (client.shopId === shopId) client.send(payload);
+    else if (client.viewShop === shopId && message.type === 'SETTINGS_UPDATED') client.send(payload);
   });
+}
+
+// ---- Multi-shop helpers ----
+// Everything a customer sees (name, UPI, prices, open/closed) comes from THEIR shop record.
+function shopSettingsFor(shop) {
+  const g = publicSettings(getSettings());
+  delete g.shopId; delete g.publicUrl;
+  return {
+    ...g,
+    shopName: shop.shopName,
+    shopPhone: shop.phone || '',
+    shopAddress: shop.address || '',
+    upiId: shop.upiId || '',
+    upiName: shop.shopName,
+    pricing: { ...(g.pricing || {}), ...(shop.pricing || {}) },
+    ...(shop.settings || {}),
+    shopId: shop.shopId
+  };
+}
+function shopFromToken(req) {
+  const t = A.verifyToken(A.bearer(req));
+  if (!t || t.r !== 'shop') return null;
+  return getShops().find(x => x.shopId === t.id) || null;
+}
+function shopFromParam(req) {
+  const id = String((req.query && req.query.shop) || (req.body && req.body.shopId) || '').trim();
+  return id ? (getShops().find(x => x.shopId === id) || null) : null;
+}
+function shopBlockMessage(shop) {
+  const info = A.licenseInfo(shop);
+  return info.allowed ? null : A.licenseMessage(info);
 }
 
 // Multer Storage Configuration
@@ -153,7 +188,7 @@ if (!fs.existsSync(path.join(__dirname, 'public', 'index.html'))) {
 }
 
 // ---------- Website-owner (super admin) ----------
-superadmin.mount(app, { getShops, saveShops, getSettings, saveSettings, broadcast, getOwnerConfig: store.getOwnerConfig, saveOwnerConfig: store.saveOwnerConfig });
+superadmin.mount(app, { getShops, saveShops, getSettings, saveSettings, broadcast, shopSettingsFor, getOwnerConfig: store.getOwnerConfig, saveOwnerConfig: store.saveOwnerConfig });
 app.get(['/superadmin', '/superadmin.html', '/owner'], (req, res) => {
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
   res.sendFile(path.join(__dirname, 'public', 'superadmin.html'));
@@ -169,15 +204,6 @@ function requireShop(req, res, next) {
   if (!info.allowed) return res.status(403).json({ error: A.licenseMessage(info), code: 'LICENSE', state: info.state });
   req.shop = shop;
   next();
-}
-
-// Is the shop currently shown to customers allowed to print? (legacy/unknown shop = allowed)
-function activeShopBlocked() {
-  const sid = getSettings().shopId;
-  const shop = sid && getShops().find(x => x.shopId === sid);
-  if (!shop) return null;
-  const info = A.licenseInfo(shop);
-  return info.allowed ? null : A.licenseMessage(info);
 }
 
 // One-time upgrade: hash old plain passwords, give existing shops a licence
@@ -235,14 +261,15 @@ app.get('/api/info', (req, res) => {
   const localIp = getLocalIp();
   const port = PORT;
   const settings = getSettings();
+  const shop = shopFromToken(req) || shopFromParam(req);
   
   // Detect if requested via public tunnel (Cloudflare / ngrok / reverse proxy)
   const forwardedHost = req.headers['x-forwarded-host'] || req.headers.host;
   const forwardedProto = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
   
   let baseUrl;
-  if (settings.publicUrl && settings.publicUrl.trim().length > 0) {
-    baseUrl = settings.publicUrl.trim().replace(/\/$/, '');
+  if ((process.env.PUBLIC_URL || '').trim()) {
+    baseUrl = process.env.PUBLIC_URL.trim().replace(/\/$/, '');
   } else if (forwardedHost && !forwardedHost.includes('localhost') && !forwardedHost.includes('127.0.0.1')) {
     baseUrl = `${forwardedProto}://${forwardedHost}`;
   } else {
@@ -253,8 +280,11 @@ app.get('/api/info', (req, res) => {
     localIp,
     port,
     baseUrl,
-    settings: publicSettings(settings),
-    shopBlocked: activeShopBlocked() || false
+    shopId: shop ? shop.shopId : null,
+    orderUrl: shop ? `${baseUrl}/print/${encodeURIComponent(shop.shopId)}` : null,
+    noShop: !shop,
+    settings: shop ? shopSettingsFor(shop) : publicSettings(settings),
+    shopBlocked: (shop && shopBlockMessage(shop)) || false
   });
 });
 
@@ -310,7 +340,8 @@ app.post('/api/printers/test', requireShop, async (req, res) => {
 
 // Get Shop Settings
 app.get('/api/settings', (req, res) => {
-  res.json(publicSettings(getSettings()));
+  const shop = shopFromToken(req) || shopFromParam(req);
+  res.json(shop ? shopSettingsFor(shop) : publicSettings(getSettings()));
 });
 
 // Shop Owner Login (username + password given by the website owner)
@@ -333,20 +364,8 @@ app.post('/api/admin/login', (req, res) => {
     return res.status(403).json({ error: A.licenseMessage(info), code: 'LICENSE', state: info.state });
   }
 
-  // Make this the active shop shown to customers
-  const current = getSettings();
-  const updated = {
-    ...current,
-    shopId: shop.shopId,
-    shopName: shop.shopName,
-    shopPhone: shop.phone || current.shopPhone,
-    shopAddress: shop.address || '',
-    upiId: shop.upiId || current.upiId,
-    upiName: shop.shopName,
-    pricing: { ...current.pricing, ...(shop.pricing || {}) }
-  };
-  saveSettings(updated);
-  broadcast({ type: 'SETTINGS_UPDATED', settings: updated });
+  // Each shop keeps its own settings; logging in never changes another shop's page
+  const updated = shopSettingsFor(shop);
 
   res.json({
     success: true,
@@ -419,29 +438,38 @@ app.post('/api/shops/register', (req, res) => {
 
 // Update Shop Settings
 app.post('/api/settings', requireShop, (req, res) => {
-  const current = getSettings();
   // Login details and shop identity are controlled by the owner only
-  const { adminUsername, adminPassword, adminPin, shopId, ...body } = req.body || {};
-  const updated = {
-    ...current,
-    ...body,
-    pricing: { ...current.pricing, ...(body.pricing || {}) }
-  };
-  saveSettings(updated);
-  broadcast({ type: 'SETTINGS_UPDATED', settings: updated });
-  res.json({ success: true, settings: publicSettings(updated) });
+  const { adminUsername, adminPassword, adminPin, shopId, publicUrl, ...body } = req.body || {};
+  const { shopName, shopPhone, shopAddress, upiId, pricing, ...rest } = body;
+  const shops = getShops();
+  const shop = shops.find(s => s.shopId === req.shop.shopId);
+  if (typeof shopName === 'string' && shopName.trim()) shop.shopName = shopName.trim().slice(0, 80);
+  if (typeof shopPhone === 'string') shop.phone = shopPhone.trim().slice(0, 20);
+  if (typeof shopAddress === 'string') shop.address = shopAddress.trim().slice(0, 200);
+  if (typeof upiId === 'string') shop.upiId = upiId.trim().slice(0, 80);
+  if (pricing && typeof pricing === 'object') shop.pricing = { ...(shop.pricing || {}), ...pricing };
+  shop.settings = { ...(shop.settings || {}), ...rest };
+  saveShops(shops);
+  const updated = shopSettingsFor(shop);
+  broadcast({ type: 'SETTINGS_UPDATED', settings: updated }, shop.shopId);
+  res.json({ success: true, settings: updated });
 });
 
 // File Upload Endpoint
 app.post('/api/upload', upload.single('file'), async (req, res) => {
   try {
-    const blocked = activeShopBlocked();
-    if (blocked) {
+    const shop = shopFromParam(req);
+    if (!shop) {
+      if (req.file) { try { fs.unlinkSync(req.file.path); } catch (e) {} }
+      return res.status(400).json({ error: 'Invalid shop QR. Please scan the shop QR code again.' });
+    }
+    if (shopBlockMessage(shop)) {
       if (req.file) { try { fs.unlinkSync(req.file.path); } catch (e) {} }
       return res.status(403).json({ error: 'This shop is temporarily unavailable.', code: 'LICENSE' });
     }
-    const settings = getSettings();
+    const settings = shopSettingsFor(shop);
     if (settings.shopOpen === false) {
+      if (req.file) { try { fs.unlinkSync(req.file.path); } catch (e) {} }
       return res.status(403).json({ error: 'Shop is currently closed. Will reopen tomorrow morning at 9:00 AM.' });
     }
 
@@ -472,10 +500,12 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 // Create Print Order
 app.post('/api/orders', (req, res) => {
   try {
-    if (activeShopBlocked()) {
+    const shop = shopFromParam(req);
+    if (!shop) return res.status(400).json({ error: 'Invalid shop QR. Please scan the shop QR code again.' });
+    if (shopBlockMessage(shop)) {
       return res.status(403).json({ error: 'This shop is temporarily unavailable.', code: 'LICENSE' });
     }
-    const settings = getSettings();
+    const settings = shopSettingsFor(shop);
     if (settings.shopOpen === false) {
       return res.status(403).json({ error: 'Shop is currently closed. Will reopen tomorrow morning at 9:00 AM.' });
     }
@@ -529,10 +559,11 @@ app.post('/api/orders', (req, res) => {
 
     // Construct UPI Payment Link
     const upiNote = encodeURIComponent(`Print ${orderToken} - ${settings.shopName}`);
-    const upiUrl = `upi://pay?pa=${settings.upiId}&pn=${encodeURIComponent(settings.upiName)}&am=${totalAmount}&cu=INR&tn=${upiNote}`;
+    const upiUrl = !settings.upiId ? '' : `upi://pay?pa=${settings.upiId}&pn=${encodeURIComponent(settings.upiName)}&am=${totalAmount}&cu=INR&tn=${upiNote}`;
 
     const newOrder = {
       id: orderId,
+      shopId: shop.shopId,
       token: orderToken,
       fileId,
       originalName: originalName || fileId,
@@ -564,7 +595,7 @@ app.post('/api/orders', (req, res) => {
     saveOrders(orders);
 
     // Notify connected Admin dashboards
-    broadcast({ type: 'ORDER_CREATED', order: newOrder });
+    broadcast({ type: 'ORDER_CREATED', order: newOrder }, shop.shopId);
 
     res.json({ success: true, order: newOrder });
   } catch (err) {
@@ -575,15 +606,16 @@ app.post('/api/orders', (req, res) => {
 
 // Get All Orders (Admin)
 app.get('/api/orders', requireShop, (req, res) => {
-  const orders = getOrders();
+  const orders = getOrders().filter(o => o.shopId === req.shop.shopId);
   res.json({ orders });
 });
 
 // Get Single Order (Status polling / websocket tracking)
 app.get('/api/orders/:id', (req, res) => {
-  const orders = getOrders();
-  const order = orders.find(o => o.id === req.params.id || o.token === req.params.id);
-  if (!order) {
+  const viewer = shopFromToken(req) || shopFromParam(req);
+  const sid = viewer ? viewer.shopId : null;
+  const order = getOrders().find(o => o.id === req.params.id || (o.token === req.params.id && sid && o.shopId === sid));
+  if (!order || (sid && order.shopId !== sid)) {
     return res.status(404).json({ error: 'Order not found' });
   }
   res.json({ order });
@@ -593,7 +625,7 @@ app.get('/api/orders/:id', (req, res) => {
 app.post('/api/orders/:id/pay', requireShop, (req, res) => {
   const { txnId = '', simulated = false } = req.body;
   const orders = getOrders();
-  const orderIndex = orders.findIndex(o => o.id === req.params.id || o.token === req.params.id);
+  const orderIndex = orders.findIndex(o => (o.id === req.params.id || o.token === req.params.id) && o.shopId === req.shop.shopId);
 
   if (orderIndex === -1) {
     return res.status(404).json({ error: 'Order not found' });
@@ -609,7 +641,7 @@ app.post('/api/orders/:id/pay', requireShop, (req, res) => {
   saveOrders(orders);
 
   // Broadcast real-time event to Admin (plays audio alert!) and Customer
-  broadcast({ type: 'ORDER_PAID', order });
+  broadcast({ type: 'ORDER_PAID', order }, req.shop.shopId);
 
   // Direct Windows Silent Printing if Auto-Print is enabled
   const settings = getSettings();
@@ -649,7 +681,7 @@ app.post('/api/orders/:id/status', requireShop, (req, res) => {
   }
 
   const orders = getOrders();
-  const orderIndex = orders.findIndex(o => o.id === req.params.id || o.token === req.params.id);
+  const orderIndex = orders.findIndex(o => (o.id === req.params.id || o.token === req.params.id) && o.shopId === req.shop.shopId);
 
   if (orderIndex === -1) {
     return res.status(404).json({ error: 'Order not found' });
@@ -660,7 +692,7 @@ app.post('/api/orders/:id/status', requireShop, (req, res) => {
 
   saveOrders(orders);
 
-  broadcast({ type: 'ORDER_STATUS_CHANGED', order: orders[orderIndex] });
+  broadcast({ type: 'ORDER_STATUS_CHANGED', order: orders[orderIndex] }, req.shop.shopId);
 
   res.json({ success: true, order: orders[orderIndex] });
 });
@@ -668,17 +700,16 @@ app.post('/api/orders/:id/status', requireShop, (req, res) => {
 // Delete Order (Admin action)
 app.delete('/api/orders/:id', requireShop, (req, res) => {
   let orders = getOrders();
-  const order = orders.find(o => o.id === req.params.id);
-  if (order) {
-    // Optionally delete uploaded file
-    const filePath = path.join(UPLOADS_DIR, order.fileId);
-    if (fs.existsSync(filePath)) {
-      try { fs.unlinkSync(filePath); } catch (e) {}
-    }
+  const order = orders.find(o => o.id === req.params.id && o.shopId === req.shop.shopId);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  // Optionally delete uploaded file
+  const filePath = path.join(UPLOADS_DIR, order.fileId);
+  if (fs.existsSync(filePath)) {
+    try { fs.unlinkSync(filePath); } catch (e) {}
   }
-  orders = orders.filter(o => o.id !== req.params.id);
+  orders = orders.filter(o => !(o.id === req.params.id && o.shopId === req.shop.shopId));
   saveOrders(orders);
-  broadcast({ type: 'ORDER_DELETED', orderId: req.params.id });
+  broadcast({ type: 'ORDER_DELETED', orderId: req.params.id }, req.shop.shopId);
   res.json({ success: true });
 });
 
@@ -718,7 +749,14 @@ app.post('/api/tunnel/restart', requireShop, (req, res) => {
 });
 
 // WebSocket Connection Management
-wss.on('connection', (ws) => {
+wss.on('connection', (ws, req) => {
+  try {
+    const u = new URL(req.url, 'http://x');
+    const tok = u.searchParams.get('token');
+    if (tok) { const t = A.verifyToken(tok); if (t && t.r === 'shop') ws.shopId = t.id; }
+    const view = u.searchParams.get('shop');
+    if (view) ws.viewShop = view;
+  } catch (e) {}
   ws.isAlive = true;
   ws.on('pong', () => { ws.isAlive = true; });
   

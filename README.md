@@ -50,6 +50,14 @@ Windows "Windows protected your PC" kaatum (unsigned) -> More info > Run anyway.
 3. Shop PC-la .exe install > shop username/password login > printer select (B&W / Color).
 4. Dashboard-la QR scan pannunga > file upload > pay > print varanum.
 
+## Multi-shop: customer data eppadi pirikkudhu
+- Ovvoru shop-kum thani QR link: `https://qrprint.hasulotstechnologies.com/print/<ShopID>`. Shop dashboard-la QR and "Counter Standee" ade link-a thaan kaattum.
+- Customer upload, order, UPI payment, price ellam antha shop-oda settings-la irundhu thaan varum. Verum `/order` link (shop ID illama) "Invalid QR" nu kaattum.
+- Ovvoru order-um shop ID oda save aagum. Shop dashboard (and .exe) than shop-oda orders mattum paakkum, live updates-um adhe shop-ku mattum pogum. Vera shop order-a pay / status maatha / delete panna mudiyaadhu.
+- Ovvoru shop-um login pannina piragu **Settings-la UPI ID kandippa set pannanum**. UPI illana customer-ku online payment option work aagaadhu.
+- Pazhaiya orders (shop ID illadha) endha shop-kum theriyaadhu.
+- Optional: Render env `PUBLIC_URL` = `https://qrprint.hasulotstechnologies.com` set pannina QR link eppavum ade domain-a irukkum.
+
 ## Gnabagam
 - `public/site.js`-la `whatsapp`, `phone`, `email` placeholder (`919999999999`) -> real values.
 - Render free: 15 min idle-na sleep. Shop open-a irukkum bodhu first scan slow irukkum. Uploads Render disk-la thaan irukku, restart-la azhiyum (orders database-la safe).

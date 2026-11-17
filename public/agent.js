@@ -314,9 +314,12 @@ async function renderCornerQrCode() {
     let targetUrl;
     const isPublic = qrMode === 'public' && info.baseUrl && info.baseUrl.startsWith('https://');
     if (isPublic) {
-      targetUrl = `${info.baseUrl}/order`;
+      targetUrl = info.orderUrl || `${info.baseUrl}/order`;
     } else {
-      targetUrl = `http://${info.localIp}:${info.port}/order`;
+      targetUrl = `http://${info.localIp}:${info.port}/print/${encodeURIComponent(info.shopId || '')}`;
+    }
+    if (info.shopId) {
+      document.querySelectorAll('a[href^="/standee.html"]').forEach(a => { a.href = '/standee.html?shop=' + encodeURIComponent(info.shopId); });
     }
 
     // Clear previous
@@ -707,7 +710,7 @@ function triggerDirectPrint(order) {
 // WebSocket Setup
 function setupWebSocket() {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = `${protocol}//${window.location.host}`;
+  const wsUrl = `${protocol}//${window.location.host}/?token=${encodeURIComponent(sessionStorage.getItem('qp_shop_token') || '')}`;
   agentState.ws = new WebSocket(wsUrl);
 
   agentState.ws.onmessage = (event) => {
@@ -1076,7 +1079,7 @@ function openShopConfigModal() {
   setVal('modal-shop-address', s.shopAddress || '');
   setVal('modal-admin-username', s.adminUsername || 'admin');
   setVal('modal-admin-password', '');
-  setVal('modal-upi-id', s.upiId || 'hasulots@upi');
+  setVal('modal-upi-id', s.upiId || '');
   setVal('modal-upi-name', s.upiName || s.shopName || 'Hasulots technologies');
   setVal('modal-bw-rate', s.pricing?.bwPerA4Page || 3);
   setVal('modal-color-rate', s.pricing?.colorPerA4Page || 10);
@@ -1114,7 +1117,7 @@ async function saveShopConfig() {
     shopAddress: getVal('modal-shop-address') || '',
     adminUsername: getVal('modal-admin-username') || 'admin',
     
-    upiId: getVal('modal-upi-id') || 'hasulots@upi',
+    upiId: (getVal('modal-upi-id') || '').trim(),
     upiName: getVal('modal-upi-name') || getVal('modal-shop-name') || 'Hasulots technologies',
     pricing: {
       bwPerA4Page: parseFloat(getVal('modal-bw-rate')) || 3,

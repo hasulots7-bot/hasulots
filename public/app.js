@@ -1,3 +1,25 @@
+// ===== Shop context: the QR link is /print/<shopId>. Every /api call carries it so the order goes to THAT shop only =====
+(function () {
+  const m = location.pathname.match(/^\/print\/([^/]+)/);
+  const q = new URLSearchParams(location.search).get('shop');
+  window.QP_SHOP = decodeURIComponent((m && m[1]) || q || '');
+  const _fetch = window.fetch.bind(window);
+  window.fetch = function (input, init) {
+    if (typeof input === 'string' && input.startsWith('/api/') && !input.startsWith('/api/qr') && window.QP_SHOP) {
+      input += (input.includes('?') ? '&' : '?') + 'shop=' + encodeURIComponent(window.QP_SHOP);
+    }
+    return _fetch(input, init);
+  };
+})();
+function showShopProblem(title, text) {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#fff;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;font-family:system-ui,sans-serif;color:#0f172a';
+  d.innerHTML = '<div><h2 style="font-size:1.5rem;font-weight:800;margin:0 0 .5rem"></h2><p style="color:#475569;margin:0"></p></div>';
+  d.querySelector('h2').textContent = title;
+  d.querySelector('p').textContent = text;
+  document.body.appendChild(d);
+}
+
 /**
  * QuickPrint Customer Web App (QR Se Print Client Engine)
  * Fully handles:
@@ -21,7 +43,7 @@ const state = {
     name: 'Hasulots technologies',
     address: 'Main Road, Opp. Bus Stand',
     phone: '+91 98765 43210',
-    upiId: 'hasulots@upi',
+    upiId: '',
     upiName: 'Hasulots technologies',
     priceBw: 3,
     priceColor: 10,
@@ -92,6 +114,8 @@ async function loadShopInfo() {
     const res = await fetch('/api/info');
     if (!res.ok) throw new Error('Failed to fetch info');
     const data = await res.json();
+    if (data.noShop) { showShopProblem('Invalid QR code', 'Please scan the QR code on the shop counter again.'); return; }
+    if (data.shopBlocked) { showShopProblem('Shop unavailable', 'This shop is temporarily unavailable. Please contact the shop.'); return; }
     
     // Check if URL has a specific shopId
     const pathParts = window.location.pathname.split('/');
@@ -101,7 +125,7 @@ async function loadShopInfo() {
     state.shopInfo.name = settings.shopName || 'Hasulots technologies';
     state.shopInfo.address = settings.shopAddress || 'Main Road, Opp. Bus Stand';
     state.shopInfo.phone = settings.shopPhone || '+91 98765 43210';
-    state.shopInfo.upiId = settings.upiId || 'hasulots@upi';
+    state.shopInfo.upiId = settings.upiId || '';
     state.shopInfo.upiName = settings.upiName || state.shopInfo.name;
     state.shopInfo.priceBw = (settings.pricing && settings.pricing.bwPerA4Page) || 3;
     state.shopInfo.priceColor = (settings.pricing && settings.pricing.colorPerA4Page) || 10;
@@ -1861,7 +1885,7 @@ function updateCustomerShopOpenStatus(isOpen) {
 function setupCustomerWebSocket() {
   try {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//${window.location.host}`);
+    const ws = new WebSocket(`${protocol}//${window.location.host}/?shop=${encodeURIComponent(window.QP_SHOP || '')}`);
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);

@@ -48,24 +48,12 @@ function publicShop(s) {
   };
 }
 
-function mount(app, { getShops, saveShops, getSettings, saveSettings, broadcast, getOwnerConfig, saveOwnerConfig }) {
+function mount(app, { getShops, saveShops, getSettings, saveSettings, broadcast, shopSettingsFor, getOwnerConfig, saveOwnerConfig }) {
   const r = express.Router();
 
   // Keep the live kiosk settings in sync when the owner edits the active shop
   function syncActive(shop) {
-    const cur = getSettings();
-    if (cur.shopId !== shop.shopId) return;
-    const updated = {
-      ...cur,
-      shopName: shop.shopName,
-      shopPhone: shop.phone || cur.shopPhone,
-      shopAddress: shop.address || '',
-      upiId: shop.upiId || cur.upiId,
-      upiName: shop.shopName,
-      pricing: { ...cur.pricing, ...(shop.pricing || {}) }
-    };
-    saveSettings(updated);
-    broadcast({ type: 'SETTINGS_UPDATED', settings: updated });
+    broadcast({ type: 'SETTINGS_UPDATED', settings: shopSettingsFor(shop) }, shop.shopId);
   }
 
   function findShop(id) {
@@ -206,7 +194,7 @@ function mount(app, { getShops, saveShops, getSettings, saveSettings, broadcast,
       summary.revenue += amt;
       if (new Date(x.date) >= m0) summary.monthRevenue += amt;
     }));
-    res.json({ shops, summary, plans: A.PLANS, payMethods: PAY_METHODS, owner: ownerPublic(), activeShopId: getSettings().shopId });
+    res.json({ shops, summary, plans: A.PLANS, payMethods: PAY_METHODS, owner: ownerPublic(), activeShopId: null });
   });
 
   r.post('/shops', (req, res) => {
