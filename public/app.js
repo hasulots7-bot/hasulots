@@ -62,6 +62,7 @@ const state = {
   copies: 1,
   totalPrice: 0,
   payMethod: 'online',     // 'online' | 'counter'
+  isOnlinePaid: false,     // true after customer taps UPI app or marks paid
   rotation: 0,
   brightness: 0,
   contrast: 0,
@@ -806,6 +807,7 @@ function updatePriceSummary() {
 
   // Update Dynamic UPI Links & QR
   generateUpiLinks();
+  selectPayMethod(state.payMethod);
 }
 
 function selectPayMethod(method) {
@@ -815,56 +817,125 @@ function selectPayMethod(method) {
   const qrWrap = document.getElementById('upiQrWrap');
   const payNote = document.getElementById('payNote');
   const payConfirmBtn = document.getElementById('payConfirmBtn');
+  const badge = document.getElementById('upiPaidSuccessBadge');
 
   if (method === 'online') {
     if (pmOnline) pmOnline.classList.add('sel');
     if (pmCounter) pmCounter.classList.remove('sel');
     if (qrWrap) qrWrap.classList.remove('hidden');
-    if (payNote) payNote.textContent = 'Instant silent print will start immediately after payment verification.';
-    if (payConfirmBtn) {
-      const pc = payConfirmBtn.querySelector('.pc-tx');
-      if (pc) pc.textContent = '💳 Pay via UPI & Print';
+
+    // Customer must pay via UPI or confirm payment before submit button enables
+    if (state.isOnlinePaid) {
+      if (payConfirmBtn) {
+        payConfirmBtn.disabled = false;
+        payConfirmBtn.classList.remove('btn-disabled');
+        payConfirmBtn.classList.add('btn-paid-ready');
+        const pc = payConfirmBtn.querySelector('.pc-tx');
+        if (pc) pc.textContent = '✅ Confirm & Print / உறுதிசெய்து அச்சிடவும்';
+      }
+      if (badge) badge.style.display = 'block';
+      if (payNote) payNote.textContent = '✅ UPI Payment verified! Click below to start silent printing.';
+    } else {
+      if (payConfirmBtn) {
+        payConfirmBtn.disabled = true;
+        payConfirmBtn.classList.add('btn-disabled');
+        payConfirmBtn.classList.remove('btn-paid-ready');
+        const pc = payConfirmBtn.querySelector('.pc-tx');
+        if (pc) pc.textContent = '🔒 Pay via UPI to Continue / பணம் செலுத்தி தொடரவும்';
+      }
+      if (badge) badge.style.display = 'none';
+      if (payNote) payNote.textContent = 'Please pay via GPay / PhonePe / Paytm / Any UPI or scan QR Code to enable printing.';
     }
   } else {
+    // Pay Cash at Counter -> Submit button is immediately enabled!
     if (pmCounter) pmCounter.classList.add('sel');
     if (pmOnline) pmOnline.classList.remove('sel');
     if (qrWrap) qrWrap.classList.add('hidden');
-    if (payNote) payNote.textContent = 'Pay cash at counter. Shopkeeper will confirm and your document will print.';
+    if (badge) badge.style.display = 'none';
     if (payConfirmBtn) {
+      payConfirmBtn.disabled = false;
+      payConfirmBtn.classList.remove('btn-disabled', 'btn-paid-ready');
       const pc = payConfirmBtn.querySelector('.pc-tx');
-      if (pc) pc.textContent = '💵 Confirm Order (Pay Cash)';
+      if (pc) pc.textContent = '💵 Confirm Order (Pay Cash) / ரொக்கம் செலுத்தி ஆர்டர் செய்யவும்';
     }
+    if (payNote) payNote.textContent = 'Pay cash at counter. Shopkeeper will confirm and your document will print.';
+  }
+}
+
+// Mark UPI payment as completed / initiated to unlock submit button
+function markUpiPaid(source) {
+  state.isOnlinePaid = true;
+  const payConfirmBtn = document.getElementById('payConfirmBtn');
+  const badge = document.getElementById('upiPaidSuccessBadge');
+  const payNote = document.getElementById('payNote');
+
+  if (badge) {
+    badge.style.display = 'block';
+    badge.innerHTML = `✅ கட்டணம் பெறப்பட்டது (${source || 'UPI'})! அச்சிட கீழே உள்ள பச்சை பட்டனை கிளிக் செய்யவும்.`;
+  }
+  if (payNote) {
+    payNote.textContent = '✅ UPI Payment verified! Click below to start silent printing.';
+  }
+  if (payConfirmBtn) {
+    payConfirmBtn.disabled = false;
+    payConfirmBtn.classList.remove('btn-disabled');
+    payConfirmBtn.classList.add('btn-paid-ready');
+    const pc = payConfirmBtn.querySelector('.pc-tx');
+    if (pc) pc.textContent = '✅ Confirm & Print / உறுதிசெய்து அச்சிடவும்';
+    try {
+      payConfirmBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (_) {}
   }
 }
 
 // Generate Dynamic UPI QR & App Links
 async function generateUpiLinks() {
-  const upiId = state.shopInfo.upiId || 'shop@upi';
-  const name = encodeURIComponent(state.shopInfo.upiName || 'QuickPrint');
-  const amt = state.totalPrice;
-  const note = encodeURIComponent(`Order-QP-${Date.now().toString().slice(-4)}`);
+  const upiId = (state.shopInfo.upiId || 'shop@upi').trim();
+  const rawName = state.shopInfo.upiName || state.shopInfo.name || 'QuickPrint';
+  const cleanName = rawName.replace(/[^a-zA-Z0-9 ]/g, '').trim() || 'QuickPrint';
+  const name = encodeURIComponent(cleanName);
+  const amt = parseFloat(state.totalPrice).toFixed(2);
+  const note = encodeURIComponent(`QP${Date.now().toString().slice(-4)}`);
 
+  // Universal standard NPCI UPI URI accepted by all UPI apps (GPay, PhonePe, Paytm, BHIM, Cred, etc.)
   const upiUri = `upi://pay?pa=${upiId}&pn=${name}&am=${amt}&tn=${note}&cu=INR`;
 
-  // App specific links
+  // App specific links & tap actions
   const gpayLink = document.getElementById('btnGPay');
-  if (gpayLink) gpayLink.href = upiUri;
+  if (gpayLink) {
+    gpayLink.href = upiUri;
+    gpayLink.onclick = () => { markUpiPaid('GPay'); };
+  }
 
   const phonepeLink = document.getElementById('btnPhonePe');
-  if (phonepeLink) phonepeLink.href = `phonepe://pay?pa=${upiId}&pn=${name}&am=${amt}&tn=${note}&cu=INR`;
+  if (phonepeLink) {
+    phonepeLink.href = `phonepe://pay?pa=${upiId}&pn=${name}&am=${amt}&tn=${note}&cu=INR`;
+    phonepeLink.onclick = () => { markUpiPaid('PhonePe'); };
+  }
 
   const paytmLink = document.getElementById('btnPaytm');
-  if (paytmLink) paytmLink.href = `paytmmp://pay?pa=${upiId}&pn=${name}&am=${amt}&tn=${note}&cu=INR`;
+  if (paytmLink) {
+    paytmLink.href = `paytmmp://pay?pa=${upiId}&pn=${name}&am=${amt}&tn=${note}&cu=INR`;
+    paytmLink.onclick = () => { markUpiPaid('Paytm'); };
+  }
 
   const bhimLink = document.getElementById('btnBhim');
-  if (bhimLink) bhimLink.href = upiUri;
+  if (bhimLink) {
+    bhimLink.href = upiUri;
+    bhimLink.onclick = () => { markUpiPaid('Any UPI'); };
+  }
+
+  // Clicking on QR code also marks paid / enables submit
+  const qrImg = document.getElementById('upiQrImg');
+  if (qrImg) {
+    qrImg.onclick = () => { markUpiPaid('QR Scan'); };
+  }
 
   // Fetch QR Code Image from server /api/qr
   try {
-    const res = await fetch(`/api/qr?text=${encodeURIComponent(upiUri)}&width=200`);
+    const res = await fetch(`/api/qr?text=${encodeURIComponent(upiUri)}&width=220`);
     if (res.ok) {
       const data = await res.json();
-      const qrImg = document.getElementById('upiQrImg');
       if (qrImg) qrImg.src = data.qr;
     }
   } catch (err) {
@@ -880,6 +951,11 @@ async function confirmAndPay() {
   }
 
   const isOnline = state.payMethod === 'online';
+  if (isOnline && !state.isOnlinePaid) {
+    alert('கட்டணம் செலுத்தவும்: GPay, PhonePe, Paytm, Any UPI அல்லது QR Code ஸ்கேன் செய்து பணம் செலுத்திய பின் தொடரவும்.');
+    return;
+  }
+
   await submitFinalOrder(isOnline ? 'completed' : 'pending_cash');
 }
 

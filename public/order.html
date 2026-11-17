@@ -61,6 +61,57 @@
     .btn-phonepe { background: #5f259f; }
     .btn-paytm { background: #00b9f5; }
     .btn-bhim { background: #00796b; }
+    .upi-paid-verify-btn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px 14px;
+      background: #f0fdf4;
+      border: 1.5px solid #86efac;
+      color: #166534;
+      border-radius: 12px;
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+    }
+    .upi-paid-verify-btn:active {
+      transform: scale(0.98);
+      background: #dcfce7;
+    }
+    .upi-paid-success-badge {
+      width: 100%;
+      margin-top: 8px;
+      padding: 10px 14px;
+      background: #ecfdf5;
+      border: 1.5px solid #34d399;
+      color: #065f46;
+      border-radius: 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .pay-confirm.btn-disabled,
+    .pay-confirm:disabled {
+      background: #94a3b8 !important;
+      opacity: 0.65 !important;
+      cursor: not-allowed !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+    .pay-confirm.btn-paid-ready {
+      background: linear-gradient(135deg, #10b981, #059669) !important;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.35), 0 8px 24px rgba(16, 185, 129, 0.3) !important;
+      animation: pulseGreen 1.8s infinite !important;
+    }
+    @keyframes pulseGreen {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5), 0 8px 20px rgba(16, 185, 129, 0.3); }
+      70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0), 0 8px 20px rgba(16, 185, 129, 0.3); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0), 0 8px 20px rgba(16, 185, 129, 0.3); }
+    }
     .status-tracker-box {
       margin: 16px 0;
       padding: 14px;
@@ -912,7 +963,7 @@
       <div id="upiQrWrap" class="upi-qr-card hidden">
         <div style="font-weight:800;font-size:14px;color:var(--ink);">Scan QR to Pay via Any UPI App</div>
         <p style="font-size:12px;color:var(--muted);margin:0;">GPay / PhonePe / Paytm / BHIM</p>
-        <img id="upiQrImg" alt="UPI QR Code" src="">
+        <img id="upiQrImg" alt="UPI QR Code" src="" style="cursor:pointer;" title="ஸ்கேன் செய்தபின் கிளிக் செய்யவும்">
         <div style="font-size:13px;font-weight:800;color:var(--violet);" id="upiQrAmount">Amount: ₹0</div>
         <div class="upi-apps-row">
           <a id="btnGPay" class="upi-app-btn btn-gpay" href="#">GPay</a>
@@ -920,9 +971,12 @@
           <a id="btnPaytm" class="upi-app-btn btn-paytm" href="#">Paytm</a>
           <a id="btnBhim" class="upi-app-btn btn-bhim" href="#">Any UPI</a>
         </div>
-        <p class="upi-pay-hint" style="font-size:12px;color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;padding:8px 12px;border-radius:10px;margin-top:10px;font-weight:700;text-align:center;">
-          ✅ UPI மூலம் பணம் செலுத்திய பிறகு கீழே உள்ள "Confirm &amp; Pay" பட்டனை கிளிக் செய்யவும். அச்சு தானாக தொடங்கும்!
-        </p>
+        <button type="button" id="btnUpiPaidManual" class="upi-paid-verify-btn" onclick="markUpiPaid('Manual / QR')">
+          <span class="upv-icon">✓</span> I Have Paid via UPI / பணம் செலுத்திவிட்டேன்
+        </button>
+        <div id="upiPaidSuccessBadge" class="upi-paid-success-badge" style="display:none;">
+          ✅ கட்டணம் பெறப்பட்டது! அச்சிட கீழே உள்ள பச்சை பட்டனை கிளிக் செய்யவும்.
+        </div>
       </div>
 
       <div class="pay-note" id="payNote">Loading...</div>
