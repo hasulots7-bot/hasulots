@@ -21,7 +21,12 @@
   <span class="pill">⬇ Windows App</span>
   <h1>QuickPrint <span>Shop App</span></h1>
   <p>Windows 10 &amp; above · Login · Customer QR · Silent auto print</p>
-  <div style="margin-top:22px"><a id="dl" class="btn btn-primary" href="/download/windows" style="font-size:17px;padding:14px 30px">⬇ Download for Windows (.exe)</a></div>
+  <div style="margin-top:22px;max-width:340px;margin-left:auto;margin-right:auto;text-align:left">
+    <p style="text-align:center;margin-bottom:10px">Register panna <b>Username &amp; Password</b> kudunga. <a href="/#contact" style="color:inherit;text-decoration:underline">Register illaya? Free demo-ku register pannunga</a></p>
+    <input id="dlUser" placeholder="Username" autocomplete="username" style="width:100%;padding:12px;margin-bottom:8px;border-radius:10px;border:1px solid #ddd;font-size:15px">
+    <input id="dlPass" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;padding:12px;margin-bottom:10px;border-radius:10px;border:1px solid #ddd;font-size:15px">
+    <button id="dl" class="btn btn-primary" style="width:100%;font-size:17px;padding:14px">⬇ Download for Windows (.exe)</button>
+  </div>
   <p id="dlNote" style="margin-top:12px;font-size:13.5px;opacity:.85"></p>
 </div></section>
 
@@ -48,12 +53,17 @@
 </main>
 <div id="site-footer"></div>
 <script>
-fetch('/api/desktop').then(function (r) { return r.json(); }).then(function (d) {
-  if (!d.available) {
-    var b = document.getElementById('dl'); b.style.opacity = .55; b.style.pointerEvents = 'none';
-    document.getElementById('dlNote').textContent = 'The Windows app is being prepared. Please contact us on WhatsApp for the setup file.';
-  }
-}).catch(function () {});
+document.getElementById('dl').addEventListener('click', function () {
+  var note = document.getElementById('dlNote');
+  note.textContent = 'Checking...';
+  fetch('/api/desktop/link', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: document.getElementById('dlUser').value, password: document.getElementById('dlPass').value }) })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.success) { note.textContent = 'Download starting...'; location.href = d.url; }
+      else note.textContent = d.error || 'Something went wrong';
+    }).catch(function () { note.textContent = 'Network error. Try again.'; });
+});
 </script>
 </body>
 </html>
