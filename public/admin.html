@@ -541,11 +541,11 @@
           </div>
 
           <div class="grid grid-cols-2 gap-1.5 pt-1">
-            <button type="button" onclick="downloadShopQr()" class="py-1.5 px-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-extrabold text-xs flex items-center justify-center gap-1 transition active:scale-95" title="Download QR PNG Image">
-              <span>📥 Download</span>
-            </button>
-            <button type="button" onclick="printShopQr()" class="py-1.5 px-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-extrabold text-xs flex items-center justify-center gap-1 transition active:scale-95" title="Print QR Code / Standee">
-              <span>🖨️ Print QR</span>
+            <a href="/standee.html" target="_blank" class="py-1.5 px-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-extrabold text-xs flex items-center justify-center gap-1 transition active:scale-95" title="View & Download QR Standee Poster">
+              <span>🖼️ Poster / Download</span>
+            </a>
+            <button type="button" onclick="printShopQr()" class="py-1.5 px-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-extrabold text-xs flex items-center justify-center gap-1 transition active:scale-95" title="Print QR Standee Poster">
+              <span>🖨️ Print Poster</span>
             </button>
             <button type="button" onclick="openFullscreenQrModal()" class="col-span-2 py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95">
               <span>🔍 Enlarge QR (Full Screen)</span>
@@ -847,11 +847,11 @@
       <p class="text-xs text-slate-400 mt-2 font-medium">No app download needed • 100% login-free • Instant print</p>
 
       <div class="mt-5 grid grid-cols-2 gap-3">
-        <button type="button" onclick="downloadShopQr()" class="py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-md transition active:scale-95">
-          <span>📥 Download QR (PNG)</span>
-        </button>
+        <a href="/standee.html" target="_blank" class="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-md transition active:scale-95">
+          <span>🖼️ Standee Poster (PNG)</span>
+        </a>
         <button type="button" onclick="printShopQr()" class="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-md transition active:scale-95">
-          <span>🖨️ Print QR Poster</span>
+          <span>🖨️ Print Poster (A4)</span>
         </button>
       </div>
 
