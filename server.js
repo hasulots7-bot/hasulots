@@ -596,7 +596,9 @@ app.post('/api/orders', (req, res) => {
       paperSize = 'A4',       // 'A4', 'Legal', 'A3'
       pageRange = 'all',      // 'all' or specific e.g. "1-5"
       customerName = 'Guest Customer',
-      customerPhone = ''
+      customerPhone = '',
+      paymentMethod: payMethodRaw = 'upi',
+      customerTxnId = ''
     } = req.body;
 
     if (!fileId) {
@@ -660,7 +662,8 @@ app.post('/api/orders', (req, res) => {
       upiUrl,
       paymentStatus: 'pending', // 'pending' | 'paid'
       paymentTxnId: null,
-      paymentMethod: 'upi',
+      paymentMethod: payMethodRaw === 'cash' ? 'cash' : 'upi',
+      customerTxnId: String(customerTxnId || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 30),
       status: 'pending_payment', // 'pending_payment' | 'queued' | 'printing' | 'completed' | 'cancelled'
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()

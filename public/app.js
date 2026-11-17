@@ -974,6 +974,7 @@ async function submitFinalOrder(paymentStatus) {
       colorMode: state.colorMode,
       duplex: state.isDuplex ? 'double' : 'single',
       customerName: 'Mobile Customer',
+      customerTxnId: ((document.getElementById('upiTxnId') || {}).value || '').trim(),
       paymentMethod: state.payMethod === 'online' ? 'upi' : 'cash'
     };
 

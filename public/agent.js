@@ -1044,6 +1044,7 @@ function renderOrders() {
       <div class="col-span-2 min-w-0">
         <span class="inline-block px-2.5 py-1 rounded-lg bg-slate-900 text-white font-mono font-black text-xs shadow-xs tracking-wide">${order.token}</span>
         <p class="mt-1 truncate text-xs font-semibold text-slate-500">${order.customerName || 'Customer'}</p>
+        ${order.customerTxnId ? `<p class="truncate text-[11px] font-bold text-indigo-600">UTR: ${order.customerTxnId}</p>` : ''}
       </div>
 
       <!-- Details -->
@@ -1075,7 +1076,7 @@ function renderOrders() {
         ${statusBadge}
         ${order.paymentStatus !== 'paid' && order.status !== 'completed' ? `
           <button class="btn-print-action flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md shadow-emerald-600/25 transition active:scale-95" title="Customer Paid -> Print Now" data-id="${order.id}">
-            <span>💵</span> Pay &amp; Print
+            ${order.paymentMethod === 'upi' ? '<span>✅</span> Payment Received &amp; Print' : '<span>💵</span> Cash Received &amp; Print'}
           </button>
         ` : `
           <button class="btn-print-action grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-violet-600 text-white shadow-md shadow-violet-600/30 transition hover:bg-violet-700 active:scale-95" title="Print again" data-id="${order.id}">
@@ -1253,8 +1254,10 @@ function setupWebSocket() {
         renderOrders();
         updateMetrics();
 
-        // Once online payment is done, automatically trigger print (Instant Auto-Print)
-        if (agentState.autoPrintPaid && (data.order.paymentMethod === 'upi' || data.order.paymentStatus === 'paid')) {
+        // New unpaid order: only alert the shopkeeper. Printing starts after 'Payment Received' is confirmed.
+        if (data.order.paymentStatus !== 'paid') { try { playDing(); } catch (_) {} }
+        // Already-paid orders can auto-print
+        if (agentState.autoPrintPaid && data.order.paymentStatus === 'paid') {
           (async () => {
             try {
               await fetch(`/api/orders/${data.order.id}/pay`, {
@@ -1486,11 +1489,16 @@ function setupEventListeners() {
         const order = agentState.orders.find(o => o.id === orderId);
         if (order) {
           if (order.paymentStatus !== 'paid') {
+            const amt = (order.pricing && order.pricing.totalAmount) || 0;
+            const q = order.paymentMethod === 'upi'
+              ? `₹${amt} ungal GPay / PhonePe / bank app-la vandhucha? Vandhirundha mattum OK click pannunga.`
+              : `₹${amt} cash vaangittingala?`;
+            if (!window.confirm(q)) return;
             try {
               await fetch(`/api/orders/${order.id}/pay`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ txnId: 'COUNTER-CASH-' + Date.now() })
+                body: JSON.stringify({ txnId: order.customerTxnId || (order.paymentMethod === 'upi' ? 'UPI-CONFIRMED-' : 'COUNTER-CASH-') + Date.now() })
               });
               order.paymentStatus = 'paid';
               order.status = 'queued';
