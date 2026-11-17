@@ -266,6 +266,7 @@ function unlockDashboard() {
     overlay.style.pointerEvents = 'none';
     setTimeout(() => { overlay.style.display = 'none'; }, 300);
   }
+  renderCornerQrCode();
 }
 
 function lockAdminDashboard() {
@@ -290,6 +291,7 @@ function checkAdminAuth() {
   if (!overlay) return;
   if (sessionStorage.getItem('qp_admin_auth') === 'true' && sessionStorage.getItem('qp_shop_token')) {
     overlay.style.display = 'none';
+    renderCornerQrCode();
   } else {
     overlay.style.display = 'flex';
     overlay.style.opacity = '1';
@@ -309,6 +311,10 @@ async function renderCornerQrCode() {
   try {
     const res = await fetch('/api/info');
     const info = await res.json();
+    if (!info.shopId) {
+      qrBox.innerHTML = '<div class="text-xs font-bold text-slate-500 p-2 text-center">Login to see your shop QR</div>';
+      return;
+    }
     
     // Choose target URL based on qrMode
     let targetUrl;

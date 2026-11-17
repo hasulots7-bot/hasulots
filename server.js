@@ -717,9 +717,16 @@ app.delete('/api/orders/:id', requireShop, (req, res) => {
 // Generate dynamic QR Code Image (Data URL or PNG Image)
 app.get('/api/qr', async (req, res) => {
   try {
-    const settings = getSettings();
-    const defaultUrl = settings.publicUrl ? `${settings.publicUrl}/order` : `http://${getLocalIp()}:${PORT}/order`;
-    const text = req.query.text || defaultUrl;
+    // Without ?text the QR is the logged-in shop's own link; never a shop-less /order link
+    let text = req.query.text;
+    if (!text) {
+      const shop = shopFromToken(req) || shopFromParam(req);
+      if (!shop) return res.status(400).json({ error: 'Login first to get your shop QR' });
+      const host = req.headers['x-forwarded-host'] || req.headers.host;
+      const proto = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+      const base = (process.env.PUBLIC_URL || '').trim().replace(/\/$/, '') || `${proto}://${host}`;
+      text = `${base}/print/${encodeURIComponent(shop.shopId)}`;
+    }
     const width = parseInt(req.query.width, 10) || 300;
 
     if (req.query.format === 'image' || (req.headers.accept && req.headers.accept.includes('image/'))) {
